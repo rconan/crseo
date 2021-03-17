@@ -1,0 +1,4 @@
+[submodule "CEO"]
+	path = CEO
+	url = https://github.com/rconan/CEO.git
+	branch = rust
