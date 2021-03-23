@@ -35,8 +35,8 @@ fn main() {
     bindings
         .write_to_file("src/bindings.rs")
         .expect("Couldn't write bindings!");
-    println!("cargo:rustc-link-search=native=/home/rconan/projects/crseo/CEO/lib/");
-    println!("cargo:rustc-link-search=native=/home/rconan/projects/crseo/CEO/jsmn");
+    println!("cargo:rustc-link-search=native=CEO/lib/");
+    println!("cargo:rustc-link-search=native=CEO/jsmn");
     println!("cargo:rustc-link-lib=static=ceo");
     println!("cargo:rustc-link-lib=static=jsmn");
     println!("cargo:rustc-link-lib=curl");
@@ -48,8 +48,8 @@ fn main() {
     println!("cargo:rustc-link-lib=cusparse");
     println!("cargo:rustc-link-lib=curand");
     println!("cargo:rustc-link-lib=cusolver");
-    println!("cargo:include=/home/rconan/projects/crseo/CEO/include");
+    println!("cargo:include=CEO/include");
     println!("cargo:include=/usr/local/cuda/include");
-    println!("cargo:lib=/home/rconan/projects/crseo/CEO/lib");
+    println!("cargo:lib=CEO/lib");
     println!("cargo:rerun-if-changed=wrapper.hpp");
 }
