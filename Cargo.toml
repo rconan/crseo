@@ -18,10 +18,13 @@ nalgebra = "0.23.1"
 
 [build-dependencies]
 bindgen = "0.52.0"
+ceo = { path = "CEO" }
 
 [dev-dependencies]
 simple_logger = "1.11.0"
 criterion = "0.3"
+dosio = { path= "../dosio" }
+bincode = "1.3.2"
 
 [[bench]]
 name = "ceo_benchmark"

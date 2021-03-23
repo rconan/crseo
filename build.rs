@@ -1,9 +1,7 @@
-extern crate bindgen;
-
-//use std::env;
-//use std::path::PathBuf;
+use bindgen;
 
 fn main() {
+
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
         .clang_arg("-I/usr/local/cuda/include")
@@ -33,24 +31,25 @@ fn main() {
         .whitelist_function("ormqr")
         .generate()
         .expect("Unable to generate bindings");
-//    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    //    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
         .write_to_file("src/bindings.rs")
         .expect("Couldn't write bindings!");
-    println!("cargo:rustc-link-search=native=CEO/lib/");
-    println!("cargo:rustc-link-search=native=CEO/jsmn");
+    println!("cargo:rustc-link-search=native=/home/rconan/projects/crseo/CEO/lib/");
+    println!("cargo:rustc-link-search=native=/home/rconan/projects/crseo/CEO/jsmn");
     println!("cargo:rustc-link-lib=static=ceo");
     println!("cargo:rustc-link-lib=static=jsmn");
     println!("cargo:rustc-link-lib=curl");
     println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
     println!("cargo:rustc-link-lib=cudart");
+    println!("cargo:rustc-link-lib=cudadevrt");
     println!("cargo:rustc-link-lib=cublas");
     println!("cargo:rustc-link-lib=cufft");
     println!("cargo:rustc-link-lib=cusparse");
     println!("cargo:rustc-link-lib=curand");
     println!("cargo:rustc-link-lib=cusolver");
-    println!("cargo:include=CEO/include");
+    println!("cargo:include=/home/rconan/projects/crseo/CEO/include");
     println!("cargo:include=/usr/local/cuda/include");
-    println!("cargo:lib=CEO/lib");
+    println!("cargo:lib=/home/rconan/projects/crseo/CEO/lib");
     println!("cargo:rerun-if-changed=wrapper.hpp");
 }
