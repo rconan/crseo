@@ -374,6 +374,17 @@ impl Source {
             .map(|x| x * 10_f32.powi(-exp))
             .collect()
     }
+    pub fn gradients(&mut self) -> Vec<f32> {
+        let mut sxy: Vec<Vec<f32>> = vec![vec![0.; self.size as usize]; 2];
+        unsafe {
+            self._c_.wavefront.gradient_average1(
+                sxy[0].as_mut_ptr(),
+                sxy[1].as_mut_ptr(),
+                self._c_.rays.L as f32,
+            )
+        }
+        sxy.into_iter().flatten().collect()
+    }
     pub fn segment_wfe_rms(&mut self) -> Vec<f32> {
         let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
         unsafe {
@@ -672,13 +683,17 @@ mod tests {
     fn source_field_delaunay21() {
         use crate::{ceo, Conversion};
         let src = ceo!(SOURCE, set_field_delaunay21 = []);
-        src.zenith.iter().zip(src.azimuth.iter()).enumerate().for_each(|x| {
-            println!(
-                "#{:2}: {:.3}arcmin - {:7.3}degree",
-                x.0,
-                x.1.0.to_arcmin(),
-                x.1.1.to_degrees()
-            );
-        });
+        src.zenith
+            .iter()
+            .zip(src.azimuth.iter())
+            .enumerate()
+            .for_each(|x| {
+                println!(
+                    "#{:2}: {:.3}arcmin - {:7.3}degree",
+                    x.0,
+                    x.1 .0.to_arcmin(),
+                    x.1 .1.to_degrees()
+                );
+            });
     }
 }
