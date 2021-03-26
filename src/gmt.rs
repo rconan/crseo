@@ -396,10 +396,10 @@ impl Gmt {
     }
     pub fn update42(
         &mut self,
-        m1_rbm: Option<&Vec<f64>>,
-        m2_rbm: Option<&Vec<f64>>,
-        m1_mode: Option<&Vec<f64>>,
-        m2_mode: Option<&Vec<f64>>,
+        m1_rbm: Option<&[f64]>,
+        m2_rbm: Option<&[f64]>,
+        m1_mode: Option<&[f64]>,
+        m2_mode: Option<&[f64]>,
     ) {
         if let Some(m1_rbm) = m1_rbm {
             for (k, rbm) in m1_rbm.chunks(6).enumerate() {
@@ -412,11 +412,11 @@ impl Gmt {
             }
         }
         if let Some(m1_mode) = m1_mode {
-            let mut m = m1_mode.clone();
+            let mut m = m1_mode.to_vec();
             self.set_m1_modes(&mut m);
         }
         if let Some(m2_mode) = m2_mode {
-            let mut m = m2_mode.clone();
+            let mut m = m2_mode.to_vec();
             self.set_m2_modes(&mut m);
         }
     }
