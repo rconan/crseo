@@ -451,6 +451,17 @@ impl Source {
             .map(|x| x * 10_f32.powi(-exp))
             .collect()
     }
+    pub fn segment_mask(&mut self) -> Vec<i32> {
+        let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
+        unsafe {
+            dev2host_int(
+                mask.as_mut_ptr(),
+                self._c_.rays.d__piston_mask,
+                self._c_.rays.N_RAY_TOTAL,
+            );
+        }
+        mask
+    }
     /// Returns the x and y gradient of the wavefront in average over each of the GMT segments
     pub fn segments_gradients(&mut self) -> Vec<Vec<f32>> {
         let mut sxy: Vec<Vec<f32>> = vec![vec![0.; 7 * self.size as usize]; 2];
