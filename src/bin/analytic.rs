@@ -1,5 +1,5 @@
 use crseo::analytic::*;
-use crseo::SkyAngle::*;
+use skyangle::SkyAngle::*;
 
 fn main() {
     let m1 = Conic::gmt_m1();

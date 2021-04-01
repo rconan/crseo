@@ -15,6 +15,7 @@ roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
 nalgebra = "0.25.3"
+skyangle = { git = "https://github.com/rconan/skyangle.git", branch = "main" }
 
 [build-dependencies]
 bindgen = "0.52.0"
