@@ -37,26 +37,26 @@ impl Default for LMMSE {
     }
 }
 impl LMMSE {
-    pub fn set_atmosphere(self, atm: ATMOSPHERE) -> Self {
+    pub fn atmosphere(self, atm: ATMOSPHERE) -> Self {
         Self { atm, ..self }
     }
-    pub fn set_guide_star(self, guide_star: &Source) -> Self {
+    pub fn guide_star(self, guide_star: &Source) -> Self {
         Self { guide_star: SOURCE::from(guide_star), ..self }
     }
-    pub fn set_mmse_star(self, mmse_star: &Source) -> Self {
+    pub fn mmse_star(self, mmse_star: &Source) -> Self {
         Self {
             mmse_star: SOURCE::from(mmse_star),
             fov_diameter: None,
             ..self
         }
     }
-    pub fn set_fov_diameter(self, fov_diameter: f64) -> Self {
+    pub fn fov_diameter(self, fov_diameter: f64) -> Self {
         Self {
             fov_diameter: Some(fov_diameter),
             ..self
         }
     }
-    pub fn set_n_side_lenslet(self, n_side_lenslet: usize) -> Self {
+    pub fn n_side_lenslet(self, n_side_lenslet: usize) -> Self {
         Self {
             n_side_lenslet,
             ..self
@@ -128,7 +128,7 @@ impl LinearMinimumMeanSquareError {
         phase.from_ptr(self._c_.d__phase_est);
         phase
     }
-    pub fn set_n_iteration(&mut self, n_iteration: usize) {
+    pub fn n_iteration(&mut self, n_iteration: usize) {
         self._c_.iSolve.N_ITERATION = n_iteration as i32;
     }
     pub fn get_n_iteration(&mut self) -> usize {
@@ -140,16 +140,16 @@ impl LinearMinimumMeanSquareError {
         first_kl: Option<usize>,
         stroke: Option<f64>,
     ) -> Vec<Vec<f64>> {
-        let mut gmt = GMT::new().set_m2_n_mode(n_kl).build();
+        let mut gmt = GMT::new().m2_n_mode(n_kl).build();
         let mut kl: Vec<Vec<f32>> = vec![];
         let first_kl = first_kl.unwrap_or(0);
         let stroke = stroke.unwrap_or(1e-6);
         for s in 0..7 {
             for k in first_kl..n_kl {
-                gmt.set_m2_modes_ij(s, k, stroke);
+                gmt.m2_modes_ij(s, k, stroke);
                 self.mmse_star.through(&mut gmt).xpupil();
                 let b_push: Vec<f32> = self.mmse_star.phase_as_ptr().into();
-                gmt.set_m2_modes_ij(s, k, -stroke);
+                gmt.m2_modes_ij(s, k, -stroke);
                 self.mmse_star.through(&mut gmt).xpupil();
                 let b_pull: Vec<f32> = self.mmse_star.phase_as_ptr().into();
                 kl.push(

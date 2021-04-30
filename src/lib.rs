@@ -14,9 +14,10 @@
 //! ```
 //! [`ceo!`](macro.ceo.html) is a macro that incorporates the necessary boilerplate code to create CEO elements.
 
-use std::{error::Error, f32, f64, fmt, mem};
 use skyangle::*;
+use std::{error::Error, f32, fmt, mem};
 
+pub mod analytic;
 pub mod atmosphere;
 pub mod calibrations;
 pub mod centroiding;
@@ -29,7 +30,6 @@ pub mod lmmse;
 pub mod pssn;
 pub mod shackhartmann;
 pub mod source;
-pub mod analytic;
 
 #[doc(inline)]
 pub use self::atmosphere::{Atmosphere, ATMOSPHERE};

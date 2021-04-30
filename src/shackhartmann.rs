@@ -135,10 +135,10 @@ impl<T: Model> Default for SHACKHARTMANN<T> {
     }
 }
 impl<T: Model> SHACKHARTMANN<T> {
-    pub fn set_n_sensor(self, n_sensor: usize) -> Self {
+    pub fn n_sensor(self, n_sensor: usize) -> Self {
         Self { n_sensor, ..self }
     }
-    pub fn set_lenslet_array(self, n_side_lenslet: usize, n_px_lenslet: usize, d: f64) -> Self {
+    pub fn lenslet_array(self, n_side_lenslet: usize, n_px_lenslet: usize, d: f64) -> Self {
         Self {
             lenslet_array: LensletArray(n_side_lenslet, n_px_lenslet, d),
             ..self
@@ -147,9 +147,9 @@ impl<T: Model> SHACKHARTMANN<T> {
     pub fn guide_stars(&self) -> SOURCE {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         SOURCE::new()
-            .set_size(self.n_sensor)
-            .set_pupil_size(d * n_side_lenslet as f64)
-            .set_pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
+            .size(self.n_sensor)
+            .pupil_size(d * n_side_lenslet as f64)
+            .pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
     }
 }
 impl<T: Model> Builder for SHACKHARTMANN<T> {
@@ -228,15 +228,15 @@ impl<T: Model> Default for SH48<T> {
     }
 }
 impl<T: Model> SH48<T> {
-    pub fn set_n_sensor(self, n_sensor: usize) -> Self {
+    pub fn n_sensor(self, n_sensor: usize) -> Self {
         Self { n_sensor, ..self }
     }
     pub fn guide_stars(&self) -> SOURCE {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         SOURCE::new()
-            .set_size(self.n_sensor)
-            .set_pupil_size(d * n_side_lenslet as f64)
-            .set_pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
+            .size(self.n_sensor)
+            .pupil_size(d * n_side_lenslet as f64)
+            .pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
     }
 }
 impl<T: Model> Builder for SH48<T> {
@@ -314,10 +314,10 @@ impl<S: Model> ShackHartmann<S> {
     }
     pub fn guide_stars(&self) -> SOURCE {
         SOURCE::new()
-            .set_size(self.n_sensor as usize)
-            .set_pupil_size(self.d * self.n_side_lenslet as f64)
-            .set_pupil_sampling((self.n_px_lenslet * self.n_side_lenslet + 1) as usize)
-            .set_band("R")
+            .size(self.n_sensor as usize)
+            .pupil_size(self.d * self.n_side_lenslet as f64)
+            .pupil_sampling((self.n_px_lenslet * self.n_side_lenslet + 1) as usize)
+            .band("R")
     }
     pub fn drop(&mut self) {
         self._c_.drop();
@@ -533,10 +533,10 @@ mod tests {
     fn shack_hartmann_geometric_new() {
         use crate::GMT;
         let mut wfs = SHACKHARTMANN::<Geometric>::new()
-            .set_n_sensor(1)
-            .set_lenslet_array(48, 16, 25.5 / 48f64)
+            .n_sensor(1)
+            .lenslet_array(48, 16, 25.5 / 48f64)
             .build();
-        let mut src = SOURCE::new().set_pupil_sampling(48 * 16 + 1).build();
+        let mut src = SOURCE::new().pupil_sampling(48 * 16 + 1).build();
         let mut gmt = GMT::new().build();
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
@@ -546,10 +546,10 @@ mod tests {
     fn shack_hartmann_geometric_new_with_macro() {
         let mut wfs = crate::ceo!(
             SHACKHARTMANN:Geometric,
-            set_n_sensor = [1],
-            set_lenslet_array = [48, 16, 25.5 / 48f64]
+            n_sensor = [1],
+            lenslet_array = [48, 16, 25.5 / 48f64]
         );
-        let mut src = crate::ceo!(SOURCE, set_pupil_sampling = [48 * 16 + 1]);
+        let mut src = crate::ceo!(SOURCE, pupil_sampling = [48 * 16 + 1]);
         let mut gmt = crate::ceo!(GMT);
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
@@ -561,11 +561,11 @@ mod tests {
         use crate::Builder;
         use element::*;
         let mut wfs = CEO::<SHACKHARTMANN<Diffractive>>::new()
-            .set_n_sensor(1)
-            .set_lenslet_array(48, 16, 25.5 / 48f64)
-            .set_detector(8, Some(24), None)
+            .n_sensor(1)
+            .lenslet_array(48, 16, 25.5 / 48f64)
+            .detector(8, Some(24), None)
             .build();
-        let mut src = CEO::<SOURCE>::new().set_pupil_sampling(48 * 16 + 1).build();
+        let mut src = CEO::<SOURCE>::new().pupil_sampling(48 * 16 + 1).build();
         let mut gmt = CEO::<GMT>::new().build();
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
@@ -576,11 +576,11 @@ mod tests {
         use element::*;
         let mut wfs = crate::ceo!(
             SHACKHARTMANN<Diffractive>,
-            set_n_sensor = [1],
-            set_lenslet_array = [48, 16, 25.5 / 48f64],
-            set_detector = [8, Some(24), None]
+            n_sensor = [1],
+            lenslet_array = [48, 16, 25.5 / 48f64],
+            detector = [8, Some(24), None]
         );
-        let mut src = crate::ceo!(SOURCE, set_pupil_sampling = [48 * 16 + 1]);
+        let mut src = crate::ceo!(SOURCE, pupil_sampling = [48 * 16 + 1]);
         let mut gmt = crate::ceo!(GMT);
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);

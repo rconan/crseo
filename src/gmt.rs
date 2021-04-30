@@ -15,7 +15,7 @@
 //! ```
 //! use ceo::ceo;
 //! // Creates a gmt instance with 27 M1 bending modes
-//! let mut gmt = ceo!(GMT, set_m1_n_mode = [27]);
+//! let mut gmt = ceo!(GMT, m1_n_mode = [27]);
 //! ```
 
 use super::ceo_bindings::{bundle, gmt_m1, gmt_m2, modes, vector};
@@ -47,7 +47,7 @@ pub struct Mirror {
 ///
 /// ```
 /// use ceo::{Builder, GMT};
-/// let mut gmt = GMT::new().set_m1_n_mode(27).build();
+/// let mut gmt = GMT::new().m1_n_mode(27).build();
 /// ```
 #[derive(Debug, Clone)]
 pub struct GMT {
@@ -69,7 +69,7 @@ impl Default for GMT {
     }
 }
 impl GMT {
-    pub fn set_m1(self, mode_type: &str, n_mode: usize) -> Self {
+    pub fn m1(self, mode_type: &str, n_mode: usize) -> Self {
         Self {
             m1: Mirror {
                 mode_type: mode_type.into(),
@@ -78,13 +78,13 @@ impl GMT {
             ..self
         }
     }
-    pub fn set_m1_n_mode(self, n_mode: usize) -> Self {
+    pub fn m1_n_mode(self, n_mode: usize) -> Self {
         Self {
             m1: Mirror { n_mode, ..self.m1 },
             ..self
         }
     }
-    pub fn set_m2(self, mode_type: &str, n_mode: usize) -> Self {
+    pub fn m2(self, mode_type: &str, n_mode: usize) -> Self {
         Self {
             m2: Mirror {
                 mode_type: mode_type.into(),
@@ -93,7 +93,7 @@ impl GMT {
             ..self
         }
     }
-    pub fn set_m2_n_mode(self, n_mode: usize) -> Self {
+    pub fn m2_n_mode(self, n_mode: usize) -> Self {
         Self {
             m2: Mirror { n_mode, ..self.m2 },
             ..self
@@ -305,7 +305,7 @@ impl Gmt {
     /// * `sid` - the segment ID number in the range [1,7]
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
-    pub fn set_m1_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
+    pub fn m1_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
         assert!(sid > 0 && sid < 8, "Segment ID must be in the range [1,7]!");
         let t_xyz = vector {
             x: t_xyz[0],
@@ -326,7 +326,7 @@ impl Gmt {
     /// * `sid` - the segment ID number in the range [1,7]
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
-    pub fn set_m2_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
+    pub fn m2_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
         let t_xyz = vector {
             x: t_xyz[0],
             y: t_xyz[1],
@@ -342,12 +342,12 @@ impl Gmt {
         }
     }
     /// Sets M1 modal coefficients
-    pub fn set_m1_modes(&mut self, a: &mut Vec<f64>) {
+    pub fn m1_modes(&mut self, a: &mut Vec<f64>) {
         unsafe {
             self._c_m1_modes.update(a.as_mut_ptr());
         }
     }
-    pub fn set_m1_modes_ij(&mut self, i: usize, j: usize, value: f64) {
+    pub fn m1_modes_ij(&mut self, i: usize, j: usize, value: f64) {
         let mut a = vec![0f64; 7 * self.m1_n_mode];
         a[i * self.m1_n_mode + j] = value;
         unsafe {
@@ -355,12 +355,12 @@ impl Gmt {
         }
     }
     /// Sets M2 modal coefficients
-    pub fn set_m2_modes(&mut self, a: &mut Vec<f64>) {
+    pub fn m2_modes(&mut self, a: &mut Vec<f64>) {
         unsafe {
             self._c_m2_modes.update(a.as_mut_ptr());
         }
     }
-    pub fn set_m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
+    pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
         let mut a = vec![0f64; 7 * self.m2_n_mode];
         a[i * self.m2_n_mode + j] = value;
         unsafe {
@@ -377,21 +377,21 @@ impl Gmt {
     ) {
         if let Some(m1_rbm) = m1_rbm {
             for (k, rbm) in m1_rbm.iter().enumerate() {
-                self.set_m1_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
+                self.m1_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
             }
         }
         if let Some(m2_rbm) = m2_rbm {
             for (k, rbm) in m2_rbm.iter().enumerate() {
-                self.set_m2_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
+                self.m2_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
             }
         }
         if let Some(m1_mode) = m1_mode {
             let mut m = m1_mode.clone().into_iter().flatten().collect::<Vec<f64>>();
-            self.set_m1_modes(&mut m);
+            self.m1_modes(&mut m);
         }
         if let Some(m2_mode) = m2_mode {
             let mut m = m2_mode.clone().into_iter().flatten().collect::<Vec<f64>>();
-            self.set_m2_modes(&mut m);
+            self.m2_modes(&mut m);
         }
     }
     pub fn update42(
@@ -403,21 +403,21 @@ impl Gmt {
     ) {
         if let Some(m1_rbm) = m1_rbm {
             for (k, rbm) in m1_rbm.chunks(6).enumerate() {
-                self.set_m1_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
+                self.m1_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
             }
         }
         if let Some(m2_rbm) = m2_rbm {
             for (k, rbm) in m2_rbm.chunks(6).enumerate() {
-                self.set_m2_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
+                self.m2_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
             }
         }
         if let Some(m1_mode) = m1_mode {
             let mut m = m1_mode.to_vec();
-            self.set_m1_modes(&mut m);
+            self.m1_modes(&mut m);
         }
         if let Some(m2_mode) = m2_mode {
             let mut m = m2_mode.to_vec();
-            self.set_m2_modes(&mut m);
+            self.m2_modes(&mut m);
         }
     }
     /*
@@ -436,7 +436,7 @@ impl Gmt {
             r_xyz[0] = gstate.rbm[[id, 3]] as f64;
             r_xyz[1] = gstate.rbm[[id, 4]] as f64;
             r_xyz[2] = gstate.rbm[[id, 5]] as f64;
-            self.set_m1_segment_state(sid as i32, &t_xyz, &r_xyz);
+            self.m1_segment_state(sid as i32, &t_xyz, &r_xyz);
             if self.m1_n_mode > 0 {
                 for k_bm in 0..self.m1_n_mode {
                     let idx = id * self.m1_n_mode as usize + k_bm as usize;
@@ -450,9 +450,9 @@ impl Gmt {
             r_xyz[0] = gstate.rbm[[id, 3]] as f64;
             r_xyz[1] = gstate.rbm[[id, 4]] as f64;
             r_xyz[2] = gstate.rbm[[id, 5]] as f64;
-            self.set_m2_segment_state(sid as i32, &t_xyz, &r_xyz);
+            self.m2_segment_state(sid as i32, &t_xyz, &r_xyz);
         }
-        self.set_m1_modes(&mut a);
+        self.m1_modes(&mut a);
     }
     */
 }
@@ -494,18 +494,18 @@ mod tests {
 
     #[test]
     fn gmt_new() {
-        GMT::new().set_m1_n_mode(27).set_m2_n_mode(123).build();
+        GMT::new().m1_n_mode(27).m2_n_mode(123).build();
     }
 
     #[test]
     fn gmt_new_with_macro() {
-        crate::ceo!(GMT, set_m1_n_mode = [27], set_m2_n_mode = [123]);
+        crate::ceo!(GMT, m1_n_mode = [27], m2_n_mode = [123]);
     }
 
     #[test]
     fn gmt_optical_alignment() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().set_pupil_sampling(1001).build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build();
         let mut gmt = GMT::new().build();
         src.through(&mut gmt).xpupil();
         assert!(src.wfe_rms_10e(-9)[0] < 1.0);
@@ -514,7 +514,7 @@ mod tests {
     #[test]
     fn gmt_m1_rx_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().set_pupil_sampling(1001).build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build();
         let mut gmt = GMT::new().build();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
@@ -531,7 +531,7 @@ mod tests {
     #[test]
     fn gmt_m1_ry_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().set_pupil_sampling(1001).build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build();
         let mut gmt = GMT::new().build();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
@@ -548,7 +548,7 @@ mod tests {
     #[test]
     fn gmt_m2_rx_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().set_pupil_sampling(1001).build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build();
         let mut gmt = GMT::new().build();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
@@ -565,7 +565,7 @@ mod tests {
     #[test]
     fn gmt_m2_ry_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().set_pupil_sampling(1001).build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build();
         let mut gmt = GMT::new().build();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
@@ -589,7 +589,7 @@ mod tests {
         gmt.build(1, None);
         let mut src = Source::new(1, pupil_size, n_lenslet * 16 + 1);
         src.build("V", vec![0.0], vec![0.0], vec![0.0]);
-        src.set_fwhm(4.0);
+        src.fwhm(4.0);
         let mut sensor = Imaging::new();
         sensor.build(1, n_lenslet as i32, 16, 2, 24, 3);
         let mut cog0 = Centroiding::new();
@@ -597,7 +597,7 @@ mod tests {
 
         src.through(&mut gmt).xpupil().through(&mut sensor);
         cog0.process(&sensor, None)
-            .set_valid_lenslets(Some(0.9), None);
+            .valid_lenslets(Some(0.9), None);
         src.lenslet_gradients(n_lenslet, lenslet_size, &mut cog0);
         let s0 = cog0.grab().valids(None);
         if s0.iter().any(|x| x.is_nan()) {
@@ -621,7 +621,7 @@ mod tests {
 
         let mut cog = Centroiding::new();
         cog.build(n_lenslet as u32, None);
-        cog.set_valid_lenslets(None, Some(cog0.valid_lenslets.clone()));
+        cog.valid_lenslets(None, Some(cog0.valid_lenslets.clone()));
         src.through(&mut gmt)
             .xpupil()
             .lenslet_gradients(n_lenslet, lenslet_size, &mut cog);

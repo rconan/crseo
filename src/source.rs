@@ -18,7 +18,7 @@
 //!
 //! ```
 //! use ceo::{ceo, Conversion};
-//! let mut src = ceo!(SOURCE, set_size = [3] , set_on_ring = [8f32.from_arcmin()]);
+//! let mut src = ceo!(SOURCE, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
 use super::ceo_bindings::{dev2host, dev2host_int, source, vector};
@@ -59,7 +59,7 @@ pub trait Propagation {
 ///
 /// ```
 /// use ceo::{Builder, SOURCE, Conversion};
-/// let mut src = SOURCE::new().set_size(3).set_on_ring(8f32.from_arcmin()).build();
+/// let mut src = SOURCE::new().size(3).on_ring(8f32.from_arcmin()).build();
 /// ```
 #[derive(Debug, Clone)]
 pub struct SOURCE {
@@ -86,29 +86,29 @@ impl Default for SOURCE {
 }
 impl SOURCE {
     /// Set the number of sources
-    pub fn set_size(self, size: usize) -> Self {
+    pub fn size(self, size: usize) -> Self {
         Self { size, ..self }
     }
     /// Set the sampling of the pupil in pixels
-    pub fn set_pupil_sampling(self, pupil_sampling: usize) -> Self {
+    pub fn pupil_sampling(self, pupil_sampling: usize) -> Self {
         Self {
             pupil_sampling,
             ..self
         }
     }
     /// Set the pupil size in meters
-    pub fn set_pupil_size(self, pupil_size: f64) -> Self {
+    pub fn pupil_size(self, pupil_size: f64) -> Self {
         Self { pupil_size, ..self }
     }
     /// Set the photometric band
-    pub fn set_band(self, band: &str) -> Self {
+    pub fn band(self, band: &str) -> Self {
         Self {
             band: band.to_owned(),
             ..self
         }
     }
     /// Set the source zenith and azimuth angles
-    pub fn set_zenith_azimuth(self, zenith: Vec<f32>, azimuth: Vec<f32>) -> Self {
+    pub fn zenith_azimuth(self, zenith: Vec<f32>, azimuth: Vec<f32>) -> Self {
         assert_eq!(
             self.size,
             zenith.len(),
@@ -128,7 +128,7 @@ impl SOURCE {
         }
     }
     /// Set n sources at zenith angle evenly spread of a ring
-    pub fn set_on_ring(self, zenith: f32) -> Self {
+    pub fn on_ring(self, zenith: f32) -> Self {
         Self {
             zenith: vec![zenith; self.size],
             azimuth: (0..self.size)
@@ -138,7 +138,7 @@ impl SOURCE {
         }
     }
     /// Set the source magnitude
-    pub fn set_magnitude(self, magnitude: Vec<f32>) -> Self {
+    pub fn magnitude(self, magnitude: Vec<f32>) -> Self {
         assert_eq!(
             self.size,
             magnitude.len(),
@@ -148,7 +148,7 @@ impl SOURCE {
         Self { magnitude, ..self }
     }
     ///  Builds a star field made of 21 sources located at the vertices of a Delaunay mesh sampling a 10 arcminute field of view
-    pub fn set_field_delaunay21(self) -> Self {
+    pub fn field_delaunay21(self) -> Self {
         use super::Conversion;
         use serde::Deserialize;
         use serde_pickle as pickle;
@@ -335,7 +335,7 @@ impl Source {
         unsafe { self._c_.wavelength() as f64 }
     }
     /// Sets the `Source` full width at half maximum in un-binned detector pixel
-    pub fn set_fwhm(&mut self, value: f64) {
+    pub fn fwhm(&mut self, value: f64) {
         self._c_.fwhm = value as f32;
     }
     /// Set the pupil rotation angle [degree]
@@ -693,7 +693,7 @@ mod tests {
     #[test]
     fn source_field_delaunay21() {
         use crate::{ceo, Conversion};
-        let src = ceo!(SOURCE, set_field_delaunay21 = []);
+        let src = ceo!(SOURCE, field_delaunay21 = []);
         src.zenith
             .iter()
             .zip(src.azimuth.iter())

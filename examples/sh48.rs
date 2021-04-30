@@ -1,6 +1,5 @@
 use crseo::{
-    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, Builder, Calibration,
-    GMT, SH48,
+    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, Builder, Calibration, GMT, SH48,
 };
 use serde_pickle as pickle;
 use std::fs::File;
@@ -8,17 +7,13 @@ use std::time::Instant;
 
 fn main() {
     let mut gmt = ceo!(GMT);
-    println!("M1 mode: {}",gmt.get_m1_mode_type());
-    println!("M2 mode: {}",gmt.get_m2_mode_type());
-    let wfs_blueprint = SH48::<WFS_TYPE>::new().set_n_sensor(1);
+    println!("M1 mode: {}", gmt.get_m1_mode_type());
+    println!("M2 mode: {}", gmt.get_m2_mode_type());
+    let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(1);
     let mut gs = wfs_blueprint.guide_stars().build();
-    println!("GS band: {}",gs.get_photometric_band());
+    println!("GS band: {}", gs.get_photometric_band());
 
-    let mut gmt2wfs = Calibration::new(
-        &gmt,
-        &gs,
-        wfs_blueprint.clone(),
-    );
+    let mut gmt2wfs = Calibration::new(&gmt, &gs, wfs_blueprint.clone());
     let mirror = vec![calibrations::Mirror::M2];
     let segments = vec![vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))]; 7];
     let now = Instant::now();
@@ -39,15 +34,14 @@ fn main() {
     let mut src = ceo!(SOURCE);
     let mut atm = ceo!(ATMOSPHERE);
 
-
     gs.through(&mut gmt).xpupil();
     println!("GS WFE RMS: {}nm", gs.wfe_rms_10e(-9)[0]);
     wfs.calibrate(&mut gs, 0.8);
     println!("# valid lenslet: {}", wfs.n_valid_lenslet());
 
-    gmt.set_m2_segment_state(2, &[0., 0.0, 0.], &[1e-6, 0.0, 0.]);
-    gmt.set_m2_segment_state(5, &[0., 0.0, 0.], &[0., 1e-6, 0.]);
-    gmt.set_m2_segment_state(7, &[0., 0.0, 0.], &[1e-6, 1e-6, 0.]);
+    gmt.m2_segment_state(2, &[0., 0.0, 0.], &[1e-6, 0.0, 0.]);
+    gmt.m2_segment_state(5, &[0., 0.0, 0.], &[0., 1e-6, 0.]);
+    gmt.m2_segment_state(7, &[0., 0.0, 0.], &[1e-6, 1e-6, 0.]);
     wfs.reset();
     gs.through(&mut gmt).xpupil().through(&mut wfs);
     wfs.process();
