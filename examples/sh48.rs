@@ -1,5 +1,6 @@
 use crseo::{
-    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, Builder, Calibration, GMT, SH48,
+    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, shackhartmann::WavefrontSensor,
+    shackhartmann::WavefrontSensorBuilder, Builder, Calibration, GMT, SH48,
 };
 use serde_pickle as pickle;
 use std::fs::File;

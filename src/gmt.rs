@@ -20,7 +20,10 @@
 
 use super::ceo_bindings::{bundle, gmt_m1, gmt_m2, modes, vector};
 use super::{Builder, Propagation, Source};
-use std::{ffi::{CString,CStr}, mem};
+use std::{
+    ffi::{CStr, CString},
+    mem,
+};
 
 #[doc(hidden)]
 #[derive(Debug, Clone)]
@@ -135,7 +138,10 @@ impl Builder for GMT {
 }
 impl From<&Gmt> for GMT {
     fn from(gmt: &Gmt) -> Self {
-        Self { m1: gmt.get_m1(), m2: gmt.get_m2()}
+        Self {
+            m1: gmt.get_m1(),
+            m2: gmt.get_m2(),
+        }
     }
 }
 /// gmt wrapper

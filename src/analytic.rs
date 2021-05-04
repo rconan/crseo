@@ -306,7 +306,7 @@ impl Gmt {
         // Build A matrix
         let n_u = u.len();
         let z: Vector = [0f64; 3];
-        let mut cols: Vec<Vec<f64>> = vec![u0.to_vec();n_u];
+        let mut cols: Vec<Vec<f64>> = vec![u0.to_vec(); n_u];
         for i_row in 0..n_u {
             let mut el = vec![];
             for i_col in 0..n_u {
@@ -331,7 +331,9 @@ impl Gmt {
         let s = a.svd(true, true).solve(&b, std::f64::EPSILON).unwrap();
         // Ray tracing to focal plane
         rays.insert(0, chief_ray);
-        rays.iter_mut().zip(s.into_iter()).for_each(|x| x.0.trace(*x.1));
+        rays.iter_mut()
+            .zip(s.into_iter())
+            .for_each(|x| x.0.trace(*x.1));
         rays
     }
 }

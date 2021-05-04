@@ -198,7 +198,7 @@ impl Drop for Centroiding {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Gmt,Source,Conversion};
+    use crate::{Conversion, Gmt, Source};
 
     #[test]
     fn centroiding_sim() {
@@ -222,7 +222,7 @@ mod tests {
         let nv = cog0
             .process(&sensor, None)
             .set_valid_lenslets(Some(0.5), None);
-        println!("Valid lenslet #: {}",nv);
+        println!("Valid lenslet #: {}", nv);
 
         let mut cog = Centroiding::new();
         cog.build(n_side_lenslet as u32, Some(p))
@@ -257,6 +257,6 @@ mod tests {
             .sqrt() as f64)
             .to_mas();
         println!("Centroid error: {}mas", e);
-        assert!(e<5f64);
+        assert!(e < 5f64);
     }
 }

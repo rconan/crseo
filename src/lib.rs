@@ -23,6 +23,7 @@ pub mod calibrations;
 pub mod centroiding;
 pub mod ceo_bindings;
 pub mod cu;
+pub mod dos;
 pub mod fwhm;
 pub mod gmt;
 pub mod imaging;

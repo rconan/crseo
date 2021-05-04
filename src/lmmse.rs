@@ -1,7 +1,7 @@
 use super::ceo_bindings::LMMSE as ceo_LMMSE;
 use super::{
-    cu::Single, Atmosphere, Builder, Conversion, Cu, GeometricShackHartmann as WFS, Mask,
-    Source, ATMOSPHERE, GMT, SOURCE,
+    cu::Single, Atmosphere, Builder, Conversion, Cu, GeometricShackHartmann as WFS, Mask, Source,
+    ATMOSPHERE, GMT, SOURCE,
 };
 use std::ffi::CString;
 
@@ -41,7 +41,10 @@ impl LMMSE {
         Self { atm, ..self }
     }
     pub fn guide_star(self, guide_star: &Source) -> Self {
-        Self { guide_star: SOURCE::from(guide_star), ..self }
+        Self {
+            guide_star: SOURCE::from(guide_star),
+            ..self
+        }
     }
     pub fn mmse_star(self, mmse_star: &Source) -> Self {
         Self {
