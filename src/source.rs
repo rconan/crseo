@@ -364,6 +364,16 @@ impl Source {
         }
         self._wfe_rms.clone()
     }
+    pub fn wfe_rms_f64(&mut self) -> Vec<f64> {
+        unsafe {
+            self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
+        }
+        self._wfe_rms
+            .clone()
+            .into_iter()
+            .map(|x| x as f64)
+            .collect()
+    }
     /// Returns the wavefront error root mean square [m]x10^-`exp`
     pub fn wfe_rms_10e(&mut self, exp: i32) -> Vec<f32> {
         unsafe {

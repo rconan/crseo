@@ -45,22 +45,22 @@ impl<T> Default for PSSN<T> {
     }
 }
 impl<T> PSSN<T> {
-    pub fn set_r0_at_zenith(self, r0_at_zenith: f64) -> Self {
+    pub fn r0_at_zenith(self, r0_at_zenith: f64) -> Self {
         Self {
             r0_at_zenith,
             ..self
         }
     }
-    pub fn set_outer_scale(self, oscale: f64) -> Self {
+    pub fn outer_scale(self, oscale: f64) -> Self {
         Self { oscale, ..self }
     }
-    pub fn set_zenith_angle(self, zenith_angle_degree: f64) -> Self {
+    pub fn zenith_angle(self, zenith_angle_degree: f64) -> Self {
         Self {
             zenith_angle: zenith_angle_degree.to_radians(),
             ..self
         }
     }
-    pub fn set_source(self, src: &Source) -> Self {
+    pub fn source(self, src: &Source) -> Self {
         Self {
             src: SOURCE::from(src).build(),
             ..self
