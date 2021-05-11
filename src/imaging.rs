@@ -4,6 +4,40 @@ use super::ceo_bindings::{dev2host, imaging};
 use super::Propagation;
 use super::Source;
 
+impl Default for imaging {
+    fn default() -> Self {
+        Self {
+            N_PX_PUPIL: 0,
+            N_DFT: 0,
+            N_SIDE_LENSLET: 0,
+            N_LENSLET: 0,
+            N_SOURCE: 0,
+            N_PX_IMAGE: 0,
+            N_PX_CAMERA: 0,
+            N_FRAME: 0,
+            BIN_IMAGE: 0,
+            LOCAL_RAND_SEED: 0,
+            plan: 0,
+            N_PHOTON_PER_SECOND_PER_FRAME: 0f32,
+            N_PHOTON_PER_FRAME: 0f32,
+            d__wave_PUPIL: ptr::null_mut(),
+            d__frame: ptr::null_mut(),
+            zenith: 0f32,
+            azimuth: 0f32,
+            theta_x: 0f32,
+            theta_y: 0f32,
+            d__zenith: ptr::null_mut(),
+            d__azimuth: ptr::null_mut(),
+            d__theta_x: ptr::null_mut(),
+            d__theta_y: ptr::null_mut(),
+            pixel_scale: 0f32,
+            photoelectron_gain: 0f32,
+            absolute_pointing: 0,
+            devStates: ptr::null_mut(),
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 /// A square lenslet array
 pub struct LensletArray {
@@ -61,35 +95,7 @@ impl Imaging {
     /// Creates a new `Imaging`
     pub fn new() -> Imaging {
         Imaging {
-            _c_: imaging {
-                N_PX_PUPIL: 0,
-                N_DFT: 0,
-                N_SIDE_LENSLET: 0,
-                N_LENSLET: 0,
-                N_SOURCE: 0,
-                N_PX_IMAGE: 0,
-                N_PX_CAMERA: 0,
-                N_FRAME: 0,
-                BIN_IMAGE: 0,
-                LOCAL_RAND_SEED: 0,
-                plan: 0,
-                N_PHOTON_PER_SECOND_PER_FRAME: 0f32,
-                N_PHOTON_PER_FRAME: 0f32,
-                d__wave_PUPIL: ptr::null_mut(),
-                d__frame: ptr::null_mut(),
-                zenith: 0f32,
-                azimuth: 0f32,
-                theta_x: 0f32,
-                theta_y: 0f32,
-                d__zenith: ptr::null_mut(),
-                d__azimuth: ptr::null_mut(),
-                d__theta_x: ptr::null_mut(),
-                d__theta_y: ptr::null_mut(),
-                pixel_scale: 0f32,
-                photoelectron_gain: 0f32,
-                absolute_pointing: 0,
-                devStates: ptr::null_mut(),
-            },
+            _c_: Default::default(),
             dft_osf: 1,
         }
     }

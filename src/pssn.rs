@@ -1,7 +1,32 @@
 use super::ceo_bindings::pssn as ceo_pssn;
 use super::{Builder, Cu, Propagation, Source, SOURCE};
+use crate::ceo_bindings::pssn;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
-use std::{fmt, mem};
+use std::{fmt, ptr};
+
+impl Default for pssn {
+    fn default() -> Self {
+        Self {
+            N_O: 0,
+            N_O0: 0,
+            n_byte: 0,
+            d__O: ptr::null_mut(),
+            d__O0: ptr::null_mut(),
+            buffer: ptr::null_mut(),
+            d__C: ptr::null_mut(),
+            N_PX: 0,
+            N: 0,
+            d__W: ptr::null_mut(),
+            N_OTF: 0,
+            N_OTF2: 0,
+            NN: 0,
+            plan: 0,
+            handle: ptr::null_mut(),
+            num: 0f32,
+            denom: ptr::null_mut(),
+        }
+    }
+}
 
 /// CEO PSSn estimator
 ///
@@ -72,7 +97,7 @@ impl<T: std::clone::Clone> Builder for PSSN<T> {
     fn build(self) -> PSSn<T> {
         let mut src = self.src;
         let mut pssn = PSSn::<T> {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Default::default(),
             r0_at_zenith: self.r0_at_zenith as f32,
             oscale: self.oscale as f32,
             zenith_angle: self.zenith_angle as f32,
@@ -94,7 +119,7 @@ impl<S> PSSn<S> {
     /// Creates a new `PSSn` with r0=16cm at zenith, L0=25m a zenith distance of 30 degrees
     pub fn new() -> PSSn<S> {
         PSSn {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Default::default(),
             r0_at_zenith: 0.16,
             oscale: 25.0,
             zenith_angle: 30_f32.to_radians(),
@@ -107,9 +132,9 @@ impl<S> PSSn<S> {
     /// Creates a new `PSSn` from r0 at zenith and L0 a zenith distance of 30 degrees
     pub fn from_r0_and_outerscale(r0_at_zenith: f32, oscale: f32) -> PSSn<S> {
         PSSn {
-            _c_: unsafe { mem::zeroed() },
-            r0_at_zenith: r0_at_zenith,
-            oscale: oscale,
+            _c_: Default::default(),
+            r0_at_zenith,
+            oscale,
             zenith_angle: 30_f32.to_radians(),
             wavelength: 500e-9,
             estimates: vec![],

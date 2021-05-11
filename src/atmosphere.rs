@@ -1,10 +1,29 @@
 use log;
 use serde::Deserialize;
-use std::ffi::CString;
-use std::{f32, mem};
+use std::f32;
+use std::{ffi::CString, ptr};
 
-use super::ceo_bindings::atmosphere;
+use super::ceo_bindings::{atmosphere, profile};
 use super::{Builder, Propagation, Source};
+
+impl Default for profile {
+    fn default() -> Self {
+        Self {
+            L0: 0f32,
+            l0: 0f32,
+            L: 0f32,
+            f: 0f32,
+            delta: 0f32,
+            N_k: 0f32,
+            N_a: 0f32,
+            kmin: 0f32,
+            altitude: ptr::null_mut(),
+            xi0: ptr::null_mut(),
+            wind_speed: ptr::null_mut(),
+            wind_direction: ptr::null_mut(),
+        }
+    }
+}
 
 #[derive(Deserialize, Debug)]
 struct GmtAtmosphere {
@@ -165,7 +184,36 @@ impl Builder for ATMOSPHERE {
     /// Build the `Atmosphere`
     fn build(self) -> Atmosphere {
         let mut atm = Atmosphere {
-            _c_: unsafe { mem::zeroed() },
+            _c_: atmosphere {
+                photometric_band: ptr::null_mut(),
+                wavelength: 0f32,
+                r0: 0f32,
+                wavenumber: 0f32,
+                N_LAYER: 0,
+                field_size: 0f32,
+                layers_OSF: 0,
+                layers_duration: 0f32,
+                layers_tau0: 0f32,
+                W: 0f32,
+                N_W: 0,
+                phase_screen_LAYER: ptr::null_mut(),
+                N_DURATION: 0,
+                LOCAL_RAND_SEED: 0,
+                ID: 0,
+                EPH: 0f32,
+                d__phase_screen_LAYER: ptr::null_mut(),
+                N_PHASE_LAYER: 0,
+                mmap_size: 0usize,
+                zeta1: ptr::null_mut(),
+                eta1: ptr::null_mut(),
+                zeta2: ptr::null_mut(),
+                eta2: ptr::null_mut(),
+                devStates: ptr::null_mut(),
+                turbulence: Default::default(),
+                d__turbulence: ptr::null_mut(),
+                layers: ptr::null_mut(),
+                d__layers: ptr::null_mut(),
+            },
             r0_at_zenith: self.r0_at_zenith,
             oscale: self.oscale,
             zenith_angle: self.zenith_angle,
@@ -277,47 +325,49 @@ pub struct Atmosphere {
     propagate_ptr: fn(&mut Atmosphere, &mut Source, f32),
 }
 impl Atmosphere {
-    pub fn new() -> Atmosphere {
-        Atmosphere {
-            _c_: unsafe { mem::zeroed() },
-            r0_at_zenith: 0.16,
-            oscale: 25.5,
-            zenith_angle: 0.0,
-            secs: 0.0,
-            //filename: String::new(),
-            //k_duration: 0,
-            propagate_ptr: |_, _, _| (),
+    /*
+        pub fn new() -> Atmosphere {
+            Atmosphere {
+                _c_: unsafe { mem::zeroed() },
+                r0_at_zenith: 0.16,
+                oscale: 25.5,
+                zenith_angle: 0.0,
+                secs: 0.0,
+                //filename: String::new(),
+                //k_duration: 0,
+                propagate_ptr: |_, _, _| (),
+            }
         }
-    }
-    pub fn build(
-        &mut self,
-        r_not: f32,
-        l_not: f32,
-        n_layer: i32,
-        mut altitude: Vec<f32>,
-        mut xi0: Vec<f32>,
-        mut wind_speed: Vec<f32>,
-        mut wind_direction: Vec<f32>,
-    ) -> &mut Self {
-        unsafe {
-            self._c_.setup(
-                r_not,
-                l_not,
-                n_layer,
-                altitude.as_mut_ptr(),
-                xi0.as_mut_ptr(),
-                wind_speed.as_mut_ptr(),
-                wind_direction.as_mut_ptr(),
-            );
+        pub fn build(
+            &mut self,
+            r_not: f32,
+            l_not: f32,
+            n_layer: i32,
+            mut altitude: Vec<f32>,
+            mut xi0: Vec<f32>,
+            mut wind_speed: Vec<f32>,
+            mut wind_direction: Vec<f32>,
+        ) -> &mut Self {
+            unsafe {
+                self._c_.setup(
+                    r_not,
+                    l_not,
+                    n_layer,
+                    altitude.as_mut_ptr(),
+                    xi0.as_mut_ptr(),
+                    wind_speed.as_mut_ptr(),
+                    wind_direction.as_mut_ptr(),
+                );
+            }
+            self.propagate_ptr = |a, s, t| unsafe {
+                let n_xy = s.pupil_sampling;
+                let d_xy = (s.pupil_size / (n_xy - 1) as f64) as f32;
+                a._c_
+                    .get_phase_screen4(s.as_raw_mut_ptr(), d_xy, n_xy, d_xy, n_xy, t);
+            };
+            self
         }
-        self.propagate_ptr = |a, s, t| unsafe {
-            let n_xy = s.pupil_sampling;
-            let d_xy = (s.pupil_size / (n_xy - 1) as f64) as f32;
-            a._c_
-                .get_phase_screen4(s.as_raw_mut_ptr(), d_xy, n_xy, d_xy, n_xy, t);
-        };
-        self
-    }
+    */
     pub fn as_raw_mut_ptr(&mut self) -> &mut atmosphere {
         &mut self._c_
     }

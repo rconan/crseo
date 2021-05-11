@@ -15,7 +15,7 @@
 //! [`ceo!`](macro.ceo.html) is a macro that incorporates the necessary boilerplate code to create CEO elements.
 
 use skyangle::*;
-use std::{error::Error, f32, fmt, mem};
+use std::{error::Error, f32, fmt, mem, ptr};
 
 pub mod analytic;
 pub mod atmosphere;
@@ -57,10 +57,19 @@ pub use self::source::Propagation;
 #[doc(inline)]
 pub use self::source::{Source, SOURCE};
 #[doc(hidden)]
-pub use ceo_bindings::{geqrf, gpu_double, gpu_float, mask, ormqr, set_device};
+pub use ceo_bindings::{geqrf, gpu_double, gpu_float, mask, ormqr, set_device, vector};
 
 pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 
+impl Default for vector {
+    fn default() -> Self {
+        Self {
+            x: 0.,
+            y: 0.,
+            z: 0.,
+        }
+    }
+}
 /// CEO macro builder
 ///
 /// One macro to rule them all, one macro to find them, one macro to bring them all and in the darkness bind them all
@@ -155,10 +164,27 @@ use cu::Single;
 pub struct Mask {
     _c_: mask,
 }
+impl Default for mask {
+    fn default() -> Self {
+        Self {
+            m: ptr::null_mut(),
+            f: ptr::null_mut(),
+            idx: ptr::null_mut(),
+            size_px: [0; 2usize],
+            nel: 0,
+            nnz: 0f32,
+            size_m: [0f32; 2usize],
+            area: 0f32,
+            delta: [0f32; 2usize],
+            handle: ptr::null_mut(),
+            d__piston_mask: ptr::null_mut(),
+        }
+    }
+}
 impl Mask {
     pub fn new() -> Self {
         Mask {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Default::default(),
         }
     }
     pub fn build(&mut self, n_el: usize) -> &mut Self {
