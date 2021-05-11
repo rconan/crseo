@@ -1,4 +1,4 @@
-use std::mem;
+use std::{mem, ptr};
 
 use super::ceo_bindings::{centroiding, dev2host, host2dev_char, mask};
 use super::Imaging;
@@ -26,8 +26,35 @@ impl Centroiding {
     /// Creates a new `Centroiding`
     pub fn new() -> Centroiding {
         Centroiding {
-            _c_: unsafe { mem::zeroed() },
-            _c_mask_: unsafe { mem::zeroed() },
+            _c_: centroiding {
+                _N_SIDE_LENSLET_: 0,
+                N_LENSLET: 0,
+                N_SOURCE: 0,
+                d__c: ptr::null_mut(),
+                d__cx: ptr::null_mut(),
+                d__cy: ptr::null_mut(),
+                d__mass: ptr::null_mut(),
+                lenslet_mask: ptr::null_mut(),
+                MASK_SET: 0,
+                n_data: 0,
+                DEV_SHARED_MEM: 0,
+                DEV_MAX_THREADS: 0,
+                handle: ptr::null_mut(),
+                status: 0,
+            },
+            _c_mask_: mask {
+                m: ptr::null_mut(),
+                f: ptr::null_mut(),
+                idx: ptr::null_mut(),
+                size_px: [0; 2usize],
+                nel: 0,
+                nnz: 0f32,
+                size_m: [0f32; 2usize],
+                area: 0f32,
+                delta: [0f32; 2usize],
+                handle: ptr::null_mut(),
+                d__piston_mask: ptr::null_mut(),
+            },
             n_lenslet_total: 0u32,
             n_centroids: 0u32,
             units: 1f32,
