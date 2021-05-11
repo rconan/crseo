@@ -1,8 +1,9 @@
+use crseo::Calibration;
 use crseo::{
     calibrations,
     dos::{GmtOpticalModel, GmtOpticalSensorModel},
     shackhartmann::Geometric as WFS_TYPE,
-    Builder, Calibration, ShackHartmann, ATMOSPHERE, SH48,
+    Builder, ShackHartmann, SH48,
 };
 use dosio::{io::jar, Dos};
 use std::time::Instant;
@@ -57,22 +58,24 @@ fn main() {
         .for_each(|x| println!("#{}: [{:+0.1},{:+0.1}]", 1 + x.0, x.1[0], x.1[1]));
 
     let mut gom = GmtOpticalModel::new().output(jar::SrcWfeRms::new()).build();
-    let y = gom.in_step_out(Some(vec![m2_rbm.clone()])).unwrap();
-    println!(
-        "y: {:e}m",
-        Into::<Option<Vec<f64>>>::into(y.unwrap()[0].clone()).unwrap()[0]
-    );
+    let y_wo_atm = gom.in_step_out(Some(vec![m2_rbm.clone()])).unwrap();
 
     let mut gom = GmtOpticalModel::new()
         .atmosphere(Default::default())
         .output(jar::SrcWfeRms::new())
         .build();
-    let y = gom.in_step_out(Some(vec![m2_rbm.clone()])).unwrap();
+    let y_w_atm = gom.in_step_out(Some(vec![m2_rbm.clone()])).unwrap();
     println!(
-        "y: {:e}m",
-        Into::<Option<Vec<f64>>>::into(y.unwrap()[0].clone()).unwrap()[0]
+        "WFE RMS [nm] without and with atmosphere: {:.0}/{:.0}",
+        Into::<Option<Vec<f64>>>::into(y_wo_atm.unwrap()[0].clone()).unwrap()[0] * 1e9,
+        Into::<Option<Vec<f64>>>::into(y_w_atm.unwrap()[0].clone()).unwrap()[0] * 1e9
     );
 
     let mut gom = GmtOpticalModel::new().output(jar::Pssn::new()).build();
-    let y = gom.in_step_out(None).unwrap();
+    let y = gom.in_step_out(Some(vec![m2_rbm])).unwrap();
+
+    println!(
+        "PSSn : {:.4}",
+        Into::<Option<Vec<f64>>>::into(y.unwrap()[0].clone()).unwrap()[0]
+    );
 }
