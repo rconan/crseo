@@ -18,11 +18,11 @@
 //! let mut gmt = ceo!(GMT, m1_n_mode = [27]);
 //! ```
 
-use super::ceo_bindings::{bundle, gmt_m1, gmt_m2, modes, vector};
+use super::ceo_bindings::{bundle, coordinate_system, gmt_m1, gmt_m2, modes, vector};
 use super::{Builder, Propagation, Source};
 use std::{
     ffi::{CStr, CString},
-    mem,
+    ptr,
 };
 
 #[doc(hidden)]
@@ -107,10 +107,210 @@ impl Builder for GMT {
     type Component = Gmt;
     fn build(self) -> Gmt {
         let mut gmt = Gmt {
-            _c_m1_modes: unsafe { mem::zeroed() },
-            _c_m2_modes: unsafe { mem::zeroed() },
-            _c_m1: unsafe { mem::zeroed() },
-            _c_m2: unsafe { mem::zeroed() },
+            _c_m1: gmt_m1 {
+                M_ID: 0,
+                D_assembly: 0.,
+                D_clear: 0.,
+                D_full: 0.,
+                ri: 0.,
+                beta: 0.,
+                L: 0.,
+                area0: 0.,
+                area_fraction: 0.,
+                area0_px: 0.,
+                area: 0.,
+                N: 0,
+                depth: 0.,
+                aperture_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                conic_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                conic_origin: [vector {
+                    x: 0.,
+                    y: 0.,
+                    z: 0.,
+                }; 7usize],
+                d__conic_origin: ptr::null_mut(),
+                conic_c: 0.,
+                conic_k: 0.,
+                d__conic_c: ptr::null_mut(),
+                d__conic_k: ptr::null_mut(),
+                rigid_body_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                motion_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                height: 0.,
+                V: ptr::null_mut(),
+                idx_offset: 0,
+                ZS: ptr::null_mut(),
+                d__piston_mask: ptr::null_mut(),
+                TT_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                d__C: ptr::null_mut(),
+                d__D: ptr::null_mut(),
+                handle: ptr::null_mut(),
+                d__valid_segments: ptr::null_mut(),
+                BS: modes {
+                    d__x_BM: ptr::null_mut(),
+                    d__y_BM: ptr::null_mut(),
+                    d__BM: ptr::null_mut(),
+                    d__BMS: ptr::null_mut(),
+                    BM_radius: 0.,
+                    BM_N_SAMPLE: 0,
+                    d__BM_buffer: ptr::null_mut(),
+                    n_mode: 0,
+                    b: ptr::null_mut(),
+                    d__b: ptr::null_mut(),
+                    N: 0,
+                    filename: [0; 64usize],
+                    N_SET: 0,
+                    N_MODE: 0,
+                    d__s2b: ptr::null_mut(),
+                },
+                d__segment_reflectivity: ptr::null_mut(),
+            },
+            _c_m2: gmt_m2 {
+                M_ID: 0,
+                D_assembly: 0.,
+                D_clear: 0.,
+                D_full: 0.,
+                ri: 0.,
+                beta: 0.,
+                L: 0.,
+                area0: 0.,
+                area_fraction: 0.,
+                area0_px: 0.,
+                area: 0.,
+                N: 0,
+                depth: 0.,
+                aperture_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                conic_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                conic_origin: [vector {
+                    x: 0.,
+                    y: 0.,
+                    z: 0.,
+                }; 7usize],
+                d__conic_origin: ptr::null_mut(),
+                conic_c: 0.,
+                conic_k: 0.,
+                d__conic_c: ptr::null_mut(),
+                d__conic_k: ptr::null_mut(),
+                rigid_body_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                motion_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                height: 0.,
+                V: ptr::null_mut(),
+                idx_offset: 0,
+                ZS: ptr::null_mut(),
+                d__piston_mask: ptr::null_mut(),
+                TT_CS: coordinate_system {
+                    origin: ptr::null_mut(),
+                    euler_angles: ptr::null_mut(),
+                    N: 0,
+                    R: ptr::null_mut(),
+                    d__R: ptr::null_mut(),
+                    float_R: ptr::null_mut(),
+                    d__origin: ptr::null_mut(),
+                    tag: [0; 32usize],
+                },
+                d__C: ptr::null_mut(),
+                d__D: ptr::null_mut(),
+                handle: ptr::null_mut(),
+                d__valid_segments: ptr::null_mut(),
+                BS: modes {
+                    d__x_BM: ptr::null_mut(),
+                    d__y_BM: ptr::null_mut(),
+                    d__BM: ptr::null_mut(),
+                    d__BMS: ptr::null_mut(),
+                    BM_radius: 0.,
+                    BM_N_SAMPLE: 0,
+                    d__BM_buffer: ptr::null_mut(),
+                    n_mode: 0,
+                    b: ptr::null_mut(),
+                    d__b: ptr::null_mut(),
+                    N: 0,
+                    filename: [0; 64usize],
+                    N_SET: 0,
+                    N_MODE: 0,
+                    d__s2b: ptr::null_mut(),
+                },
+                d__segment_reflectivity: ptr::null_mut(),
+            },
             m1_n_mode: 0,
             m2_n_mode: 0,
             m2_max_n: 0,
@@ -121,17 +321,15 @@ impl Builder for GMT {
         gmt.m1_n_mode = self.m1.n_mode;
         gmt.a1 = vec![0.0; 7 * gmt.m1_n_mode as usize];
         unsafe {
-            gmt._c_m1_modes
-                .setup(m1_mode_type.into_raw(), 7, gmt.m1_n_mode as i32);
-            gmt._c_m1.setup1(&mut gmt._c_m1_modes);
+            gmt._c_m1
+                .setup1(m1_mode_type.into_raw(), 7, gmt.m1_n_mode as i32);
         }
         let m2_mode_type = CString::new(self.m2.mode_type.into_bytes()).unwrap();
         gmt.m2_n_mode = self.m2.n_mode;
         gmt.a2 = vec![0.0; 7 * gmt.m2_n_mode as usize];
         unsafe {
-            gmt._c_m2_modes
-                .setup(m2_mode_type.into_raw(), 7, gmt.m2_n_mode as i32);
-            gmt._c_m2.setup1(&mut gmt._c_m2_modes);
+            gmt._c_m2
+                .setup1(m2_mode_type.into_raw(), 7, gmt.m2_n_mode as i32);
         }
         gmt
     }
@@ -146,8 +344,6 @@ impl From<&Gmt> for GMT {
 }
 /// gmt wrapper
 pub struct Gmt {
-    pub _c_m1_modes: modes,
-    pub _c_m2_modes: modes,
     pub _c_m1: gmt_m1,
     pub _c_m2: gmt_m2,
     /// M1 number of bending modes per segment
@@ -160,101 +356,103 @@ pub struct Gmt {
     pub a2: Vec<f64>,
 }
 impl Gmt {
-    /// Creates a new `Gmt`
-    pub fn new() -> Gmt {
-        Gmt {
-            _c_m1_modes: unsafe { mem::zeroed() },
-            _c_m2_modes: unsafe { mem::zeroed() },
-            _c_m1: unsafe { mem::zeroed() },
-            _c_m2: unsafe { mem::zeroed() },
-            m1_n_mode: 0,
-            m2_n_mode: 1,
-            m2_max_n: 0,
-            a1: vec![0.],
-            a2: vec![0.],
+    /*
+        /// Creates a new `Gmt`
+        pub fn new() -> Gmt {
+            Gmt {
+                _c_m1_modes: unsafe { mem::zeroed() },
+                _c_m2_modes: unsafe { mem::zeroed() },
+                _c_m1: unsafe { mem::zeroed() },
+                _c_m2: unsafe { mem::zeroed() },
+                m1_n_mode: 0,
+                m2_n_mode: 1,
+                m2_max_n: 0,
+                a1: vec![0.],
+                a2: vec![0.],
+            }
         }
-    }
-    /// Sets the `Gmt` parameters:
-    ///
-    /// * `m1_n_mode` - the number of of modes on each M1 segment
-    /// * `m2_max_n` - M2 largest Zernike radial order per segment
-    pub fn build(&mut self, m1_n_mode: usize, m2_max_n: Option<usize>) -> &mut Gmt {
-        let mode_type = CString::new("bending modes").unwrap();
-        self.m1_n_mode = m1_n_mode;
-        self.m2_max_n = match m2_max_n {
-            Some(m2_max_n) => m2_max_n,
-            None => 0,
-        };
-        self.m2_n_mode = (self.m2_max_n + 1) * (self.m2_max_n + 2) / 2;
-        if self.m1_n_mode > 0 {
-            self.a1 = vec![0.0; 7 * self.m1_n_mode as usize];
+        /// Sets the `Gmt` parameters:
+        ///
+        /// * `m1_n_mode` - the number of of modes on each M1 segment
+        /// * `m2_max_n` - M2 largest Zernike radial order per segment
+        pub fn build(&mut self, m1_n_mode: usize, m2_max_n: Option<usize>) -> &mut Gmt {
+            let mode_type = CString::new("bending modes").unwrap();
+            self.m1_n_mode = m1_n_mode;
+            self.m2_max_n = match m2_max_n {
+                Some(m2_max_n) => m2_max_n,
+                None => 0,
+            };
+            self.m2_n_mode = (self.m2_max_n + 1) * (self.m2_max_n + 2) / 2;
+            if self.m1_n_mode > 0 {
+                self.a1 = vec![0.0; 7 * self.m1_n_mode as usize];
+            }
+            self.a2 = vec![0.0; 7 * self.m2_n_mode as usize];
+            unsafe {
+                self._c_m1_modes
+                    .setup(mode_type.into_raw(), 7, self.m1_n_mode as i32);
+                self._c_m1.setup1(&mut self._c_m1_modes);
+                self._c_m2_modes.setup(
+                    CString::new("Karhunen-Loeve").unwrap().into_raw(),
+                    7,
+                    self.m2_n_mode as i32,
+                );
+                self._c_m2.setup1(&mut self._c_m2_modes);
+            }
+            self
         }
-        self.a2 = vec![0.0; 7 * self.m2_n_mode as usize];
-        unsafe {
-            self._c_m1_modes
-                .setup(mode_type.into_raw(), 7, self.m1_n_mode as i32);
-            self._c_m1.setup1(&mut self._c_m1_modes);
-            self._c_m2_modes.setup(
-                CString::new("Karhunen-Loeve").unwrap().into_raw(),
-                7,
-                self.m2_n_mode as i32,
-            );
-            self._c_m2.setup1(&mut self._c_m2_modes);
+        /// Sets the `Gmt` M1 parameters:
+        ///
+        /// * `mode_type` - the type of modes: "bending modes", "KarhunenLoeve", ...
+        /// * `m1_n_mode` - the number of modes on each M1 segment
+        pub fn build_m1(&mut self, mode_type: &str, m1_n_mode: usize) -> &mut Self {
+            let m1_mode_type = CString::new(mode_type).unwrap();
+            self.m1_n_mode = m1_n_mode;
+            if self.m1_n_mode > 0 {
+                self.a1 = vec![0.0; 7 * self.m1_n_mode as usize];
+            }
+            unsafe {
+                self._c_m1_modes
+                    .setup(m1_mode_type.into_raw(), 7, self.m1_n_mode as i32);
+                self._c_m1.setup1(&mut self._c_m1_modes);
+            }
+            self
         }
-        self
-    }
-    /// Sets the `Gmt` M1 parameters:
-    ///
-    /// * `mode_type` - the type of modes: "bending modes", "KarhunenLoeve", ...
-    /// * `m1_n_mode` - the number of modes on each M1 segment
-    pub fn build_m1(&mut self, mode_type: &str, m1_n_mode: usize) -> &mut Self {
-        let m1_mode_type = CString::new(mode_type).unwrap();
-        self.m1_n_mode = m1_n_mode;
-        if self.m1_n_mode > 0 {
-            self.a1 = vec![0.0; 7 * self.m1_n_mode as usize];
+        pub fn from_m2_modes(&mut self, mode_type: &str, m2_n_mode: usize) -> &mut Self {
+            let m2_mode_type = CString::new(mode_type).unwrap();
+            self.m2_n_mode = m2_n_mode;
+            if self.m2_n_mode > 0 {
+                self.a1 = vec![0.0; 7 * self.m2_n_mode as usize];
+            }
+            unsafe {
+                self._c_m2_modes
+                    .setup(m2_mode_type.into_raw(), 7, self.m2_n_mode as i32);
+                self._c_m2.setup1(&mut self._c_m2_modes);
+            }
+            self
         }
-        unsafe {
-            self._c_m1_modes
-                .setup(m1_mode_type.into_raw(), 7, self.m1_n_mode as i32);
-            self._c_m1.setup1(&mut self._c_m1_modes);
+        /// Sets the `Gmt` M2 parameters:
+        ///
+        /// * `m2_n_mode` - the number of Karhunen-Loeve modes on each M2 segment
+        pub fn build_m2(&mut self, m2_n_mode: Option<usize>) -> &mut Self {
+            let m2_mode_type = CString::new("Karhunen-Loeve").unwrap();
+            self.m2_n_mode = match m2_n_mode {
+                Some(m2_n_mode) => m2_n_mode,
+                None => 0,
+            };
+            self.a2 = vec![0.0; 7 * self.m2_n_mode as usize];
+            unsafe {
+                self._c_m2_modes
+                    .setup(m2_mode_type.into_raw(), 7, self.m2_n_mode as i32);
+                self._c_m2.setup1(&mut self._c_m2_modes);
+            }
+            self
         }
-        self
-    }
-    pub fn from_m2_modes(&mut self, mode_type: &str, m2_n_mode: usize) -> &mut Self {
-        let m2_mode_type = CString::new(mode_type).unwrap();
-        self.m2_n_mode = m2_n_mode;
-        if self.m2_n_mode > 0 {
-            self.a1 = vec![0.0; 7 * self.m2_n_mode as usize];
-        }
-        unsafe {
-            self._c_m2_modes
-                .setup(m2_mode_type.into_raw(), 7, self.m2_n_mode as i32);
-            self._c_m2.setup1(&mut self._c_m2_modes);
-        }
-        self
-    }
-    /// Sets the `Gmt` M2 parameters:
-    ///
-    /// * `m2_n_mode` - the number of Karhunen-Loeve modes on each M2 segment
-    pub fn build_m2(&mut self, m2_n_mode: Option<usize>) -> &mut Self {
-        let m2_mode_type = CString::new("Karhunen-Loeve").unwrap();
-        self.m2_n_mode = match m2_n_mode {
-            Some(m2_n_mode) => m2_n_mode,
-            None => 0,
-        };
-        self.a2 = vec![0.0; 7 * self.m2_n_mode as usize];
-        unsafe {
-            self._c_m2_modes
-                .setup(m2_mode_type.into_raw(), 7, self.m2_n_mode as i32);
-            self._c_m2.setup1(&mut self._c_m2_modes);
-        }
-        self
-    }
+    */
     /// Returns `Gmt` M1 mode type
     pub fn get_m1_mode_type(&self) -> String {
         unsafe {
             String::from(
-                CStr::from_ptr(self._c_m1_modes.filename.as_ptr())
+                CStr::from_ptr(self._c_m1.BS.filename.as_ptr())
                     .to_str()
                     .expect("CStr::to_str failed"),
             )
@@ -278,7 +476,7 @@ impl Gmt {
     pub fn get_m2_mode_type(&self) -> String {
         unsafe {
             String::from(
-                CStr::from_ptr(self._c_m2_modes.filename.as_ptr())
+                CStr::from_ptr(self._c_m2.BS.filename.as_ptr())
                     .to_str()
                     .expect("CStr::to_str failed"),
             )
@@ -291,8 +489,8 @@ impl Gmt {
         unsafe {
             self._c_m1.reset();
             self._c_m2.reset();
-            self._c_m1_modes.update(a1.as_mut_ptr());
-            self._c_m2_modes.update(a2.as_mut_ptr());
+            self._c_m1.BS.update(a1.as_mut_ptr());
+            self._c_m2.BS.update(a2.as_mut_ptr());
         }
         self
     }
@@ -350,27 +548,27 @@ impl Gmt {
     /// Sets M1 modal coefficients
     pub fn m1_modes(&mut self, a: &mut Vec<f64>) {
         unsafe {
-            self._c_m1_modes.update(a.as_mut_ptr());
+            self._c_m1.BS.update(a.as_mut_ptr());
         }
     }
     pub fn m1_modes_ij(&mut self, i: usize, j: usize, value: f64) {
         let mut a = vec![0f64; 7 * self.m1_n_mode];
         a[i * self.m1_n_mode + j] = value;
         unsafe {
-            self._c_m1_modes.update(a.as_mut_ptr());
+            self._c_m1.BS.update(a.as_mut_ptr());
         }
     }
     /// Sets M2 modal coefficients
     pub fn m2_modes(&mut self, a: &mut Vec<f64>) {
         unsafe {
-            self._c_m2_modes.update(a.as_mut_ptr());
+            self._c_m2.BS.update(a.as_mut_ptr());
         }
     }
     pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
         let mut a = vec![0f64; 7 * self.m2_n_mode];
         a[i * self.m2_n_mode + j] = value;
         unsafe {
-            self._c_m2_modes.update(a.as_mut_ptr());
+            self._c_m2.BS.update(a.as_mut_ptr());
         }
     }
     /// Updates M1 and M1 rigid body motion and M1 model coefficients
@@ -466,9 +664,7 @@ impl Drop for Gmt {
     /// Frees CEO memory before dropping `Gmt`
     fn drop(&mut self) {
         unsafe {
-            self._c_m1_modes.cleanup();
             self._c_m1.cleanup();
-            self._c_m2_modes.cleanup();
             self._c_m2.cleanup();
         }
     }
