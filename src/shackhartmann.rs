@@ -12,14 +12,15 @@
 //! let mut wfs = ceo!(SHACKHARTMANN:Geometric);
 //! ```
 
-use super::ceo_bindings::{geometricShackHartmann, shackHartmann};
+use super::ceo_bindings::{centroiding, geometricShackHartmann, imaging, mask, shackHartmann};
 use super::{cu::Single, Builder, Cu, Mask, Propagation, Source, SOURCE};
-use std::{f32, mem};
+use std::{f32, ptr};
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
 
 pub trait Model: Clone {
+    fn new() -> Self;
     fn build(
         &mut self,
         n_side_lenslet: i32,
@@ -35,6 +36,99 @@ pub trait Model: Clone {
     fn drop(&mut self);
 }
 impl Model for Geometric {
+    fn new() -> Self {
+        Self {
+            N_WFS: 0,
+            N_SIDE_LENSLET: 0,
+            N_LENSLET: 0,
+            N_ACTUATOR: 0,
+            N_SLOPE: 0,
+            d__c0: ptr::null_mut(),
+            d__cx0: ptr::null_mut(),
+            d__cy0: ptr::null_mut(),
+            valid_lenslet: mask {
+                m: ptr::null_mut(),
+                f: ptr::null_mut(),
+                idx: ptr::null_mut(),
+                size_px: [0; 2usize],
+                nel: 0,
+                nnz: 0f32,
+                size_m: [0f32; 2usize],
+                area: 0f32,
+                delta: [0f32; 2usize],
+                handle: ptr::null_mut(),
+                d__piston_mask: ptr::null_mut(),
+            },
+            valid_actuator: mask {
+                m: ptr::null_mut(),
+                f: ptr::null_mut(),
+                idx: ptr::null_mut(),
+                size_px: [0; 2usize],
+                nel: 0,
+                nnz: 0f32,
+                size_m: [0f32; 2usize],
+                area: 0f32,
+                delta: [0f32; 2usize],
+                handle: ptr::null_mut(),
+                d__piston_mask: ptr::null_mut(),
+            },
+            camera: imaging {
+                N_PX_PUPIL: 0,
+                N_DFT: 0,
+                N_SIDE_LENSLET: 0,
+                N_LENSLET: 0,
+                N_SOURCE: 0,
+                N_PX_IMAGE: 0,
+                N_PX_CAMERA: 0,
+                N_FRAME: 0,
+                BIN_IMAGE: 0,
+                LOCAL_RAND_SEED: 0,
+                plan: 0,
+                N_PHOTON_PER_SECOND_PER_FRAME: 0f32,
+                N_PHOTON_PER_FRAME: 0f32,
+                d__wave_PUPIL: ptr::null_mut(),
+                d__frame: ptr::null_mut(),
+                zenith: 0f32,
+                azimuth: 0f32,
+                theta_x: 0f32,
+                theta_y: 0f32,
+                d__zenith: ptr::null_mut(),
+                d__azimuth: ptr::null_mut(),
+                d__theta_x: ptr::null_mut(),
+                d__theta_y: ptr::null_mut(),
+                pixel_scale: 0f32,
+                photoelectron_gain: 0f32,
+                absolute_pointing: 0,
+                devStates: ptr::null_mut(),
+            },
+            data_proc: centroiding {
+                _N_SIDE_LENSLET_: 0,
+                N_LENSLET: 0,
+                N_SOURCE: 0,
+                d__c: ptr::null_mut(),
+                d__cx: ptr::null_mut(),
+                d__cy: ptr::null_mut(),
+                d__mass: ptr::null_mut(),
+                lenslet_mask: ptr::null_mut(),
+                MASK_SET: 0,
+                n_data: 0,
+                DEV_SHARED_MEM: 0,
+                DEV_MAX_THREADS: 0,
+                handle: ptr::null_mut(),
+                status: 0,
+            },
+            DFT_osf: 0,
+            lenslet_pitch: 0f32,
+            pixel_scale: 0f32,
+            intensity_threshold: 0f32,
+            slopes_gain: 0f32,
+            _d__c_: ptr::null_mut(),
+            _d__cx_: ptr::null_mut(),
+            _d__cy_: ptr::null_mut(),
+            N_FRAME: 0,
+            handle: ptr::null_mut(),
+        }
+    }
     fn build(
         &mut self,
         n_side_lenslet: i32,
@@ -64,6 +158,94 @@ impl Model for Geometric {
     }
 }
 impl Model for Diffractive {
+    fn new() -> Self {
+        Self {
+            N_WFS: 0,
+            N_SIDE_LENSLET: 0,
+            N_LENSLET: 0,
+            N_ACTUATOR: 0,
+            N_SLOPE: 0,
+            d__c0: ptr::null_mut(),
+            d__cx0: ptr::null_mut(),
+            d__cy0: ptr::null_mut(),
+            valid_lenslet: mask {
+                m: ptr::null_mut(),
+                f: ptr::null_mut(),
+                idx: ptr::null_mut(),
+                size_px: [0; 2usize],
+                nel: 0,
+                nnz: 0f32,
+                size_m: [0f32; 2usize],
+                area: 0f32,
+                delta: [0f32; 2usize],
+                handle: ptr::null_mut(),
+                d__piston_mask: ptr::null_mut(),
+            },
+            valid_actuator: mask {
+                m: ptr::null_mut(),
+                f: ptr::null_mut(),
+                idx: ptr::null_mut(),
+                size_px: [0; 2usize],
+                nel: 0,
+                nnz: 0f32,
+                size_m: [0f32; 2usize],
+                area: 0f32,
+                delta: [0f32; 2usize],
+                handle: ptr::null_mut(),
+                d__piston_mask: ptr::null_mut(),
+            },
+            camera: imaging {
+                N_PX_PUPIL: 0,
+                N_DFT: 0,
+                N_SIDE_LENSLET: 0,
+                N_LENSLET: 0,
+                N_SOURCE: 0,
+                N_PX_IMAGE: 0,
+                N_PX_CAMERA: 0,
+                N_FRAME: 0,
+                BIN_IMAGE: 0,
+                LOCAL_RAND_SEED: 0,
+                plan: 0,
+                N_PHOTON_PER_SECOND_PER_FRAME: 0f32,
+                N_PHOTON_PER_FRAME: 0f32,
+                d__wave_PUPIL: ptr::null_mut(),
+                d__frame: ptr::null_mut(),
+                zenith: 0f32,
+                azimuth: 0f32,
+                theta_x: 0f32,
+                theta_y: 0f32,
+                d__zenith: ptr::null_mut(),
+                d__azimuth: ptr::null_mut(),
+                d__theta_x: ptr::null_mut(),
+                d__theta_y: ptr::null_mut(),
+                pixel_scale: 0f32,
+                photoelectron_gain: 0f32,
+                absolute_pointing: 0,
+                devStates: ptr::null_mut(),
+            },
+            data_proc: centroiding {
+                _N_SIDE_LENSLET_: 0,
+                N_LENSLET: 0,
+                N_SOURCE: 0,
+                d__c: ptr::null_mut(),
+                d__cx: ptr::null_mut(),
+                d__cy: ptr::null_mut(),
+                d__mass: ptr::null_mut(),
+                lenslet_mask: ptr::null_mut(),
+                MASK_SET: 0,
+                n_data: 0,
+                DEV_SHARED_MEM: 0,
+                DEV_MAX_THREADS: 0,
+                handle: ptr::null_mut(),
+                status: 0,
+            },
+            DFT_osf: 0,
+            lenslet_pitch: 0f32,
+            pixel_scale: 0f32,
+            intensity_threshold: 0f32,
+            slopes_gain: 0f32,
+        }
+    }
     fn drop(&mut self) {
         unsafe {
             self.cleanup();
@@ -177,7 +359,7 @@ impl<T: Model> Builder for SHACKHARTMANN<T> {
     fn build(self) -> ShackHartmann<T> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         let mut wfs = ShackHartmann::<T> {
-            _c_: unsafe { std::mem::zeroed() },
+            _c_: Model::new(),
             n_side_lenslet: n_side_lenslet as i32,
             n_px_lenslet: n_px_lenslet as i32,
             d,
@@ -266,7 +448,7 @@ impl<T: Model> Builder for SH48<T> {
     fn build(self) -> ShackHartmann<T> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         let mut wfs = ShackHartmann::<T> {
-            _c_: unsafe { std::mem::zeroed() },
+            _c_: Model::new(),
             n_side_lenslet: n_side_lenslet as i32,
             n_px_lenslet: n_px_lenslet as i32,
             d,
@@ -330,7 +512,7 @@ impl<S: Model> ShackHartmann<S> {
     /// * `d` - the lenslet pitch [m]
     pub fn new(n_sensor: i32, n_side_lenslet: i32, n_px_lenslet: i32, d: f64) -> ShackHartmann<S> {
         ShackHartmann {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Model::new(),
             n_side_lenslet,
             n_px_lenslet,
             d,
@@ -346,7 +528,7 @@ impl<S: Model> ShackHartmann<S> {
             .pupil_sampling((self.n_px_lenslet * self.n_side_lenslet + 1) as usize)
             .band("R")
     }
-    pub fn drop(&mut self) {
+    pub fn drop_sh(&mut self) {
         self._c_.drop();
     }
 }
@@ -438,7 +620,7 @@ impl ShackHartmann<Geometric> {
 }
 impl<S: Model> Drop for ShackHartmann<S> {
     fn drop(&mut self) {
-        self.drop();
+        self.drop_sh();
     }
 }
 impl Propagation for ShackHartmann<Geometric> {
