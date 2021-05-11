@@ -1,4 +1,4 @@
-use std::{mem, ptr};
+use std::ptr;
 
 use super::ceo_bindings::{centroiding, dev2host, host2dev_char, mask};
 use super::Imaging;
@@ -210,6 +210,12 @@ impl Centroiding {
     }
     pub fn __mut_ceo__(&mut self) -> (&mut centroiding, &mut mask) {
         (&mut self._c_, &mut self._c_mask_)
+    }
+}
+
+impl Default for Centroiding {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl Drop for Centroiding {
