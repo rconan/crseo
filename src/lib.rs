@@ -23,6 +23,7 @@ pub mod calibrations;
 pub mod centroiding;
 pub mod ceo_bindings;
 pub mod cu;
+pub mod error;
 pub mod fwhm;
 pub mod gmt;
 pub mod imaging;
@@ -39,6 +40,8 @@ pub use self::calibrations::Calibration;
 pub use self::centroiding::Centroiding;
 #[doc(inline)]
 pub use self::cu::Cu;
+#[doc(inline)]
+pub use self::error::CRSEOError;
 #[doc(inline)]
 pub use self::fwhm::Fwhm;
 #[doc(inline)]
@@ -106,16 +109,16 @@ pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 #[macro_export]
 macro_rules! ceo {
     ($element:ident) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::new())
+        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()).unwrap()
     };
     ($element:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()$(.$arg($($val),*))*)
+        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
     };
     ($element:ident:$model:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new())
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()).unwrap()
     };
     ($element:ident:$model:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()$(.$arg($($val),*))*)
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
     };
 }
 /*
@@ -134,13 +137,14 @@ impl<T: std::fmt::Debug> fmt::Display for CeoError<T> {
     }
 }
 
+pub type Result<T> = std::result::Result<T, CRSEOError>;
 /// CEO builder type trait
 pub trait Builder: Default {
     type Component;
     fn new() -> Self {
         Default::default()
     }
-    fn build(self) -> Self::Component;
+    fn build(self) -> Result<Self::Component>;
 }
 
 pub fn set_gpu(id: i32) {

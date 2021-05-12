@@ -19,8 +19,13 @@
 //! ```
 
 use super::ceo_bindings::{bundle, gmt_m1, gmt_m2, modes, vector};
-use super::{Builder, Propagation, Source};
-use std::{ffi::{CString,CStr}, mem};
+use super::{Builder, CRSEOError, Propagation, Source};
+use std::{
+    env,
+    ffi::{CStr, CString},
+    mem,
+    path::Path,
+};
 
 #[doc(hidden)]
 #[derive(Debug, Clone)]
@@ -102,7 +107,9 @@ impl GMT {
 }
 impl Builder for GMT {
     type Component = Gmt;
-    fn build(self) -> Gmt {
+    fn build(self) -> std::result::Result< Gmt,CRSEOError> {
+        let env_path = env::var("GMT_MODES_PATH").unwrap_or("CEO/gmtMirrors".to_string());
+        let gmt_modes_path = Path::new(&env_path);
         let mut gmt = Gmt {
             _c_m1_modes: unsafe { mem::zeroed() },
             _c_m2_modes: unsafe { mem::zeroed() },
@@ -114,6 +121,10 @@ impl Builder for GMT {
             a1: vec![0.],
             a2: vec![0.],
         };
+        //let m1_mode_path = gmt_modes_path.join(self.m1.mode_type);
+        //if !m1_mode_path.is_file() {
+        //    return Err(CRSEOError::GMTModesPath(m1_mode_path))
+       // }
         let m1_mode_type = CString::new(self.m1.mode_type.into_bytes()).unwrap();
         gmt.m1_n_mode = self.m1.n_mode;
         gmt.a1 = vec![0.0; 7 * gmt.m1_n_mode as usize];
@@ -130,15 +141,19 @@ impl Builder for GMT {
                 .setup(m2_mode_type.into_raw(), 7, gmt.m2_n_mode as i32);
             gmt._c_m2.setup1(&mut gmt._c_m2_modes);
         }
-        gmt
+        Ok(gmt)
     }
 }
 impl From<&Gmt> for GMT {
     fn from(gmt: &Gmt) -> Self {
-        Self { m1: gmt.get_m1(), m2: gmt.get_m2()}
+        Self {
+            m1: gmt.get_m1(),
+            m2: gmt.get_m2(),
+        }
     }
 }
 /// gmt wrapper
+#[repr(C)]
 pub struct Gmt {
     pub _c_m1_modes: modes,
     pub _c_m2_modes: modes,

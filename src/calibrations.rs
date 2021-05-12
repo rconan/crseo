@@ -1,5 +1,5 @@
 use super::{
-    cu::Single, shackhartmann::Geometric, Builder, Cu, Gmt, ShackHartmann, Source, GMT, SOURCE
+    cu::Single, shackhartmann::Geometric, Builder, Cu, Gmt, ShackHartmann, Source, GMT, SOURCE, Result
 };
 use log;
 use std::ops::Range;
@@ -201,9 +201,9 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
                 for rbm in segment.iter() {
                     log::trace!("segment: {:?}", rbm);
                     let (stroke, idx) = rbm.strip();
-                    let mut gmt = self.gmt_blueprint.clone().build();
-                    let mut wfs = self.wfs_blueprint.clone().build();
-                    let mut src = self.src_blueprint.clone().build();
+                    let mut gmt = self.gmt_blueprint.clone().build().unwrap();
+                    let mut wfs = self.wfs_blueprint.clone().build().unwrap();
+                    let mut src = self.src_blueprint.clone().build().unwrap();
                     src.through(&mut gmt).xpupil();
                     wfs.calibrate(&mut src, wfs_intensity_threshold);
                     nnz = wfs.n_valid_lenslet();

@@ -1,16 +1,16 @@
 use crseo::{
-    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, Builder, Calibration, GMT, SH48,
+    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, Builder, Calibration, GMT, SH48, CRSEOError,
 };
 use serde_pickle as pickle;
 use std::fs::File;
 use std::time::Instant;
 
-fn main() {
+fn main() -> std::result::Result<(),CRSEOError> {
     let mut gmt = ceo!(GMT);
     println!("M1 mode: {}", gmt.get_m1_mode_type());
     println!("M2 mode: {}", gmt.get_m2_mode_type());
     let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(1);
-    let mut gs = wfs_blueprint.guide_stars().build();
+    let mut gs = wfs_blueprint.guide_stars().build().unwrap();
     println!("GS band: {}", gs.get_photometric_band());
 
     let mut gmt2wfs = Calibration::new(&gmt, &gs, wfs_blueprint.clone());
@@ -30,7 +30,7 @@ fn main() {
     let mut file = File::create("poke.pkl").unwrap();
     pickle::to_writer(&mut file, &gmt2wfs.poke.from_dev(), true).unwrap();
 
-    let mut wfs = wfs_blueprint.build();
+    let mut wfs = wfs_blueprint.build().unwrap();
     let mut src = ceo!(SOURCE);
     let mut atm = ceo!(ATMOSPHERE);
 
@@ -69,4 +69,5 @@ fn main() {
             .through(&mut atm)
             .wfe_rms_10e(-9)[0]
     );
+    Ok(())
 }

@@ -4,7 +4,7 @@ use std::ffi::CString;
 use std::{f32, mem};
 
 use super::ceo_bindings::atmosphere;
-use super::{Builder, Propagation, Source};
+use super::{Builder, Propagation, Source, Result};
 
 #[derive(Deserialize, Debug)]
 struct GmtAtmosphere {
@@ -88,29 +88,29 @@ impl Default for ATMOSPHERE {
 /// ## `Atmosphere` builder
 impl ATMOSPHERE {
     /// Set r0 value taken at pointing the zenith in meters
-    pub fn set_r0_at_zenith(self, r0_at_zenith: f64) -> Self {
+    pub fn r0_at_zenith(self, r0_at_zenith: f64) -> Self {
         Self {
             r0_at_zenith,
             ..self
         }
     }
     /// Set outer scale value in meters
-    pub fn set_oscale(self, oscale: f64) -> Self {
+    pub fn oscale(self, oscale: f64) -> Self {
         Self { oscale, ..self }
     }
     /// Set zenith angle value in radians
-    pub fn set_zenith_angle(self, zenith_angle: f64) -> Self {
+    pub fn zenith_angle(self, zenith_angle: f64) -> Self {
         Self {
             zenith_angle,
             ..self
         }
     }
     /// Set the turbulence profile
-    pub fn set_turbulence_profile(self, turbulence: TurbulenceProfile) -> Self {
+    pub fn turbulence_profile(self, turbulence: TurbulenceProfile) -> Self {
         Self { turbulence, ..self }
     }
     /// Set a single turbulence layer
-    pub fn set_single_turbulence_layer(
+    pub fn single_turbulence_layer(
         self,
         altitude: f32,
         wind_speed: Option<f32>,
@@ -138,7 +138,7 @@ impl ATMOSPHERE {
         Self { turbulence, ..self }
     }
     /// Set parameters for atmosphere ray tracing
-    pub fn set_ray_tracing(
+    pub fn ray_tracing(
         self,
         width: f32,
         n_width_px: i32,
@@ -163,7 +163,7 @@ impl ATMOSPHERE {
 impl Builder for ATMOSPHERE {
     type Component = Atmosphere;
     /// Build the `Atmosphere`
-    fn build(self) -> Atmosphere {
+    fn build(self) -> Result<Atmosphere> {
         let mut atm = Atmosphere {
             _c_: unsafe { mem::zeroed() },
             r0_at_zenith: self.r0_at_zenith,
@@ -263,7 +263,7 @@ impl Builder for ATMOSPHERE {
                 },
             },
         }
-        atm
+        Ok(atm)
     }
 }
 pub struct Atmosphere {
@@ -387,7 +387,7 @@ impl Atmosphere {
         }
         self
     }
-    pub fn set_r0(&mut self, new_r0: f64) {
+    pub fn r0(&mut self, new_r0: f64) {
         self._c_.r0 = new_r0 as f32;
     }
     pub fn reset(&mut self) {

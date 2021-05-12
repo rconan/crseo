@@ -22,7 +22,7 @@
 //! ```
 
 use super::ceo_bindings::{dev2host, dev2host_int, source, vector};
-use super::{cu::Single, Builder, Centroiding, Cu};
+use super::{cu::Single, Builder, Centroiding, Cu, Result};
 use std::{
     f32,
     ffi::{CStr, CString},
@@ -61,6 +61,7 @@ pub trait Propagation {
 /// use ceo::{Builder, SOURCE, Conversion};
 /// let mut src = SOURCE::new().size(3).on_ring(8f32.from_arcmin()).build();
 /// ```
+#[repr(C)]
 #[derive(Debug, Clone)]
 pub struct SOURCE {
     pub size: usize,
@@ -181,7 +182,7 @@ impl SOURCE {
 impl Builder for SOURCE {
     type Component = Source;
     /// Build the `Source`
-    fn build(self) -> Source {
+    fn build(self) -> Result<Source> {
         let mut src = Source {
             _c_: unsafe { mem::zeroed() },
             size: self.size as i32,
@@ -212,7 +213,7 @@ impl Builder for SOURCE {
                 origin,
             );
         }
-        src
+        Ok(src)
     }
 }
 
@@ -231,6 +232,7 @@ impl From<&Source> for SOURCE {
 }
 
 /// source wrapper
+#[repr(C)]
 pub struct Source {
     _c_: source,
     /// The number of sources

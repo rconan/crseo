@@ -13,7 +13,7 @@
 //! ```
 
 use super::ceo_bindings::{geometricShackHartmann, shackHartmann};
-use super::{cu::Single, Builder, Cu, Mask, Propagation, Source, SOURCE};
+use super::{cu::Single, Builder, Cu, Mask, Propagation, Source, SOURCE, Result};
 use std::{f32, mem};
 
 pub type Geometric = geometricShackHartmann;
@@ -154,7 +154,7 @@ impl<T: Model> SHACKHARTMANN<T> {
 }
 impl<T: Model> Builder for SHACKHARTMANN<T> {
     type Component = ShackHartmann<T>;
-    fn build(self) -> ShackHartmann<T> {
+    fn build(self) -> Result<ShackHartmann<T>> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         let mut wfs = ShackHartmann::<T> {
             _c_: unsafe { std::mem::zeroed() },
@@ -188,7 +188,7 @@ impl<T: Model> Builder for SHACKHARTMANN<T> {
             b as i32,
         );
         wfs.centroids.from_ptr(wfs._c_.get_c_as_mut_ptr());
-        wfs
+        Ok(wfs)
     }
 }
 /// `ShackHartmann` "SH48" builder for GMT AGWS model
@@ -241,7 +241,7 @@ impl<T: Model> SH48<T> {
 }
 impl<T: Model> Builder for SH48<T> {
     type Component = ShackHartmann<T>;
-    fn build(self) -> ShackHartmann<T> {
+    fn build(self) -> Result<ShackHartmann<T>> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         let mut wfs = ShackHartmann::<T> {
             _c_: unsafe { std::mem::zeroed() },
@@ -275,7 +275,7 @@ impl<T: Model> Builder for SH48<T> {
             b as i32,
         );
         wfs.centroids.from_ptr(wfs._c_.get_c_as_mut_ptr());
-        wfs
+        Ok(wfs)
     }
 }
 /// shackhartmann wrapper

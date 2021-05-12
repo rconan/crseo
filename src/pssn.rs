@@ -1,5 +1,5 @@
 use super::ceo_bindings::pssn as ceo_pssn;
-use super::{Builder, Cu, Propagation, Source, SOURCE};
+use super::{Builder, Cu, Propagation, Source, SOURCE, Result};
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::{fmt, mem};
 
@@ -39,37 +39,37 @@ impl<T> Default for PSSN<T> {
             r0_at_zenith: 0.16,
             oscale: 25.0,
             zenith_angle: 30_f64.to_radians(),
-            src: SOURCE::default().build(),
+            src: SOURCE::default().build().unwrap(),
             marker: std::marker::PhantomData,
         }
     }
 }
 impl<T> PSSN<T> {
-    pub fn set_r0_at_zenith(self, r0_at_zenith: f64) -> Self {
+    pub fn r0_at_zenith(self, r0_at_zenith: f64) -> Self {
         Self {
             r0_at_zenith,
             ..self
         }
     }
-    pub fn set_outer_scale(self, oscale: f64) -> Self {
+    pub fn outer_scale(self, oscale: f64) -> Self {
         Self { oscale, ..self }
     }
-    pub fn set_zenith_angle(self, zenith_angle_degree: f64) -> Self {
+    pub fn zenith_angle(self, zenith_angle_degree: f64) -> Self {
         Self {
             zenith_angle: zenith_angle_degree.to_radians(),
             ..self
         }
     }
-    pub fn set_source(self, src: &Source) -> Self {
+    pub fn source(self, src: &Source) -> Self {
         Self {
-            src: SOURCE::from(src).build(),
+            src: SOURCE::from(src).build().unwrap(),
             ..self
         }
     }
 }
 impl<T: std::clone::Clone> Builder for PSSN<T> {
     type Component = PSSn<T>;
-    fn build(self) -> PSSn<T> {
+    fn build(self) -> Result<PSSn<T>> {
         let mut src = self.src;
         let mut pssn = PSSn::<T> {
             _c_: unsafe { mem::zeroed() },
@@ -87,7 +87,7 @@ impl<T: std::clone::Clone> Builder for PSSN<T> {
             pssn._c_.setup(src.as_raw_mut_ptr(), pssn.r0(), pssn.oscale);
         }
         pssn.estimates = vec![0.0; pssn._c_.N as usize];
-        pssn
+        Ok(pssn)
     }
 }
 impl<S> PSSn<S> {
@@ -209,7 +209,7 @@ impl<S> PSSn<S> {
     }
 }
 impl<T> Serialize for PSSn<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {

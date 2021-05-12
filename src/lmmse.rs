@@ -1,7 +1,7 @@
 use super::ceo_bindings::LMMSE as ceo_LMMSE;
 use super::{
     cu::Single, Atmosphere, Builder, Conversion, Cu, GeometricShackHartmann as WFS, Mask,
-    Source, ATMOSPHERE, GMT, SOURCE,
+    Source, ATMOSPHERE, GMT, SOURCE, Result
 };
 use std::ffi::CString;
 
@@ -65,9 +65,9 @@ impl LMMSE {
 }
 impl Builder for LMMSE {
     type Component = LinearMinimumMeanSquareError;
-    fn build(self) -> LinearMinimumMeanSquareError {
-        let mut gmt = GMT::new().build();
-        let mut mmse_star = self.mmse_star.build();
+    fn build(self) -> Result<LinearMinimumMeanSquareError> {
+        let mut gmt = GMT::new().build().unwrap();
+        let mut mmse_star = self.mmse_star.build().unwrap();
         mmse_star.through(&mut gmt).xpupil();
         let mut pupil_mask = Mask::new();
         let n_actuator = self.n_side_lenslet + 1;
@@ -77,8 +77,8 @@ impl Builder for LMMSE {
             .filter(&mut mmse_star.amplitude().into());
         let mut lmmse = LinearMinimumMeanSquareError {
             _c_: unsafe { std::mem::zeroed() },
-            atm: self.atm.build(),
-            guide_star: self.guide_star.build(),
+            atm: self.atm.build().unwrap(),
+            guide_star: self.guide_star.build().unwrap(),
             mmse_star,
             fov_diameter: self.fov_diameter,
             pupil_mask,
@@ -112,7 +112,7 @@ impl Builder for LMMSE {
                 )
             },
         }
-        lmmse
+        Ok(lmmse)
     }
 }
 impl LinearMinimumMeanSquareError {
@@ -140,7 +140,7 @@ impl LinearMinimumMeanSquareError {
         first_kl: Option<usize>,
         stroke: Option<f64>,
     ) -> Vec<Vec<f64>> {
-        let mut gmt = GMT::new().m2_n_mode(n_kl).build();
+        let mut gmt = GMT::new().m2_n_mode(n_kl).build().unwrap();
         let mut kl: Vec<Vec<f32>> = vec![];
         let first_kl = first_kl.unwrap_or(0);
         let stroke = stroke.unwrap_or(1e-6);
