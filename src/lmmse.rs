@@ -1,10 +1,233 @@
-use super::ceo_bindings::LMMSE as ceo_LMMSE;
+use super::ceo_bindings::{
+    aaStats, iterativeSolvers, paStats, stopwatch, BTBT, GBTBT, LMMSE as ceo_LMMSE,
+};
 use super::{
     cu::Single, Atmosphere, Builder, Conversion, Cu, GeometricShackHartmann as WFS, Mask, Source,
     ATMOSPHERE, GMT, SOURCE,
 };
-use std::ffi::CString;
+use std::{ffi::CString, ptr};
 
+impl Default for stopwatch {
+    fn default() -> Self {
+        Self {
+            elapsedTime: 0f32,
+            start: ptr::null_mut(),
+            stop: ptr::null_mut(),
+        }
+    }
+}
+impl Default for aaStats {
+    fn default() -> Self {
+        Self {
+            N: 0,
+            N2: 0,
+            NU: 0,
+            NU2: 0,
+            NF: 0,
+            NF2: 0,
+            psd_size: 0,
+            cov_size: 0,
+            ind_size: 0,
+            d__psd: ptr::null_mut(),
+            d__cov: ptr::null_mut(),
+            d__alpha: ptr::null_mut(),
+            d__beta: ptr::null_mut(),
+            n_full: 0f32,
+            n_comp: 0f32,
+            b_full: 0f32,
+            b_comp: 0f32,
+            cov_eval_et: 0f32,
+            sampling: 0f32,
+            plan: 0,
+            N_SRC2: 0,
+        }
+    }
+}
+impl Default for paStats {
+    fn default() -> Self {
+        Self {
+            osf: 0,
+            M: 0,
+            shift: 0,
+            M_LAYER: ptr::null_mut(),
+            N: 0,
+            N2: 0,
+            NU: 0,
+            NU2: 0,
+            NF: 0,
+            NF2: 0,
+            psd_size: 0,
+            cov_size: 0,
+            ind_size: 0,
+            d__psd: ptr::null_mut(),
+            d__cov: ptr::null_mut(),
+            d__alpha: ptr::null_mut(),
+            d__beta: ptr::null_mut(),
+            n_full: 0f32,
+            n_comp: 0f32,
+            b_full: 0f32,
+            b_comp: 0f32,
+            cov_eval_et: 0f32,
+            sampling: 0f32,
+            plan: 0,
+            N_SRC2: 0,
+        }
+    }
+}
+impl Default for BTBT {
+    fn default() -> Self {
+        Self {
+            M: 0,
+            N: 0,
+            MT: 0,
+            MT2: 0,
+            NT: 0,
+            NT2: 0,
+            NU: 0,
+            NU2: 0,
+            NDFT: 0,
+            HALF_NDFT: 0,
+            NU_TOTAL: 0,
+            NF: 0,
+            NF2: 0,
+            ind_size: 0,
+            cov_size: 0,
+            mask: ptr::null_mut(),
+            d__cov: ptr::null_mut(),
+            d__b: ptr::null_mut(),
+            d__c: ptr::null_mut(),
+            d__alpha: ptr::null_mut(),
+            d__beta: ptr::null_mut(),
+            n_full: 0f32,
+            n_comp: 0f32,
+            b_full: 0f32,
+            b_comp: 0f32,
+            cov_eval_et: 0f32,
+            d__mu: ptr::null_mut(),
+            d__xi: ptr::null_mut(),
+            raster_plan: 0,
+            MVM_input_plan: 0,
+            MVM_output_plan: 0,
+        }
+    }
+}
+impl Default for GBTBT {
+    fn default() -> Self {
+        Self {
+            M: 0,
+            N: 0,
+            NT: 0,
+            NT2: 0,
+            NDFT: 0,
+            HALF_NDFT: 0,
+            NU_TOTAL: 0,
+            NF: 0,
+            NF2: 0,
+            ind_size: 0,
+            cov_size: 0,
+            MT2_TOTAL: 0,
+            MT_size: 0,
+            MAX_MT: 0,
+            MT: ptr::null_mut(),
+            MT2: ptr::null_mut(),
+            NU: ptr::null_mut(),
+            NU2: ptr::null_mut(),
+            CS_MT2: ptr::null_mut(),
+            d__MT: ptr::null_mut(),
+            d__MT2: ptr::null_mut(),
+            d__NU: ptr::null_mut(),
+            d__NU2: ptr::null_mut(),
+            d__CS_MT2: ptr::null_mut(),
+            mask: ptr::null_mut(),
+            d__cov: ptr::null_mut(),
+            d__b: ptr::null_mut(),
+            d__c: ptr::null_mut(),
+            d__alpha: ptr::null_mut(),
+            d__beta: ptr::null_mut(),
+            n_full: 0f32,
+            n_comp: 0f32,
+            b_full: 0f32,
+            b_comp: 0f32,
+            cov_eval_et: 0f32,
+            d__mu: ptr::null_mut(),
+            d__xi: ptr::null_mut(),
+            raster_plan: 0,
+            MVM_input_plan: 0,
+            MVM_output_plan: 0,
+        }
+    }
+}
+impl Default for iterativeSolvers {
+    fn default() -> Self {
+        Self {
+            d__vectors: ptr::null_mut(),
+            q: ptr::null_mut(),
+            x: ptr::null_mut(),
+            r: ptr::null_mut(),
+            p: ptr::null_mut(),
+            z: ptr::null_mut(),
+            nu_i: ptr::null_mut(),
+            nu_im1: ptr::null_mut(),
+            nu_ip1: ptr::null_mut(),
+            w_i: ptr::null_mut(),
+            w_im1: ptr::null_mut(),
+            w_im2: ptr::null_mut(),
+            rnorm: 0f32,
+            rel_rnorm: 0f32,
+            mean_time_per_iteration: 0f32,
+            RTOL: 0f32,
+            ATOL: 0f32,
+            N: 0,
+            N_ITERATION: 0,
+            cvgce_iteration: 0,
+            tid: Default::default(),
+            handle: ptr::null_mut(),
+            status: 0,
+            VERBOSE: 0,
+        }
+    }
+}
+impl Default for ceo_LMMSE {
+    fn default() -> Self {
+        Self {
+            d__idx: ptr::null_mut(),
+            PS_E_N_PX: 0,
+            N_guide_star: 0,
+            N_mmse_star: 0,
+            offset: 0,
+            N_SIDE_LENSLET_: 0,
+            NP: 0,
+            NS: 0,
+            osf: 0,
+            d__ce: ptr::null_mut(),
+            d__phase_est: ptr::null_mut(),
+            d__phase_est_c: ptr::null_mut(),
+            d__phase_est_i: ptr::null_mut(),
+            d__x: ptr::null_mut(),
+            d__zp_x: ptr::null_mut(),
+            aa: Default::default(),
+            aaCov: Default::default(),
+            pa: Default::default(),
+            paCov: Default::default(),
+            iSolve: Default::default(),
+            tid: Default::default(),
+            nnz: 0,
+            NI: 0,
+            csrValH: ptr::null_mut(),
+            csrColIndH: ptr::null_mut(),
+            csrRowPtrH: ptr::null_mut(),
+            alpha: 0f32,
+            beta: 0f32,
+            elapsed_time: 0f32,
+            cudaStat: 0,
+            status: 0,
+            handle: ptr::null_mut(),
+            descr: ptr::null_mut(),
+            start: ptr::null_mut(),
+            stop: ptr::null_mut(),
+        }
+    }
+}
 pub struct LinearMinimumMeanSquareError {
     _c_: ceo_LMMSE,
     atm: Atmosphere,
@@ -79,7 +302,7 @@ impl Builder for LMMSE {
             .build(n_actuator * n_actuator)
             .filter(&mut mmse_star.amplitude().into());
         let mut lmmse = LinearMinimumMeanSquareError {
-            _c_: unsafe { std::mem::zeroed() },
+            _c_: Default::default(),
             atm: self.atm.build(),
             guide_star: self.guide_star.build(),
             mmse_star,

@@ -15,7 +15,7 @@
 //! [`ceo!`](macro.ceo.html) is a macro that incorporates the necessary boilerplate code to create CEO elements.
 
 use skyangle::*;
-use std::{error::Error, f32, fmt, mem, ptr};
+use std::{error::Error, fmt, ptr};
 
 pub mod analytic;
 pub mod atmosphere;
@@ -214,6 +214,7 @@ impl Default for Mask {
     }
 }
 
+/*
 pub struct CuFloat {
     _c_: gpu_float,
     host_data: Vec<f32>,
@@ -281,7 +282,7 @@ pub fn qr(tau: &mut CuFloat, a: &mut CuFloat, m: i32, n: i32) {
 pub fn qtb(b: &mut CuFloat, m: i32, a: &mut CuFloat, tau: &mut CuFloat, n: i32) {
     unsafe { ormqr(b._c_.dev_data, m, a._c_.dev_data, tau._c_.dev_data, n) }
 }
-
+*/
 #[cfg(test)]
 mod tests {
     use super::*;
