@@ -6675,7 +6675,7 @@ impl modes {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct gmt_m1 {
     pub M_ID: ::std::os::raw::c_int,
     pub D_assembly: rtd,
@@ -6710,14 +6710,14 @@ pub struct gmt_m1 {
     pub d__D: *mut f64,
     pub handle: cublasHandle_t,
     pub d__valid_segments: *mut ::std::os::raw::c_char,
-    pub BS: *mut modes,
+    pub BS: modes,
     pub d__segment_reflectivity: *mut f32,
 }
 #[test]
 fn bindgen_test_layout_gmt_m1() {
     assert_eq!(
         ::std::mem::size_of::<gmt_m1>(),
-        840usize,
+        1000usize,
         concat!("Size of: ", stringify!(gmt_m1))
     );
     assert_eq!(
@@ -7052,7 +7052,7 @@ fn bindgen_test_layout_gmt_m1() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<gmt_m1>())).d__segment_reflectivity as *const _ as usize },
-        832usize,
+        992usize,
         concat!(
             "Offset of field: ",
             stringify!(gmt_m1),
@@ -7066,8 +7066,13 @@ extern "C" {
     pub fn gmt_m1_setup(this: *mut gmt_m1);
 }
 extern "C" {
-    #[link_name = "\u{1}_ZN6gmt_m15setupEP5modes"]
-    pub fn gmt_m1_setup1(this: *mut gmt_m1, _BS_: *mut modes);
+    #[link_name = "\u{1}_ZN6gmt_m15setupEPcii"]
+    pub fn gmt_m1_setup1(
+        this: *mut gmt_m1,
+        _filename_: *mut ::std::os::raw::c_char,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    );
 }
 extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m15setupEP8zernikeS"]
@@ -7174,8 +7179,13 @@ impl gmt_m1 {
         gmt_m1_setup(self)
     }
     #[inline]
-    pub unsafe fn setup1(&mut self, _BS_: *mut modes) {
-        gmt_m1_setup1(self, _BS_)
+    pub unsafe fn setup1(
+        &mut self,
+        _filename_: *mut ::std::os::raw::c_char,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    ) {
+        gmt_m1_setup1(self, _filename_, _N_, _n_mode_)
     }
     #[inline]
     pub unsafe fn setup2(&mut self, ZS: *mut zernikeS) {
@@ -7274,7 +7284,7 @@ impl gmt_m1 {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct gmt_m2 {
     pub M_ID: ::std::os::raw::c_int,
     pub D_assembly: rtd,
@@ -7309,14 +7319,14 @@ pub struct gmt_m2 {
     pub d__D: *mut f64,
     pub handle: cublasHandle_t,
     pub d__valid_segments: *mut ::std::os::raw::c_char,
-    pub BS: *mut modes,
+    pub BS: modes,
     pub d__segment_reflectivity: *mut f32,
 }
 #[test]
 fn bindgen_test_layout_gmt_m2() {
     assert_eq!(
         ::std::mem::size_of::<gmt_m2>(),
-        840usize,
+        1000usize,
         concat!("Size of: ", stringify!(gmt_m2))
     );
     assert_eq!(
@@ -7651,7 +7661,7 @@ fn bindgen_test_layout_gmt_m2() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<gmt_m2>())).d__segment_reflectivity as *const _ as usize },
-        832usize,
+        992usize,
         concat!(
             "Offset of field: ",
             stringify!(gmt_m2),
@@ -7665,8 +7675,13 @@ extern "C" {
     pub fn gmt_m2_setup(this: *mut gmt_m2);
 }
 extern "C" {
-    #[link_name = "\u{1}_ZN6gmt_m25setupEP5modes"]
-    pub fn gmt_m2_setup1(this: *mut gmt_m2, _BS_: *mut modes);
+    #[link_name = "\u{1}_ZN6gmt_m25setupEPcii"]
+    pub fn gmt_m2_setup1(
+        this: *mut gmt_m2,
+        _filename_: *mut ::std::os::raw::c_char,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    );
 }
 extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m25setupEP8zernikeS"]
@@ -7773,8 +7788,13 @@ impl gmt_m2 {
         gmt_m2_setup(self)
     }
     #[inline]
-    pub unsafe fn setup1(&mut self, _BS_: *mut modes) {
-        gmt_m2_setup1(self, _BS_)
+    pub unsafe fn setup1(
+        &mut self,
+        _filename_: *mut ::std::os::raw::c_char,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    ) {
+        gmt_m2_setup1(self, _filename_, _N_, _n_mode_)
     }
     #[inline]
     pub unsafe fn setup2(&mut self, ZS: *mut zernikeS) {

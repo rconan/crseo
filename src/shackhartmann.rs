@@ -13,13 +13,14 @@
 //! ```
 
 use super::ceo_bindings::{geometricShackHartmann, shackHartmann};
-use super::{cu::Single, Builder, Cu, Mask, Propagation, Source, SOURCE, Result};
-use std::{f32, mem};
+use super::{cu::Single, Builder, Cu, Mask, Propagation, Result, Source, SOURCE};
+use std::{f32, ptr};
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
 
 pub trait Model: Clone {
+    fn new() -> Self;
     fn build(
         &mut self,
         n_side_lenslet: i32,
@@ -31,9 +32,36 @@ pub trait Model: Clone {
         b: i32,
     );
     fn get_c_as_mut_ptr(&mut self) -> *mut f32;
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) -> &mut Self;
     fn drop(&mut self);
 }
 impl Model for Geometric {
+    fn new() -> Self {
+        Self {
+            N_WFS: 0,
+            N_SIDE_LENSLET: 0,
+            N_LENSLET: 0,
+            N_ACTUATOR: 0,
+            N_SLOPE: 0,
+            d__c0: ptr::null_mut(),
+            d__cx0: ptr::null_mut(),
+            d__cy0: ptr::null_mut(),
+            valid_lenslet: Default::default(),
+            valid_actuator: Default::default(),
+            camera: Default::default(),
+            data_proc: Default::default(),
+            DFT_osf: 0,
+            lenslet_pitch: 0f32,
+            pixel_scale: 0f32,
+            intensity_threshold: 0f32,
+            slopes_gain: 0f32,
+            _d__c_: ptr::null_mut(),
+            _d__cx_: ptr::null_mut(),
+            _d__cy_: ptr::null_mut(),
+            N_FRAME: 0,
+            handle: ptr::null_mut(),
+        }
+    }
     fn build(
         &mut self,
         n_side_lenslet: i32,
@@ -54,8 +82,36 @@ impl Model for Geometric {
     fn drop(&mut self) {
         unsafe { self.cleanup() };
     }
+    /// Calibrates the `ShackHartmann` WFS reference slopes and valid lenslets
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) -> &mut Self {
+        unsafe {
+            self.calibrate(src.as_raw_mut_ptr(), threshold as f32);
+        }
+        self
+    }
 }
 impl Model for Diffractive {
+    fn new() -> Self {
+        Self {
+            N_WFS: 0,
+            N_SIDE_LENSLET: 0,
+            N_LENSLET: 0,
+            N_ACTUATOR: 0,
+            N_SLOPE: 0,
+            d__c0: ptr::null_mut(),
+            d__cx0: ptr::null_mut(),
+            d__cy0: ptr::null_mut(),
+            valid_lenslet: Default::default(),
+            valid_actuator: Default::default(),
+            camera: Default::default(),
+            data_proc: Default::default(),
+            DFT_osf: 0,
+            lenslet_pitch: 0f32,
+            pixel_scale: 0f32,
+            intensity_threshold: 0f32,
+            slopes_gain: 0f32,
+        }
+    }
     fn drop(&mut self) {
         unsafe {
             self.cleanup();
@@ -78,6 +134,13 @@ impl Model for Diffractive {
             self.setup(n_side_lenslet, n_px_lenslet, d, osf, n_px, b, n_sensor);
         }
     }
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) -> &mut Self {
+        unsafe {
+            self.calibrate(src.as_raw_mut_ptr(), threshold as f32);
+            self.camera.reset();
+        }
+        self
+    }
 }
 
 // n_side_lenslet, n_px_lenslet, d
@@ -97,6 +160,9 @@ impl Default for Detector {
     fn default() -> Self {
         Detector(512, None, None)
     }
+}
+pub trait WavefrontSensorBuilder {
+    fn guide_stars(&self) -> SOURCE;
 }
 /// `ShackHartmann` builder
 ///
@@ -144,7 +210,9 @@ impl<T: Model> SHACKHARTMANN<T> {
             ..self
         }
     }
-    pub fn guide_stars(&self) -> SOURCE {
+}
+impl<T: Model> WavefrontSensorBuilder for SHACKHARTMANN<T> {
+    fn guide_stars(&self) -> SOURCE {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         SOURCE::new()
             .size(self.n_sensor)
@@ -157,7 +225,7 @@ impl<T: Model> Builder for SHACKHARTMANN<T> {
     fn build(self) -> Result<ShackHartmann<T>> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         let mut wfs = ShackHartmann::<T> {
-            _c_: unsafe { std::mem::zeroed() },
+            _c_: Model::new(),
             n_side_lenslet: n_side_lenslet as i32,
             n_px_lenslet: n_px_lenslet as i32,
             d,
@@ -231,7 +299,9 @@ impl<T: Model> SH48<T> {
     pub fn n_sensor(self, n_sensor: usize) -> Self {
         Self { n_sensor, ..self }
     }
-    pub fn guide_stars(&self) -> SOURCE {
+}
+impl<T: Model> WavefrontSensorBuilder for SH48<T> {
+    fn guide_stars(&self) -> SOURCE {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         SOURCE::new()
             .size(self.n_sensor)
@@ -244,7 +314,7 @@ impl<T: Model> Builder for SH48<T> {
     fn build(self) -> Result<ShackHartmann<T>> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         let mut wfs = ShackHartmann::<T> {
-            _c_: unsafe { std::mem::zeroed() },
+            _c_: Model::new(),
             n_side_lenslet: n_side_lenslet as i32,
             n_px_lenslet: n_px_lenslet as i32,
             d,
@@ -278,6 +348,11 @@ impl<T: Model> Builder for SH48<T> {
         Ok(wfs)
     }
 }
+
+pub trait WavefrontSensor {
+    fn calibrate(&mut self, src: &mut Source, threshold: f64);
+}
+
 /// shackhartmann wrapper
 pub struct ShackHartmann<S: Model> {
     pub _c_: S,
@@ -303,7 +378,7 @@ impl<S: Model> ShackHartmann<S> {
     /// * `d` - the lenslet pitch [m]
     pub fn new(n_sensor: i32, n_side_lenslet: i32, n_px_lenslet: i32, d: f64) -> ShackHartmann<S> {
         ShackHartmann {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Model::new(),
             n_side_lenslet,
             n_px_lenslet,
             d,
@@ -319,8 +394,13 @@ impl<S: Model> ShackHartmann<S> {
             .pupil_sampling((self.n_px_lenslet * self.n_side_lenslet + 1) as usize)
             .band("R")
     }
-    pub fn drop(&mut self) {
+    pub fn drop_sh(&mut self) {
         self._c_.drop();
+    }
+}
+impl<S: Model> WavefrontSensor for ShackHartmann<S> {
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) {
+        self._c_.calibrate(src, threshold);
     }
 }
 impl ShackHartmann<Geometric> {
@@ -347,13 +427,6 @@ impl ShackHartmann<Geometric> {
             self.d * self.n_side_lenslet as f64,
             self.n_px_lenslet * self.n_side_lenslet + 1,
         )
-    }
-    /// Calibrates the `ShackHartmann` WFS reference slopes and valid lenslets
-    pub fn calibrate(&mut self, src: &mut Source, threshold: f64) -> &mut Self {
-        unsafe {
-            self._c_.calibrate(src.as_raw_mut_ptr(), threshold as f32);
-        }
-        self
     }
     pub fn process(&mut self) -> &mut Self {
         unsafe {
@@ -413,7 +486,7 @@ impl ShackHartmann<Geometric> {
 }
 impl<S: Model> Drop for ShackHartmann<S> {
     fn drop(&mut self) {
-        self.drop();
+        self.drop_sh();
     }
 }
 impl Propagation for ShackHartmann<Geometric> {
@@ -464,13 +537,6 @@ impl ShackHartmann<Diffractive> {
             self.d * self.n_side_lenslet as f64,
             self.n_px_lenslet * self.n_side_lenslet + 1,
         )
-    }
-    pub fn calibrate(&mut self, src: &mut Source, threshold: f64) -> &mut Self {
-        unsafe {
-            self._c_.calibrate(src.as_raw_mut_ptr(), threshold as f32);
-            self._c_.camera.reset();
-        }
-        self
     }
     pub fn process(&mut self) -> &mut Self {
         unsafe {
@@ -545,7 +611,7 @@ mod tests {
     #[test]
     fn shack_hartmann_geometric_new_with_macro() {
         let mut wfs = crate::ceo!(
-            SHACKHARTMANN:Geometric,
+            SHACKHARTMANN: Geometric,
             n_sensor = [1],
             lenslet_array = [48, 16, 25.5 / 48f64]
         );

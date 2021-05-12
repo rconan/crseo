@@ -1,11 +1,21 @@
-use super::ceo_bindings::{gpu_double, gpu_float};
+use super::ceo_bindings::{gpu_double, gpu_float, stats};
 use core::ops::{AddAssign, Mul, SubAssign};
-use std::mem;
+use std::ptr;
+
+impl Default for stats {
+    fn default() -> Self {
+        Self {
+            handle: ptr::null_mut(),
+            status: 0,
+        }
+    }
+}
 
 pub type Single = gpu_float;
 pub type Double = gpu_double;
 
 pub trait CuType {
+    fn new() -> Self;
     fn build(&mut self, size: i32);
     fn malloc(&mut self);
     fn assign_f32(&mut self, _ptr: *mut f32) {}
@@ -13,6 +23,18 @@ pub trait CuType {
     fn drop(&mut self);
 }
 impl CuType for Double {
+    fn new() -> Self {
+        Self {
+            dev_data: ptr::null_mut(),
+            host_data: ptr::null_mut(),
+            N: 0,
+            nb: 0,
+            S: Default::default(),
+            stat: 0,
+            handle: ptr::null_mut(),
+            cusolverH: ptr::null_mut(),
+        }
+    }
     fn build(&mut self, size: i32) {
         unsafe {
             self.setup1(size);
@@ -33,6 +55,19 @@ impl CuType for Double {
     }
 }
 impl CuType for Single {
+    fn new() -> Self {
+        Self {
+            dev_data: ptr::null_mut(),
+            host_data: ptr::null_mut(),
+            d_tau: ptr::null_mut(),
+            N: 0,
+            nb: 0,
+            S: Default::default(),
+            stat: 0,
+            handle: ptr::null_mut(),
+            cusolverH: ptr::null_mut(),
+        }
+    }
     fn build(&mut self, size: i32) {
         unsafe {
             self.setup1(size);
@@ -64,7 +99,7 @@ impl<T: CuType> Cu<T> {
     /// Creates an empty CUDA array
     pub fn new() -> Cu<T> {
         Cu {
-            _c_: unsafe { mem::zeroed() },
+            _c_: CuType::new(),
             n_rows: 0,
             n_cols: 0,
             dev_alloc: false,
@@ -72,16 +107,16 @@ impl<T: CuType> Cu<T> {
     }
     pub fn array(n_rows: usize, n_cols: usize) -> Cu<T> {
         Cu {
-            _c_: unsafe { mem::zeroed() },
-            n_rows: n_rows,
-            n_cols: n_cols,
+            _c_: CuType::new(),
+            n_rows,
+            n_cols,
             dev_alloc: false,
         }
     }
     pub fn vector(n_rows: usize) -> Cu<T> {
         Cu {
-            _c_: unsafe { mem::zeroed() },
-            n_rows: n_rows,
+            _c_: CuType::new(),
+            n_rows,
             n_cols: 1,
             dev_alloc: false,
         }

@@ -21,13 +21,81 @@
 //! let mut src = ceo!(SOURCE, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use super::ceo_bindings::{dev2host, dev2host_int, source, vector};
+use super::ceo_bindings::{bundle, complex_amplitude, dev2host, dev2host_int, source, vector};
 use super::{cu::Single, Builder, Centroiding, Cu, Result};
+
 use std::{
     f32,
     ffi::{CStr, CString},
-    mem,
+    ptr,
 };
+
+impl Default for complex_amplitude {
+    fn default() -> Self {
+        Self {
+            N_PX: 0,
+            N: 0,
+            amplitude: ptr::null_mut(),
+            phase: ptr::null_mut(),
+            M: ptr::null_mut(),
+            handle: ptr::null_mut(),
+            buffer: ptr::null_mut(),
+        }
+    }
+}
+impl Default for bundle {
+    fn default() -> Self {
+        Self {
+            N_RAY: 0,
+            d__ray: ptr::null_mut(),
+            N_BUNDLE: 0,
+            N_RAY_TOTAL: 0,
+            d__origin: ptr::null_mut(),
+            rot_angle: 0.,
+            d__chief_ray: ptr::null_mut(),
+            d__chief_origin: ptr::null_mut(),
+            V: Default::default(),
+            geom: [0; 8usize],
+            N_RADIUS: 0,
+            N_THETA: 0,
+            N_L: 0,
+            L: 0.,
+            d__sphere_distance: ptr::null_mut(),
+            d__sphere_radius: ptr::null_mut(),
+            d__sphere_origin: ptr::null_mut(),
+            d__piston_mask: ptr::null_mut(),
+            refractive_index: 0.,
+            d__Vx: ptr::null_mut(),
+            d__Vy: ptr::null_mut(),
+        }
+    }
+}
+impl Default for source {
+    fn default() -> Self {
+        Self {
+            N_SRC: 0,
+            zenith: 0.,
+            azimuth: 0.,
+            height: 0.,
+            theta_x: 0.,
+            theta_y: 0.,
+            _zenith_64_: 0.,
+            _azimuth_64_: 0.,
+            _height_64_: 0.,
+            _theta_x_64_: 0.,
+            _theta_y_64_: 0.,
+            photometric_band: ptr::null(),
+            magnitude: 0.,
+            N_PHOTON: 0.,
+            fwhm: 0.,
+            wavefront: Default::default(),
+            dev_ptr: ptr::null_mut(),
+            tag: [0; 8usize],
+            rays_exist: 0,
+            rays: Default::default(),
+        }
+    }
+}
 
 /// A system that mutates `Source` arguments should implement the `Propagation` trait
 pub trait Propagation {
@@ -184,7 +252,7 @@ impl Builder for SOURCE {
     /// Build the `Source`
     fn build(self) -> Result<Source> {
         let mut src = Source {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Default::default(),
             size: self.size as i32,
             pupil_size: self.pupil_size,
             pupil_sampling: self.pupil_sampling as i32,
@@ -251,7 +319,7 @@ impl Source {
     /// Creates and empty `Source`
     pub fn empty() -> Source {
         Source {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Default::default(),
             size: 0,
             pupil_size: 0.0,
             pupil_sampling: 0,
@@ -268,7 +336,7 @@ impl Source {
     /// * `pupil_sampling` - the sampling of the entrance pupil [px]
     pub fn new(size: i32, pupil_size: f64, pupil_sampling: i32) -> Source {
         Source {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Default::default(),
             size,
             pupil_size,
             pupil_sampling,
@@ -365,6 +433,16 @@ impl Source {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
         }
         self._wfe_rms.clone()
+    }
+    pub fn wfe_rms_f64(&mut self) -> Vec<f64> {
+        unsafe {
+            self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
+        }
+        self._wfe_rms
+            .clone()
+            .into_iter()
+            .map(|x| x as f64)
+            .collect()
     }
     /// Returns the wavefront error root mean square [m]x10^-`exp`
     pub fn wfe_rms_10e(&mut self, exp: i32) -> Vec<f32> {

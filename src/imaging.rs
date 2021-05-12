@@ -1,8 +1,42 @@
-use std::{f32, mem};
+use std::{f32, ptr};
 
 use super::ceo_bindings::{dev2host, imaging};
 use super::Propagation;
 use super::Source;
+
+impl Default for imaging {
+    fn default() -> Self {
+        Self {
+            N_PX_PUPIL: 0,
+            N_DFT: 0,
+            N_SIDE_LENSLET: 0,
+            N_LENSLET: 0,
+            N_SOURCE: 0,
+            N_PX_IMAGE: 0,
+            N_PX_CAMERA: 0,
+            N_FRAME: 0,
+            BIN_IMAGE: 0,
+            LOCAL_RAND_SEED: 0,
+            plan: 0,
+            N_PHOTON_PER_SECOND_PER_FRAME: 0f32,
+            N_PHOTON_PER_FRAME: 0f32,
+            d__wave_PUPIL: ptr::null_mut(),
+            d__frame: ptr::null_mut(),
+            zenith: 0f32,
+            azimuth: 0f32,
+            theta_x: 0f32,
+            theta_y: 0f32,
+            d__zenith: ptr::null_mut(),
+            d__azimuth: ptr::null_mut(),
+            d__theta_x: ptr::null_mut(),
+            d__theta_y: ptr::null_mut(),
+            pixel_scale: 0f32,
+            photoelectron_gain: 0f32,
+            absolute_pointing: 0,
+            devStates: ptr::null_mut(),
+        }
+    }
+}
 
 #[derive(Copy, Clone)]
 /// A square lenslet array
@@ -61,7 +95,7 @@ impl Imaging {
     /// Creates a new `Imaging`
     pub fn new() -> Imaging {
         Imaging {
-            _c_: unsafe { mem::zeroed() },
+            _c_: Default::default(),
             dft_osf: 1,
         }
     }
@@ -194,8 +228,8 @@ impl Propagation for Imaging {
 #[cfg(test)]
 /// Imaging tests
 mod tests {
-    use crate::{Gmt,Centroiding,Conversion};
     use super::*;
+    use crate::{Centroiding, Conversion, Gmt};
 
     #[test]
     /// Test the intensity per lenslet
@@ -221,7 +255,7 @@ mod tests {
             .iter()
             .cloned()
             .fold(-f32::INFINITY, f32::max);
-        println!("Light collecting area: {}",src.light_collecting_area());
+        println!("Light collecting area: {}", src.light_collecting_area());
         println!("Sensor lenslet flux: {}", fluxlet);
         let fluxlet_expected = src.n_photon()[0] * lenslet_size * lenslet_size;
         println!("Lenslet expected flux: {}", fluxlet_expected);
@@ -323,15 +357,15 @@ mod tests {
         let nbg_px = 1000f64;
         sensor
             .reset()
-            .readout(1f64, Some(NoiseDataSheet::background(n as f64*nbg_px)));
+            .readout(1f64, Some(NoiseDataSheet::background(n as f64 * nbg_px)));
         let mut frame = vec![0f32; n as usize];
         sensor.frame_transfer(&mut frame);
 
         let m = frame.iter().sum::<f32>() / n as f32;
         let v = frame.iter().map(|x| (x - m).powi(2)).sum::<f32>() / n as f32;
         println!("background photon: [{},{}]", m, v);
-        assert!((m as f64-nbg_px).abs()/nbg_px<1e-2);
-        assert!((v as f64-nbg_px).abs()/nbg_px<2e-2);
+        assert!((m as f64 - nbg_px).abs() / nbg_px < 1e-2);
+        assert!((v as f64 - nbg_px).abs() / nbg_px < 2e-2);
     }
     #[test]
     fn imaging_pointing() {
@@ -372,7 +406,7 @@ mod tests {
         cog.process(&sensor, Some(&cog0));
         let s = &cog.grab().centroids;
         println!("s: [{},{}]", (s[0] as f64).to_mas(), (s[1] as f64).to_mas());
-        assert!(((z+s[0]) as f64).to_mas()<1f64);
+        assert!(((z + s[0]) as f64).to_mas() < 1f64);
     }
 
     #[test]

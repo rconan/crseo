@@ -1,16 +1,17 @@
 use crseo::{
-    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, Builder, Calibration, GMT, SH48, CRSEOError,
+    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, shackhartmann::WavefrontSensor,
+    shackhartmann::WavefrontSensorBuilder, Builder, Calibration, CrseoError, GMT, SH48,
 };
 use serde_pickle as pickle;
 use std::fs::File;
 use std::time::Instant;
 
-fn main() -> std::result::Result<(),CRSEOError> {
+fn main() -> std::result::Result<(), CrseoError> {
     let mut gmt = ceo!(GMT);
     println!("M1 mode: {}", gmt.get_m1_mode_type());
     println!("M2 mode: {}", gmt.get_m2_mode_type());
     let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(1);
-    let mut gs = wfs_blueprint.guide_stars().build().unwrap();
+    let mut gs = wfs_blueprint.guide_stars().build()?;
     println!("GS band: {}", gs.get_photometric_band());
 
     let mut gmt2wfs = Calibration::new(&gmt, &gs, wfs_blueprint.clone());

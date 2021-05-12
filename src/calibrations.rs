@@ -1,5 +1,6 @@
 use super::{
-    cu::Single, shackhartmann::Geometric, Builder, Cu, Gmt, ShackHartmann, Source, GMT, SOURCE, Result
+    cu::Single, shackhartmann::Geometric, shackhartmann::WavefrontSensor, Builder, Cu, Gmt,
+    ShackHartmann, Source, GMT, SOURCE,
 };
 use log;
 use std::ops::Range;
@@ -89,7 +90,7 @@ impl Segment {
 ///
 /// `Calibration` creates its own GMT simulation with a `Gmt`, a `Source` and a `Builder`.
 /// The calibration is performed by estimating the geometric centroids associated with the calibrated functions.
-pub struct Calibration<T: Clone +  Builder<Component = ShackHartmann<Geometric>>> {
+pub struct Calibration<T: Clone + Builder<Component = ShackHartmann<Geometric>>> {
     gmt_blueprint: GMT,
     src_blueprint: SOURCE,
     wfs_blueprint: T,
@@ -100,8 +101,7 @@ pub struct Calibration<T: Clone +  Builder<Component = ShackHartmann<Geometric>>
 }
 impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
     /// Creates a new `Calibration` with the blueprints of the `Gmt`, the `Source` and the `Builder`
-    pub fn new(gmt: &Gmt, src: &Source, wfs_blueprint: T) -> Calibration<T>
-    {
+    pub fn new(gmt: &Gmt, src: &Source, wfs_blueprint: T) -> Calibration<T> {
         Calibration {
             gmt_blueprint: gmt.into(),
             src_blueprint: src.into(),
