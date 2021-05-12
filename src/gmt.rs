@@ -19,7 +19,7 @@
 //! ```
 
 use super::ceo_bindings::{bundle, coordinate_system, gmt_m1, gmt_m2, modes, vector};
-use super::{Builder, CrseoError, Propagation, Source};
+use super::{Builder, CrseoError, Propagation, Result, Source};
 use std::{
     env,
     ffi::{CStr, CString},
@@ -223,18 +223,26 @@ impl GMT {
         }
     }
 }
+impl Mirror {
+    fn mode_path(&self) -> Result<String> {
+        let mode_type = Path::new(&self.mode_type).with_extension("ceo");
+        if mode_type.is_file() {
+            Ok(mode_type.to_str().unwrap().to_owned())
+        } else {
+            let env_path =
+                env::var("GMT_MODES_PATH").unwrap_or_else(|_| String::from("CEO/gmtMirrors"));
+            let path = Path::new(&env_path).join(mode_type);
+            if path.is_file() {
+                Ok(path.to_str().unwrap().to_owned())
+            } else {
+                Err(CrseoError::GmtModesPath(path))
+            }
+        }
+    }
+}
 impl Builder for GMT {
     type Component = Gmt;
     fn build(self) -> std::result::Result<Gmt, CrseoError> {
-        let env_path = env::var("GMT_MODES_PATH").map_err(|e| CrseoError::Env {
-            var: "GMT_MODES_PATH".to_string(),
-            error: e,
-        })?;
-        let gmt_modes_path = Path::new(&env_path);
-        let m1_mode_path = gmt_modes_path.join(format!("{}.ceo", self.m1.mode_type));
-        if !m1_mode_path.is_file() {
-            return Err(CrseoError::GmtModesPath(m1_mode_path));
-        }
         let mut gmt = Gmt {
             _c_m1: Default::default(),
             _c_m2: Default::default(),
@@ -244,14 +252,14 @@ impl Builder for GMT {
             a1: vec![0.],
             a2: vec![0.],
         };
-        let m1_mode_type = CString::new(self.m1.mode_type.into_bytes())?;
+        let m1_mode_type = CString::new(self.m1.mode_path()?)?;
         gmt.m1_n_mode = self.m1.n_mode;
         gmt.a1 = vec![0.0; 7 * gmt.m1_n_mode as usize];
         unsafe {
             gmt._c_m1
                 .setup1(m1_mode_type.into_raw(), 7, gmt.m1_n_mode as i32);
         }
-        let m2_mode_type = CString::new(self.m2.mode_type.into_bytes()).unwrap();
+        let m2_mode_type = CString::new(self.m2.mode_path()?)?;
         gmt.m2_n_mode = self.m2.n_mode;
         gmt.a2 = vec![0.0; 7 * gmt.m2_n_mode as usize];
         unsafe {
