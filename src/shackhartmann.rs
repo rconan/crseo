@@ -560,9 +560,10 @@ mod tests {
         let mut wfs = SHACKHARTMANN::<Geometric>::new()
             .n_sensor(1)
             .lenslet_array(48, 16, 25.5 / 48f64)
-            .build();
-        let mut src = SOURCE::new().pupil_sampling(48 * 16 + 1).build();
-        let mut gmt = GMT::new().build();
+            .build()
+            .unwrap();
+        let mut src = SOURCE::new().pupil_sampling(48 * 16 + 1).build().unwrap();
+        let mut gmt = GMT::new().build().unwrap();
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
     }

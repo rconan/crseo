@@ -640,68 +640,71 @@ impl Default for Source {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::Gmt;
+    //    use super::*;
+    //    use crate::Gmt;
 
-    #[test]
-    fn source_piston() {
-        let mut src = Source::new(1, 25.5, 1001);
-        src.build("V", vec![0.0], vec![0.0], vec![0.0]);
-        let mut gmt = Gmt::new();
-        gmt.build(1, None);
-        let p0 = src.through(&mut gmt).xpupil().segment_piston_10e(-9);
-        let rt = vec![vec![0f64, 0f64, 1e-6, 0f64, 0f64, 0f64]; 7];
-        gmt.update(None, Some(&rt), None, None);
-        let p = src.through(&mut gmt).xpupil().segment_piston_10e(-9);
-        let dp = p
-            .iter()
-            .zip(p0.iter())
-            .map(|x| x.0 - x.1)
-            .collect::<Vec<f32>>();
-        println!("{:?}", dp);
-    }
-
-    #[test]
-    fn source_fluxlet() {
-        let n_let = 48usize;
-        let mut src = Source::new(1, 25.5, n_let as i32 * 16 + 1);
-        src.build("V", vec![0.0], vec![0.0], vec![0.0]);
-        let mut gmt = Gmt::new();
-        gmt.build(1, None);
-        let f = src.through(&mut gmt).xpupil().fluxlet(n_let);
-        for i in 0..n_let {
-            for j in 0..n_let {
-                let k = i + n_let * j;
-                print!("{:3.0},", f[k])
-            }
-            println!("");
+    /*
+        #[test]
+        fn source_piston() {
+            let mut src = Source::new(1, 25.5, 1001);
+            src.build("V", vec![0.0], vec![0.0], vec![0.0]);
+            let mut gmt = Gmt::new();
+            gmt.build(1, None);
+            let p0 = src.through(&mut gmt).xpupil().segment_piston_10e(-9);
+            let rt = vec![vec![0f64, 0f64, 1e-6, 0f64, 0f64, 0f64]; 7];
+            gmt.update(None, Some(&rt), None, None);
+            let p = src.through(&mut gmt).xpupil().segment_piston_10e(-9);
+            let dp = p
+                .iter()
+                .zip(p0.iter())
+                .map(|x| x.0 - x.1)
+                .collect::<Vec<f32>>();
+            println!("{:?}", dp);
         }
-        let f_max = f.iter().cloned().fold(-f32::INFINITY, f32::max);
-        println!("Flux max: {}", f_max);
-        let t = 0.9;
-        let nv = f
-            .iter()
-            .cloned()
-            .filter(|x| x >= &(t * f_max))
-            .collect::<Vec<f32>>()
-            .len();
-        println!("# of valid let: {}", nv);
-        assert_eq!(nv, 1144);
-    }
-
+    */
+    /*
+        #[test]
+        fn source_fluxlet() {
+            let n_let = 48usize;
+            let mut src = Source::new(1, 25.5, n_let as i32 * 16 + 1);
+            src.build("V", vec![0.0], vec![0.0], vec![0.0]);
+            let mut gmt = Gmt::new();
+            gmt.build(1, None);
+            let f = src.through(&mut gmt).xpupil().fluxlet(n_let);
+            for i in 0..n_let {
+                for j in 0..n_let {
+                    let k = i + n_let * j;
+                    print!("{:3.0},", f[k])
+                }
+                println!("");
+            }
+            let f_max = f.iter().cloned().fold(-f32::INFINITY, f32::max);
+            println!("Flux max: {}", f_max);
+            let t = 0.9;
+            let nv = f
+                .iter()
+                .cloned()
+                .filter(|x| x >= &(t * f_max))
+                .collect::<Vec<f32>>()
+                .len();
+            println!("# of valid let: {}", nv);
+            assert_eq!(nv, 1144);
+        }
+    */
     #[test]
-    fn source_masklet() {
-        let n_let = 48usize;
-        let mut src = Source::new(1, 25.5, n_let as i32 * 16 + 1);
-        src.build("V", vec![0.0], vec![0.0], vec![0.0]);
-        let mut gmt = Gmt::new();
-        gmt.build(1, None);
-        let m = src.through(&mut gmt).xpupil().masklet(n_let, 0.9);
-        let nv = m.iter().fold(0u32, |a, x| a + *x as u32);
-        println!("# of valid let: {}", nv);
-        assert_eq!(nv, 1144);
-    }
-
+    /*
+        fn source_masklet() {
+            let n_let = 48usize;
+            let mut src = Source::new(1, 25.5, n_let as i32 * 16 + 1);
+            src.build("V", vec![0.0], vec![0.0], vec![0.0]);
+            let mut gmt = Gmt::new();
+            gmt.build(1, None);
+            let m = src.through(&mut gmt).xpupil().masklet(n_let, 0.9);
+            let nv = m.iter().fold(0u32, |a, x| a + *x as u32);
+            println!("# of valid let: {}", nv);
+            assert_eq!(nv, 1144);
+        }
+    */
     #[test]
     fn source_field_delaunay21() {
         use crate::{ceo, Conversion};

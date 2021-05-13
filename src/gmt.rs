@@ -512,7 +512,7 @@ mod tests {
 
     #[test]
     fn gmt_new() {
-        GMT::new().m1_n_mode(27).m2_n_mode(123).build();
+        GMT::new().m1_n_mode(27).m2_n_mode(123).build().unwrap();
     }
 
     #[test]
@@ -523,8 +523,8 @@ mod tests {
     #[test]
     fn gmt_optical_alignment() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().pupil_sampling(1001).build();
-        let mut gmt = GMT::new().build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
+        let mut gmt = GMT::new().build().unwrap();
         src.through(&mut gmt).xpupil();
         assert!(src.wfe_rms_10e(-9)[0] < 1.0);
     }
@@ -532,8 +532,8 @@ mod tests {
     #[test]
     fn gmt_m1_rx_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().pupil_sampling(1001).build();
-        let mut gmt = GMT::new().build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
+        let mut gmt = GMT::new().build().unwrap();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
         gmt.update(Some(&rt), None, None, None);
@@ -549,8 +549,8 @@ mod tests {
     #[test]
     fn gmt_m1_ry_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().pupil_sampling(1001).build();
-        let mut gmt = GMT::new().build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
+        let mut gmt = GMT::new().build().unwrap();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
         gmt.update(Some(&rt), None, None, None);
@@ -566,8 +566,8 @@ mod tests {
     #[test]
     fn gmt_m2_rx_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().pupil_sampling(1001).build();
-        let mut gmt = GMT::new().build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
+        let mut gmt = GMT::new().build().unwrap();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
         gmt.update(None, Some(&rt), None, None);
@@ -583,8 +583,8 @@ mod tests {
     #[test]
     fn gmt_m2_ry_optical_sensitity() {
         use crate::SOURCE;
-        let mut src = SOURCE::new().pupil_sampling(1001).build();
-        let mut gmt = GMT::new().build();
+        let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
+        let mut gmt = GMT::new().build().unwrap();
         let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
         gmt.update(None, Some(&rt), None, None);

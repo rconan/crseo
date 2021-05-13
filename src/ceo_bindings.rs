@@ -15,6 +15,15 @@ impl Default for vector {
         }
     }
 }
+impl From<[f64; 3]> for vector {
+    fn from(v: [f64; 3]) -> Self {
+        Self {
+            x: v[0],
+            y: v[1],
+            z: v[2],
+        }
+    }
+}
 impl Default for complex_amplitude {
     fn default() -> Self {
         Self {

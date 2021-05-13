@@ -30,6 +30,7 @@ pub mod gmt;
 pub mod imaging;
 pub mod lmmse;
 pub mod pssn;
+pub mod raytracing;
 pub mod shackhartmann;
 pub mod source;
 
@@ -277,7 +278,7 @@ pub fn qr(tau: &mut CuFloat, a: &mut CuFloat, m: i32, n: i32) {
 pub fn qtb(b: &mut CuFloat, m: i32, a: &mut CuFloat, tau: &mut CuFloat, n: i32) {
     unsafe { ormqr(b._c_.dev_data, m, a._c_.dev_data, tau._c_.dev_data, n) }
 }
-*/
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -345,3 +346,4 @@ mod tests {
         assert!((sx - (n as f32)).abs() < 1e-6);
     }
 }
+*/

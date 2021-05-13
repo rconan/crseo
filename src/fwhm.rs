@@ -76,15 +76,14 @@ impl Fwhm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{pssn::TelescopeError as TE, Atmosphere, Conversion, Gmt, PSSn};
+    use crate::{ceo, pssn::TelescopeError as TE, Builder, Conversion, PSSn, ATMOSPHERE};
     use std::time::Instant;
 
     #[test]
     fn fwhm_atmosphere_x() {
         let mut src = Source::new(1, 25.5, 1024);
         src.build("Vs", vec![0.0], vec![0.0], vec![0.0]);
-        let mut gmt = Gmt::new();
-        gmt.build(1, None);
+        let mut gmt = ceo!(GMT);
         let mut pssn: PSSn<TE> = PSSn::new();
         src.through(&mut gmt);
         pssn.build(&mut src);
@@ -103,23 +102,18 @@ mod tests {
     fn fwhm_atmosphere_n() {
         let mut src = Source::new(1, 25.5, 1024);
         src.build("Vs", vec![0.0], vec![0.0], vec![0.0]);
-        let mut gmt = Gmt::new();
-        gmt.build(1, None);
+        let mut gmt = ceo!(GMT);
         let mut pssn: PSSn<TE> = PSSn::new();
         src.through(&mut gmt);
         pssn.build(&mut src);
         let mut fwhm = Fwhm::new();
         fwhm.build(&mut src);
-        let mut atm = Atmosphere::new();
-        atm.build(
-            pssn.r0(),
-            pssn.oscale,
-            1,
-            vec![0f32],
-            vec![1f32],
-            vec![0f32],
-            vec![0f32],
-        );
+        let mut atm = ATMOSPHERE::new()
+            .r0_at_zenith(pssn.r0_at_zenith as f64)
+            .oscale(pssn.oscale as f64)
+            .single_turbulence_layer(0., None, None)
+            .build()
+            .unwrap();
         let atm_fwhm_x0 =
             Fwhm::atmosphere(500e-9, pssn.r0() as f64, pssn.oscale as f64).to_arcsec();
         let atm_fwhm_x1 = fwhm.from_complex_otf(&pssn.atmosphere_otf());

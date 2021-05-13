@@ -276,10 +276,10 @@ mod tests {
     #[test]
     fn pssn_new() {
         use crate::{GMT, SOURCE};
-        let mut src = SOURCE::new().build();
-        let mut gmt = GMT::new().build();
+        let mut src = SOURCE::new().build().unwrap();
+        let mut gmt = GMT::new().build().unwrap();
         src.through(&mut gmt).xpupil();
-        let mut pssn = PSSN::<TelescopeError>::new().build();
+        let mut pssn = PSSN::<TelescopeError>::new().build().unwrap();
         src.through(&mut pssn);
         println!("PSSN: {}", pssn.peek());
     }

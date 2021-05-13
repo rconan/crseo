@@ -143,7 +143,7 @@ impl Centroiding {
         self.lenslet_flux().iter().sum()
     }
     /// Computes the valid lenslets and return the number of valid lenslets; the valid lenslets are computed based on the maximum flux threshold or a given valid lenslets mask
-    pub fn set_valid_lenslets(
+    pub fn valid_lenslets(
         &mut self,
         some_flux_threshold: Option<f64>,
         some_valid_lenslets: Option<Vec<i8>>,
@@ -202,7 +202,7 @@ impl Drop for Centroiding {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Conversion, Gmt, Source};
+    use crate::{ceo, Conversion, Source};
 
     #[test]
     fn centroiding_sim() {
@@ -211,11 +211,10 @@ mod tests {
         let n_px_lenslet = 16;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = Gmt::new();
-        gmt.build(0, None);
+        let mut gmt = ceo!(GMT);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
-        src.set_fwhm(3f64);
+        src.fwhm(3f64);
         let mut sensor = Imaging::new();
         sensor.build(1, n_side_lenslet, n_px_lenslet, 2, 24, 3);
         let p = sensor.pixel_scale(&mut src) as f64;
@@ -223,14 +222,12 @@ mod tests {
         let mut cog0 = Centroiding::new();
         cog0.build(n_side_lenslet as u32, None);
         src.through(&mut gmt).xpupil().through(&mut sensor);
-        let nv = cog0
-            .process(&sensor, None)
-            .set_valid_lenslets(Some(0.5), None);
+        let nv = cog0.process(&sensor, None).valid_lenslets(Some(0.5), None);
         println!("Valid lenslet #: {}", nv);
 
         let mut cog = Centroiding::new();
         cog.build(n_side_lenslet as u32, Some(p))
-            .set_valid_lenslets(None, Some(cog0.valid_lenslets.clone()));
+            .valid_lenslets(None, Some(cog0.valid_lenslets.clone()));
         src.through(&mut gmt).xpupil().lenslet_gradients(
             n_side_lenslet,
             lenslet_size as f64,

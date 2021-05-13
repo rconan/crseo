@@ -1,7 +1,8 @@
 use crseo::ceo;
-use crseo::{pssn::TelescopeError, Builder, Conversion, Fwhm, PSSn, SkyAngle, SOURCE};
+use crseo::{pssn::TelescopeError, Builder, Fwhm, PSSn, SOURCE};
 use serde::Deserialize;
 use serde_pickle as pickle;
+use skyangle::{Conversion, SkyAngle};
 use std::collections::BTreeMap;
 use std::fs::File;
 
@@ -19,7 +20,7 @@ struct DField {
 }
 
 fn telescope_aberration_free(filename: &str, e_fwhm: &[f64]) {
-    println!("{}",filename);
+    println!("{}", filename);
     let file = File::open("/home/rconan/projects/gicsdom/ceo/fielddelaunay21.pkl").unwrap();
     let DField {
         zenith_arcmin,
@@ -46,16 +47,16 @@ fn telescope_aberration_free(filename: &str, e_fwhm: &[f64]) {
         .collect();
     let field_area = areas.iter().sum::<f64>();
     /*
-    println!(
-        "areas: {:?} ==> {}/{}",
-        areas,
-        field_area,
-        std::f64::consts::PI * (5f64.from_arcmin()).powf(2f64)
-    );
-*/
+        println!(
+            "areas: {:?} ==> {}/{}",
+            areas,
+            field_area,
+            std::f64::consts::PI * (5f64.from_arcmin()).powf(2f64)
+        );
+    */
     let file = File::open(format!("{}.pkl", filename)).unwrap();
     let fwhm: BTreeMap<String, Vec<f64>> = pickle::from_reader(file).unwrap();
-    println!("Case #:{}",fwhm.len());
+    println!("Case #:{}", fwhm.len());
 
     let mut field_free_fwhm = BTreeMap::<String, Vec<f64>>::new();
     for (key, value) in fwhm.iter() {
@@ -93,17 +94,17 @@ fn telescope_aberration_free(filename: &str, e_fwhm: &[f64]) {
     let mut file = File::create(format!("{}-tel.pkl", filename)).unwrap();
     pickle::to_writer(&mut file, &field_free_fwhm, true).unwrap();
 }
-fn main() {
+fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut gmt = ceo!(GMT);
     match Field::Delaunay {
         Field::Radial => {
             for z_arcmin in 0..11 {
                 let mut src = SOURCE::new()
-                    .set_zenith_azimuth(
+                    .zenith_azimuth(
                         vec![SkyAngle::Arcminute(z_arcmin as f32).to_radians()],
                         vec![0.],
                     )
-                    .build();
+                    .build()?;
                 let wfe_rms = src.through(&mut gmt).xpupil().wfe_rms_10e(-9);
                 let mut pssn: PSSn<TelescopeError> = PSSn::new();
                 pssn.build(&mut src);
@@ -120,7 +121,7 @@ fn main() {
             }
         }
         Field::Delaunay => {
-            let mut src = SOURCE::new().set_field_delaunay21().build();
+            let mut src = SOURCE::new().field_delaunay21().build()?;
             let wfe_rms = src.through(&mut gmt).xpupil().wfe_rms_10e(-9);
             let mut pssn: PSSn<TelescopeError> = PSSn::new();
             pssn.build(&mut src);
@@ -157,4 +158,5 @@ fn main() {
             );
         }
     }
+    Ok(())
 }

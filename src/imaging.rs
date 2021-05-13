@@ -143,7 +143,7 @@ impl Imaging {
         self
     }
     /// Sets the pixel scale
-    pub fn set_pixel_scale(&mut self, src: &mut Source) -> &mut Self {
+    pub fn set_pixel_scalep(&mut self, src: &mut Source) -> &mut Self {
         self._c_.pixel_scale = (src.wavelength() / src.pupil_size / self.dft_osf as f64) as f32
             * (self._c_.N_SIDE_LENSLET * self._c_.BIN_IMAGE) as f32;
         self
@@ -154,7 +154,7 @@ impl Imaging {
             * (self._c_.N_SIDE_LENSLET * self._c_.BIN_IMAGE) as f32
     }
     /// Sets the detector pointing direction
-    pub fn set_pointing(
+    pub fn pointing(
         &mut self,
         mut zen: Vec<f32>,
         mut azi: Vec<f32>,
@@ -194,7 +194,7 @@ impl Propagation for Imaging {
 /// Imaging tests
 mod tests {
     use super::*;
-    use crate::{Centroiding, Conversion, Gmt};
+    use crate::{ceo, Centroiding, Conversion};
 
     #[test]
     /// Test the intensity per lenslet
@@ -204,8 +204,7 @@ mod tests {
         let n_px_lenslet = 32;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = Gmt::new();
-        gmt.build(0, None);
+        let mut gmt = ceo!(GMT);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
         let mut sensor = Imaging::new();
@@ -234,12 +233,11 @@ mod tests {
         let n_px_lenslet = 16;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = Gmt::new();
-        gmt.build(0, None);
+        let mut gmt = ceo!(GMT);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![16f32]);
         let fwhm_px = 8f64;
-        src.set_fwhm(fwhm_px);
+        src.fwhm(fwhm_px);
         let mut sensor = Imaging::new();
         sensor.build(1, n_side_lenslet, n_px_lenslet, 2, 2 * n_px_lenslet, 1);
         let p = sensor.pixel_scale(&mut src) as f64;
@@ -247,9 +245,7 @@ mod tests {
         let mut cog0 = Centroiding::new();
         cog0.build(n_side_lenslet as u32, None);
         src.through(&mut gmt).xpupil().through(&mut sensor);
-        let nv = cog0
-            .process(&sensor, None)
-            .set_valid_lenslets(Some(0.9), None);
+        let nv = cog0.process(&sensor, None).valid_lenslets(Some(0.9), None);
         println!("Valid lenslet #: {}", nv);
 
         let mut cog = Centroiding::new();
@@ -339,8 +335,7 @@ mod tests {
         let n_px_lenslet = 511;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         //        let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = Gmt::new();
-        gmt.build(0, None);
+        let mut gmt = ceo!(GMT);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
         let mut sensor = Imaging::new();
@@ -362,7 +357,7 @@ mod tests {
         cog.build(n_side_lenslet as u32, Some(p));
 
         let z = p as f32 * 10.0;
-        sensor.set_pointing(vec![z], vec![0.0], p);
+        sensor.pointing(vec![z], vec![0.0], p);
         src.through(&mut gmt).xpupil().through(sensor.reset());
         sensor.frame_transfer(&mut frame);
         let f = frame.iter().sum::<f32>();
@@ -381,8 +376,7 @@ mod tests {
         let n_px_lenslet = 511;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         //        let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = Gmt::new();
-        gmt.build(0, None);
+        let mut gmt = ceo!(GMT);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
         let mut sensor = Imaging::new();
