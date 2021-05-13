@@ -1,28 +1,6 @@
-use std::ptr;
-
 use super::ceo_bindings::{centroiding, dev2host, host2dev_char, mask};
 use super::Imaging;
 
-impl Default for centroiding {
-    fn default() -> Self {
-        Self {
-            _N_SIDE_LENSLET_: 0,
-            N_LENSLET: 0,
-            N_SOURCE: 0,
-            d__c: ptr::null_mut(),
-            d__cx: ptr::null_mut(),
-            d__cy: ptr::null_mut(),
-            d__mass: ptr::null_mut(),
-            lenslet_mask: ptr::null_mut(),
-            MASK_SET: 0,
-            n_data: 0,
-            DEV_SHARED_MEM: 0,
-            DEV_MAX_THREADS: 0,
-            handle: ptr::null_mut(),
-            status: 0,
-        }
-    }
-}
 /// Wrapper for CEO centroiding
 pub struct Centroiding {
     _c_: centroiding,

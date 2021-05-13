@@ -1,7 +1,6 @@
 use bindgen;
 
 fn main() {
-
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
         .clang_arg("-I/usr/local/cuda/include")
@@ -27,6 +26,10 @@ fn main() {
         .whitelist_type("atmosphere")
         .whitelist_type("LMMSE")
         .whitelist_type("pyramid")
+        .whitelist_type("conic")
+        .whitelist_function("intersect")
+        .whitelist_function("reflect")
+        .whitelist_function("refract")
         .whitelist_function("geqrf")
         .whitelist_function("ormqr")
         .generate()

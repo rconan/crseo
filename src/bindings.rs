@@ -3816,6 +3816,966 @@ impl pssn {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct coordinate_system {
+    pub origin: *mut vector,
+    pub euler_angles: *mut vector,
+    pub N: ::std::os::raw::c_int,
+    pub R: *mut rtd,
+    pub d__R: *mut rtd,
+    pub float_R: *mut f32,
+    pub d__origin: *mut vector,
+    pub tag: [::std::os::raw::c_char; 32usize],
+}
+#[test]
+fn bindgen_test_layout_coordinate_system() {
+    assert_eq!(
+        ::std::mem::size_of::<coordinate_system>(),
+        88usize,
+        concat!("Size of: ", stringify!(coordinate_system))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<coordinate_system>(),
+        8usize,
+        concat!("Alignment of ", stringify!(coordinate_system))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).origin as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(origin)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).euler_angles as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(euler_angles)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).N as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(N)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).R as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(R)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).d__R as *const _ as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(d__R)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).float_R as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(float_R)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).d__origin as *const _ as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(d__origin)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<coordinate_system>())).tag as *const _ as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(coordinate_system),
+            "::",
+            stringify!(tag)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system5setupEv"]
+    pub fn coordinate_system_setup(this: *mut coordinate_system);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system5setupE6vectorS0_"]
+    pub fn coordinate_system_setup1(
+        this: *mut coordinate_system,
+        _origin_: vector,
+        _euler_angles_: vector,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system5setupEP6vectorS1_i"]
+    pub fn coordinate_system_setup2(
+        this: *mut coordinate_system,
+        _origin_: *mut vector,
+        _euler_angles_: *mut vector,
+        _N_: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system5setupEP6vectorS1_iPc"]
+    pub fn coordinate_system_setup3(
+        this: *mut coordinate_system,
+        _origin_: *mut vector,
+        _euler_angles_: *mut vector,
+        _N_: ::std::os::raw::c_int,
+        _tag_: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system7cleanupEv"]
+    pub fn coordinate_system_cleanup(this: *mut coordinate_system);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system4infoEv"]
+    pub fn coordinate_system_info(this: *mut coordinate_system);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system12info_detailsEv"]
+    pub fn coordinate_system_info_details(this: *mut coordinate_system);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system6updateEv"]
+    pub fn coordinate_system_update(this: *mut coordinate_system);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN17coordinate_system6updateE6vectorS0_i"]
+    pub fn coordinate_system_update1(
+        this: *mut coordinate_system,
+        _origin_: vector,
+        _euler_angles_: vector,
+        idx: ::std::os::raw::c_int,
+    );
+}
+impl coordinate_system {
+    #[inline]
+    pub unsafe fn setup(&mut self) {
+        coordinate_system_setup(self)
+    }
+    #[inline]
+    pub unsafe fn setup1(&mut self, _origin_: vector, _euler_angles_: vector) {
+        coordinate_system_setup1(self, _origin_, _euler_angles_)
+    }
+    #[inline]
+    pub unsafe fn setup2(
+        &mut self,
+        _origin_: *mut vector,
+        _euler_angles_: *mut vector,
+        _N_: ::std::os::raw::c_int,
+    ) {
+        coordinate_system_setup2(self, _origin_, _euler_angles_, _N_)
+    }
+    #[inline]
+    pub unsafe fn setup3(
+        &mut self,
+        _origin_: *mut vector,
+        _euler_angles_: *mut vector,
+        _N_: ::std::os::raw::c_int,
+        _tag_: *mut ::std::os::raw::c_char,
+    ) {
+        coordinate_system_setup3(self, _origin_, _euler_angles_, _N_, _tag_)
+    }
+    #[inline]
+    pub unsafe fn cleanup(&mut self) {
+        coordinate_system_cleanup(self)
+    }
+    #[inline]
+    pub unsafe fn info(&mut self) {
+        coordinate_system_info(self)
+    }
+    #[inline]
+    pub unsafe fn info_details(&mut self) {
+        coordinate_system_info_details(self)
+    }
+    #[inline]
+    pub unsafe fn update(&mut self) {
+        coordinate_system_update(self)
+    }
+    #[inline]
+    pub unsafe fn update1(
+        &mut self,
+        _origin_: vector,
+        _euler_angles_: vector,
+        idx: ::std::os::raw::c_int,
+    ) {
+        coordinate_system_update1(self, _origin_, _euler_angles_, idx)
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct conic {
+    pub ref_frame: coordinate_system,
+    pub origin: vector,
+    pub d__origin: *mut vector,
+    pub c: rtd,
+    pub k: rtd,
+    pub refractive_index: rtd,
+    pub even_asphere_N: ::std::os::raw::c_int,
+    pub d__even_asphere_a: *mut rtd,
+}
+#[test]
+fn bindgen_test_layout_conic() {
+    assert_eq!(
+        ::std::mem::size_of::<conic>(),
+        160usize,
+        concat!("Size of: ", stringify!(conic))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<conic>(),
+        8usize,
+        concat!("Alignment of ", stringify!(conic))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).ref_frame as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(conic),
+            "::",
+            stringify!(ref_frame)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).origin as *const _ as usize },
+        88usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(conic),
+            "::",
+            stringify!(origin)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).d__origin as *const _ as usize },
+        112usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(conic),
+            "::",
+            stringify!(d__origin)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).c as *const _ as usize },
+        120usize,
+        concat!("Offset of field: ", stringify!(conic), "::", stringify!(c))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).k as *const _ as usize },
+        128usize,
+        concat!("Offset of field: ", stringify!(conic), "::", stringify!(k))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).refractive_index as *const _ as usize },
+        136usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(conic),
+            "::",
+            stringify!(refractive_index)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).even_asphere_N as *const _ as usize },
+        144usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(conic),
+            "::",
+            stringify!(even_asphere_N)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<conic>())).d__even_asphere_a as *const _ as usize },
+        152usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(conic),
+            "::",
+            stringify!(d__even_asphere_a)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic5setupEdd"]
+    pub fn conic_setup(this: *mut conic, _c_: rtd, _k_: rtd);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic5setupEdd6vectorS0_"]
+    pub fn conic_setup1(
+        this: *mut conic,
+        _c_: rtd,
+        _k_: rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic5setupEdd6vectorS0_S0_"]
+    pub fn conic_setup2(
+        this: *mut conic,
+        _c_: rtd,
+        _k_: rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        conic_origin: vector,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic5setupEdd6vectorS0_S0_d"]
+    pub fn conic_setup3(
+        this: *mut conic,
+        _c_: rtd,
+        _k_: rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        conic_origin: vector,
+        _refractive_index_: rtd,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic5setupEdd6vectorS0_S0_diPd"]
+    pub fn conic_setup4(
+        this: *mut conic,
+        _c_: rtd,
+        _k_: rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        conic_origin: vector,
+        _refractive_index_: rtd,
+        asphere_N: ::std::os::raw::c_int,
+        asphere_a: *mut rtd,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic7cleanupEv"]
+    pub fn conic_cleanup(this: *mut conic);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic5traceEP6bundle"]
+    pub fn conic_trace(this: *mut conic, src: *mut bundle);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN5conic4infoEv"]
+    pub fn conic_info(this: *mut conic);
+}
+impl conic {
+    #[inline]
+    pub unsafe fn setup(&mut self, _c_: rtd, _k_: rtd) {
+        conic_setup(self, _c_, _k_)
+    }
+    #[inline]
+    pub unsafe fn setup1(&mut self, _c_: rtd, _k_: rtd, _origin_: vector, _euler_angles_: vector) {
+        conic_setup1(self, _c_, _k_, _origin_, _euler_angles_)
+    }
+    #[inline]
+    pub unsafe fn setup2(
+        &mut self,
+        _c_: rtd,
+        _k_: rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        conic_origin: vector,
+    ) {
+        conic_setup2(self, _c_, _k_, _origin_, _euler_angles_, conic_origin)
+    }
+    #[inline]
+    pub unsafe fn setup3(
+        &mut self,
+        _c_: rtd,
+        _k_: rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        conic_origin: vector,
+        _refractive_index_: rtd,
+    ) {
+        conic_setup3(
+            self,
+            _c_,
+            _k_,
+            _origin_,
+            _euler_angles_,
+            conic_origin,
+            _refractive_index_,
+        )
+    }
+    #[inline]
+    pub unsafe fn setup4(
+        &mut self,
+        _c_: rtd,
+        _k_: rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        conic_origin: vector,
+        _refractive_index_: rtd,
+        asphere_N: ::std::os::raw::c_int,
+        asphere_a: *mut rtd,
+    ) {
+        conic_setup4(
+            self,
+            _c_,
+            _k_,
+            _origin_,
+            _euler_angles_,
+            conic_origin,
+            _refractive_index_,
+            asphere_N,
+            asphere_a,
+        )
+    }
+    #[inline]
+    pub unsafe fn cleanup(&mut self) {
+        conic_cleanup(self)
+    }
+    #[inline]
+    pub unsafe fn trace(&mut self, src: *mut bundle) {
+        conic_trace(self, src)
+    }
+    #[inline]
+    pub unsafe fn info(&mut self) {
+        conic_info(self)
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct zernikeS {
+    pub max_n: ::std::os::raw::c_int,
+    pub j: ::std::os::raw::c_uint,
+    pub n: ::std::os::raw::c_uint,
+    pub m: ::std::os::raw::c_uint,
+    pub n_mode: ::std::os::raw::c_uint,
+    pub a: *mut rtd,
+    pub d__a: *mut rtd,
+    pub bx: *mut rtd,
+    pub by: *mut rtd,
+    pub d__bx: *mut rtd,
+    pub d__by: *mut rtd,
+    pub bx_row_idx: *mut ::std::os::raw::c_uint,
+    pub bx_col_ptr: *mut ::std::os::raw::c_uint,
+    pub by_row_idx: *mut ::std::os::raw::c_uint,
+    pub by_col_ptr: *mut ::std::os::raw::c_uint,
+    pub bx_nnz: ::std::os::raw::c_uint,
+    pub by_nnz: ::std::os::raw::c_uint,
+    pub cx: *mut rtd,
+    pub d__cx: *mut rtd,
+    pub cy: *mut rtd,
+    pub d__cy: *mut rtd,
+    pub N: ::std::os::raw::c_int,
+    pub ref_frame: coordinate_system,
+}
+#[test]
+fn bindgen_test_layout_zernikeS() {
+    assert_eq!(
+        ::std::mem::size_of::<zernikeS>(),
+        240usize,
+        concat!("Size of: ", stringify!(zernikeS))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<zernikeS>(),
+        8usize,
+        concat!("Alignment of ", stringify!(zernikeS))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).max_n as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(max_n)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).j as *const _ as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(j)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).n as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(n)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).m as *const _ as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(m)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).n_mode as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(n_mode)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).a as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(a)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__a as *const _ as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(d__a)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(bx)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).by as *const _ as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(by)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__bx as *const _ as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(d__bx)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__by as *const _ as usize },
+        64usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(d__by)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx_row_idx as *const _ as usize },
+        72usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(bx_row_idx)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx_col_ptr as *const _ as usize },
+        80usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(bx_col_ptr)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).by_row_idx as *const _ as usize },
+        88usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(by_row_idx)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).by_col_ptr as *const _ as usize },
+        96usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(by_col_ptr)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx_nnz as *const _ as usize },
+        104usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(bx_nnz)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).by_nnz as *const _ as usize },
+        108usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(by_nnz)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).cx as *const _ as usize },
+        112usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(cx)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__cx as *const _ as usize },
+        120usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(d__cx)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).cy as *const _ as usize },
+        128usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(cy)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__cy as *const _ as usize },
+        136usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(d__cy)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).N as *const _ as usize },
+        144usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(N)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<zernikeS>())).ref_frame as *const _ as usize },
+        152usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(zernikeS),
+            "::",
+            stringify!(ref_frame)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS5setupEiPd"]
+    pub fn zernikeS_setup(this: *mut zernikeS, max_n: ::std::os::raw::c_int, a: *mut rtd);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS5setupEiPdi"]
+    pub fn zernikeS_setup1(
+        this: *mut zernikeS,
+        _max_n_: ::std::os::raw::c_int,
+        _a_: *mut rtd,
+        _N_: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS5setupEiPd6vectorS1_"]
+    pub fn zernikeS_setup2(
+        this: *mut zernikeS,
+        max_n: ::std::os::raw::c_int,
+        a: *mut rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS5setupEiPd6vectorS1_i"]
+    pub fn zernikeS_setup3(
+        this: *mut zernikeS,
+        max_n: ::std::os::raw::c_int,
+        a: *mut rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        _N_: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS7cleanupEv"]
+    pub fn zernikeS_cleanup(this: *mut zernikeS);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS7surfaceEPdS0_S0_i"]
+    pub fn zernikeS_surface(
+        this: *mut zernikeS,
+        S: *mut rtd,
+        r: *mut rtd,
+        o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS7surfaceEPdS0_S0_ii"]
+    pub fn zernikeS_surface1(
+        this: *mut zernikeS,
+        S: *mut rtd,
+        r: *mut rtd,
+        o: *mut rtd,
+        N: ::std::os::raw::c_int,
+        surf_id: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS6updateEPd"]
+    pub fn zernikeS_update(this: *mut zernikeS, a: *mut rtd);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS24surface_derivative_coefsEv"]
+    pub fn zernikeS_surface_derivative_coefs(this: *mut zernikeS);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS19surface_derivativesEPdS0_S0_S0_i"]
+    pub fn zernikeS_surface_derivatives(
+        this: *mut zernikeS,
+        d__dSdx: *mut rtd,
+        d__dSdy: *mut rtd,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS23surface_and_derivativesEPdS0_S0_S0_S0_i"]
+    pub fn zernikeS_surface_and_derivatives(
+        this: *mut zernikeS,
+        d__S: *mut rtd,
+        d__dSdx: *mut rtd,
+        d__dSdy: *mut rtd,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS23surface_and_derivativesEPdS0_S0_S0_S0_ii"]
+    pub fn zernikeS_surface_and_derivatives1(
+        this: *mut zernikeS,
+        d__S: *mut rtd,
+        d__dSdx: *mut rtd,
+        d__dSdy: *mut rtd,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+        surf_id: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8zernikeS10projectionEPfPdS1_i"]
+    pub fn zernikeS_projection(
+        this: *mut zernikeS,
+        d__phase: *mut f32,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    );
+}
+impl zernikeS {
+    #[inline]
+    pub unsafe fn setup(&mut self, max_n: ::std::os::raw::c_int, a: *mut rtd) {
+        zernikeS_setup(self, max_n, a)
+    }
+    #[inline]
+    pub unsafe fn setup1(
+        &mut self,
+        _max_n_: ::std::os::raw::c_int,
+        _a_: *mut rtd,
+        _N_: ::std::os::raw::c_int,
+    ) {
+        zernikeS_setup1(self, _max_n_, _a_, _N_)
+    }
+    #[inline]
+    pub unsafe fn setup2(
+        &mut self,
+        max_n: ::std::os::raw::c_int,
+        a: *mut rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+    ) {
+        zernikeS_setup2(self, max_n, a, _origin_, _euler_angles_)
+    }
+    #[inline]
+    pub unsafe fn setup3(
+        &mut self,
+        max_n: ::std::os::raw::c_int,
+        a: *mut rtd,
+        _origin_: vector,
+        _euler_angles_: vector,
+        _N_: ::std::os::raw::c_int,
+    ) {
+        zernikeS_setup3(self, max_n, a, _origin_, _euler_angles_, _N_)
+    }
+    #[inline]
+    pub unsafe fn cleanup(&mut self) {
+        zernikeS_cleanup(self)
+    }
+    #[inline]
+    pub unsafe fn surface(
+        &mut self,
+        S: *mut rtd,
+        r: *mut rtd,
+        o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    ) {
+        zernikeS_surface(self, S, r, o, N)
+    }
+    #[inline]
+    pub unsafe fn surface1(
+        &mut self,
+        S: *mut rtd,
+        r: *mut rtd,
+        o: *mut rtd,
+        N: ::std::os::raw::c_int,
+        surf_id: ::std::os::raw::c_int,
+    ) {
+        zernikeS_surface1(self, S, r, o, N, surf_id)
+    }
+    #[inline]
+    pub unsafe fn update(&mut self, a: *mut rtd) {
+        zernikeS_update(self, a)
+    }
+    #[inline]
+    pub unsafe fn surface_derivative_coefs(&mut self) {
+        zernikeS_surface_derivative_coefs(self)
+    }
+    #[inline]
+    pub unsafe fn surface_derivatives(
+        &mut self,
+        d__dSdx: *mut rtd,
+        d__dSdy: *mut rtd,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    ) {
+        zernikeS_surface_derivatives(self, d__dSdx, d__dSdy, d__r, d__o, N)
+    }
+    #[inline]
+    pub unsafe fn surface_and_derivatives(
+        &mut self,
+        d__S: *mut rtd,
+        d__dSdx: *mut rtd,
+        d__dSdy: *mut rtd,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    ) {
+        zernikeS_surface_and_derivatives(self, d__S, d__dSdx, d__dSdy, d__r, d__o, N)
+    }
+    #[inline]
+    pub unsafe fn surface_and_derivatives1(
+        &mut self,
+        d__S: *mut rtd,
+        d__dSdx: *mut rtd,
+        d__dSdy: *mut rtd,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+        surf_id: ::std::os::raw::c_int,
+    ) {
+        zernikeS_surface_and_derivatives1(self, d__S, d__dSdx, d__dSdy, d__r, d__o, N, surf_id)
+    }
+    #[inline]
+    pub unsafe fn projection(
+        &mut self,
+        d__phase: *mut f32,
+        d__r: *mut rtd,
+        d__o: *mut rtd,
+        N: ::std::os::raw::c_int,
+    ) {
+        zernikeS_projection(self, d__phase, d__r, d__o, N)
+    }
+}
+extern "C" {
+    #[link_name = "\u{1}_Z9intersectP6bundleP5conic"]
+    pub fn intersect(rays: *mut bundle, F: *mut conic);
+}
+extern "C" {
+    #[link_name = "\u{1}_Z7reflectP6bundle"]
+    pub fn reflect(rays: *mut bundle);
+}
+extern "C" {
+    #[link_name = "\u{1}_Z7refractP6bundled"]
+    pub fn refract(rays: *mut bundle, mu: rtd);
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct imaging {
     pub N_PX_PUPIL: ::std::os::raw::c_int,
     pub N_DFT: ::std::os::raw::c_int,
@@ -5665,719 +6625,6 @@ impl geometricShackHartmann {
     #[inline]
     pub unsafe fn reset(&mut self) {
         geometricShackHartmann_reset(self)
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct coordinate_system {
-    pub origin: *mut vector,
-    pub euler_angles: *mut vector,
-    pub N: ::std::os::raw::c_int,
-    pub R: *mut rtd,
-    pub d__R: *mut rtd,
-    pub float_R: *mut f32,
-    pub d__origin: *mut vector,
-    pub tag: [::std::os::raw::c_char; 32usize],
-}
-#[test]
-fn bindgen_test_layout_coordinate_system() {
-    assert_eq!(
-        ::std::mem::size_of::<coordinate_system>(),
-        88usize,
-        concat!("Size of: ", stringify!(coordinate_system))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<coordinate_system>(),
-        8usize,
-        concat!("Alignment of ", stringify!(coordinate_system))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).origin as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(origin)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).euler_angles as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(euler_angles)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).N as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(N)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).R as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(R)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).d__R as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(d__R)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).float_R as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(float_R)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).d__origin as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(d__origin)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<coordinate_system>())).tag as *const _ as usize },
-        56usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(coordinate_system),
-            "::",
-            stringify!(tag)
-        )
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system5setupEv"]
-    pub fn coordinate_system_setup(this: *mut coordinate_system);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system5setupE6vectorS0_"]
-    pub fn coordinate_system_setup1(
-        this: *mut coordinate_system,
-        _origin_: vector,
-        _euler_angles_: vector,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system5setupEP6vectorS1_i"]
-    pub fn coordinate_system_setup2(
-        this: *mut coordinate_system,
-        _origin_: *mut vector,
-        _euler_angles_: *mut vector,
-        _N_: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system5setupEP6vectorS1_iPc"]
-    pub fn coordinate_system_setup3(
-        this: *mut coordinate_system,
-        _origin_: *mut vector,
-        _euler_angles_: *mut vector,
-        _N_: ::std::os::raw::c_int,
-        _tag_: *mut ::std::os::raw::c_char,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system7cleanupEv"]
-    pub fn coordinate_system_cleanup(this: *mut coordinate_system);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system4infoEv"]
-    pub fn coordinate_system_info(this: *mut coordinate_system);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system12info_detailsEv"]
-    pub fn coordinate_system_info_details(this: *mut coordinate_system);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system6updateEv"]
-    pub fn coordinate_system_update(this: *mut coordinate_system);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN17coordinate_system6updateE6vectorS0_i"]
-    pub fn coordinate_system_update1(
-        this: *mut coordinate_system,
-        _origin_: vector,
-        _euler_angles_: vector,
-        idx: ::std::os::raw::c_int,
-    );
-}
-impl coordinate_system {
-    #[inline]
-    pub unsafe fn setup(&mut self) {
-        coordinate_system_setup(self)
-    }
-    #[inline]
-    pub unsafe fn setup1(&mut self, _origin_: vector, _euler_angles_: vector) {
-        coordinate_system_setup1(self, _origin_, _euler_angles_)
-    }
-    #[inline]
-    pub unsafe fn setup2(
-        &mut self,
-        _origin_: *mut vector,
-        _euler_angles_: *mut vector,
-        _N_: ::std::os::raw::c_int,
-    ) {
-        coordinate_system_setup2(self, _origin_, _euler_angles_, _N_)
-    }
-    #[inline]
-    pub unsafe fn setup3(
-        &mut self,
-        _origin_: *mut vector,
-        _euler_angles_: *mut vector,
-        _N_: ::std::os::raw::c_int,
-        _tag_: *mut ::std::os::raw::c_char,
-    ) {
-        coordinate_system_setup3(self, _origin_, _euler_angles_, _N_, _tag_)
-    }
-    #[inline]
-    pub unsafe fn cleanup(&mut self) {
-        coordinate_system_cleanup(self)
-    }
-    #[inline]
-    pub unsafe fn info(&mut self) {
-        coordinate_system_info(self)
-    }
-    #[inline]
-    pub unsafe fn info_details(&mut self) {
-        coordinate_system_info_details(self)
-    }
-    #[inline]
-    pub unsafe fn update(&mut self) {
-        coordinate_system_update(self)
-    }
-    #[inline]
-    pub unsafe fn update1(
-        &mut self,
-        _origin_: vector,
-        _euler_angles_: vector,
-        idx: ::std::os::raw::c_int,
-    ) {
-        coordinate_system_update1(self, _origin_, _euler_angles_, idx)
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct zernikeS {
-    pub max_n: ::std::os::raw::c_int,
-    pub j: ::std::os::raw::c_uint,
-    pub n: ::std::os::raw::c_uint,
-    pub m: ::std::os::raw::c_uint,
-    pub n_mode: ::std::os::raw::c_uint,
-    pub a: *mut rtd,
-    pub d__a: *mut rtd,
-    pub bx: *mut rtd,
-    pub by: *mut rtd,
-    pub d__bx: *mut rtd,
-    pub d__by: *mut rtd,
-    pub bx_row_idx: *mut ::std::os::raw::c_uint,
-    pub bx_col_ptr: *mut ::std::os::raw::c_uint,
-    pub by_row_idx: *mut ::std::os::raw::c_uint,
-    pub by_col_ptr: *mut ::std::os::raw::c_uint,
-    pub bx_nnz: ::std::os::raw::c_uint,
-    pub by_nnz: ::std::os::raw::c_uint,
-    pub cx: *mut rtd,
-    pub d__cx: *mut rtd,
-    pub cy: *mut rtd,
-    pub d__cy: *mut rtd,
-    pub N: ::std::os::raw::c_int,
-    pub ref_frame: coordinate_system,
-}
-#[test]
-fn bindgen_test_layout_zernikeS() {
-    assert_eq!(
-        ::std::mem::size_of::<zernikeS>(),
-        240usize,
-        concat!("Size of: ", stringify!(zernikeS))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<zernikeS>(),
-        8usize,
-        concat!("Alignment of ", stringify!(zernikeS))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).max_n as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(max_n)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).j as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(j)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).n as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(n)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).m as *const _ as usize },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(m)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).n_mode as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(n_mode)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).a as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(a)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__a as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(d__a)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(bx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).by as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(by)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__bx as *const _ as usize },
-        56usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(d__bx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__by as *const _ as usize },
-        64usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(d__by)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx_row_idx as *const _ as usize },
-        72usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(bx_row_idx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx_col_ptr as *const _ as usize },
-        80usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(bx_col_ptr)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).by_row_idx as *const _ as usize },
-        88usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(by_row_idx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).by_col_ptr as *const _ as usize },
-        96usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(by_col_ptr)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).bx_nnz as *const _ as usize },
-        104usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(bx_nnz)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).by_nnz as *const _ as usize },
-        108usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(by_nnz)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).cx as *const _ as usize },
-        112usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(cx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__cx as *const _ as usize },
-        120usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(d__cx)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).cy as *const _ as usize },
-        128usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(cy)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).d__cy as *const _ as usize },
-        136usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(d__cy)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).N as *const _ as usize },
-        144usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(N)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<zernikeS>())).ref_frame as *const _ as usize },
-        152usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(zernikeS),
-            "::",
-            stringify!(ref_frame)
-        )
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS5setupEiPd"]
-    pub fn zernikeS_setup(this: *mut zernikeS, max_n: ::std::os::raw::c_int, a: *mut rtd);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS5setupEiPdi"]
-    pub fn zernikeS_setup1(
-        this: *mut zernikeS,
-        _max_n_: ::std::os::raw::c_int,
-        _a_: *mut rtd,
-        _N_: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS5setupEiPd6vectorS1_"]
-    pub fn zernikeS_setup2(
-        this: *mut zernikeS,
-        max_n: ::std::os::raw::c_int,
-        a: *mut rtd,
-        _origin_: vector,
-        _euler_angles_: vector,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS5setupEiPd6vectorS1_i"]
-    pub fn zernikeS_setup3(
-        this: *mut zernikeS,
-        max_n: ::std::os::raw::c_int,
-        a: *mut rtd,
-        _origin_: vector,
-        _euler_angles_: vector,
-        _N_: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS7cleanupEv"]
-    pub fn zernikeS_cleanup(this: *mut zernikeS);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS7surfaceEPdS0_S0_i"]
-    pub fn zernikeS_surface(
-        this: *mut zernikeS,
-        S: *mut rtd,
-        r: *mut rtd,
-        o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS7surfaceEPdS0_S0_ii"]
-    pub fn zernikeS_surface1(
-        this: *mut zernikeS,
-        S: *mut rtd,
-        r: *mut rtd,
-        o: *mut rtd,
-        N: ::std::os::raw::c_int,
-        surf_id: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS6updateEPd"]
-    pub fn zernikeS_update(this: *mut zernikeS, a: *mut rtd);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS24surface_derivative_coefsEv"]
-    pub fn zernikeS_surface_derivative_coefs(this: *mut zernikeS);
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS19surface_derivativesEPdS0_S0_S0_i"]
-    pub fn zernikeS_surface_derivatives(
-        this: *mut zernikeS,
-        d__dSdx: *mut rtd,
-        d__dSdy: *mut rtd,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS23surface_and_derivativesEPdS0_S0_S0_S0_i"]
-    pub fn zernikeS_surface_and_derivatives(
-        this: *mut zernikeS,
-        d__S: *mut rtd,
-        d__dSdx: *mut rtd,
-        d__dSdy: *mut rtd,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS23surface_and_derivativesEPdS0_S0_S0_S0_ii"]
-    pub fn zernikeS_surface_and_derivatives1(
-        this: *mut zernikeS,
-        d__S: *mut rtd,
-        d__dSdx: *mut rtd,
-        d__dSdy: *mut rtd,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-        surf_id: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}_ZN8zernikeS10projectionEPfPdS1_i"]
-    pub fn zernikeS_projection(
-        this: *mut zernikeS,
-        d__phase: *mut f32,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    );
-}
-impl zernikeS {
-    #[inline]
-    pub unsafe fn setup(&mut self, max_n: ::std::os::raw::c_int, a: *mut rtd) {
-        zernikeS_setup(self, max_n, a)
-    }
-    #[inline]
-    pub unsafe fn setup1(
-        &mut self,
-        _max_n_: ::std::os::raw::c_int,
-        _a_: *mut rtd,
-        _N_: ::std::os::raw::c_int,
-    ) {
-        zernikeS_setup1(self, _max_n_, _a_, _N_)
-    }
-    #[inline]
-    pub unsafe fn setup2(
-        &mut self,
-        max_n: ::std::os::raw::c_int,
-        a: *mut rtd,
-        _origin_: vector,
-        _euler_angles_: vector,
-    ) {
-        zernikeS_setup2(self, max_n, a, _origin_, _euler_angles_)
-    }
-    #[inline]
-    pub unsafe fn setup3(
-        &mut self,
-        max_n: ::std::os::raw::c_int,
-        a: *mut rtd,
-        _origin_: vector,
-        _euler_angles_: vector,
-        _N_: ::std::os::raw::c_int,
-    ) {
-        zernikeS_setup3(self, max_n, a, _origin_, _euler_angles_, _N_)
-    }
-    #[inline]
-    pub unsafe fn cleanup(&mut self) {
-        zernikeS_cleanup(self)
-    }
-    #[inline]
-    pub unsafe fn surface(
-        &mut self,
-        S: *mut rtd,
-        r: *mut rtd,
-        o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    ) {
-        zernikeS_surface(self, S, r, o, N)
-    }
-    #[inline]
-    pub unsafe fn surface1(
-        &mut self,
-        S: *mut rtd,
-        r: *mut rtd,
-        o: *mut rtd,
-        N: ::std::os::raw::c_int,
-        surf_id: ::std::os::raw::c_int,
-    ) {
-        zernikeS_surface1(self, S, r, o, N, surf_id)
-    }
-    #[inline]
-    pub unsafe fn update(&mut self, a: *mut rtd) {
-        zernikeS_update(self, a)
-    }
-    #[inline]
-    pub unsafe fn surface_derivative_coefs(&mut self) {
-        zernikeS_surface_derivative_coefs(self)
-    }
-    #[inline]
-    pub unsafe fn surface_derivatives(
-        &mut self,
-        d__dSdx: *mut rtd,
-        d__dSdy: *mut rtd,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    ) {
-        zernikeS_surface_derivatives(self, d__dSdx, d__dSdy, d__r, d__o, N)
-    }
-    #[inline]
-    pub unsafe fn surface_and_derivatives(
-        &mut self,
-        d__S: *mut rtd,
-        d__dSdx: *mut rtd,
-        d__dSdy: *mut rtd,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    ) {
-        zernikeS_surface_and_derivatives(self, d__S, d__dSdx, d__dSdy, d__r, d__o, N)
-    }
-    #[inline]
-    pub unsafe fn surface_and_derivatives1(
-        &mut self,
-        d__S: *mut rtd,
-        d__dSdx: *mut rtd,
-        d__dSdy: *mut rtd,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-        surf_id: ::std::os::raw::c_int,
-    ) {
-        zernikeS_surface_and_derivatives1(self, d__S, d__dSdx, d__dSdy, d__r, d__o, N, surf_id)
-    }
-    #[inline]
-    pub unsafe fn projection(
-        &mut self,
-        d__phase: *mut f32,
-        d__r: *mut rtd,
-        d__o: *mut rtd,
-        N: ::std::os::raw::c_int,
-    ) {
-        zernikeS_projection(self, d__phase, d__r, d__o, N)
     }
 }
 #[repr(C)]

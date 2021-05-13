@@ -21,81 +21,13 @@
 //! let mut src = ceo!(SOURCE, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use super::ceo_bindings::{bundle, complex_amplitude, dev2host, dev2host_int, source, vector};
+use super::ceo_bindings::{dev2host, dev2host_int, source, vector};
 use super::{cu::Single, Builder, Centroiding, Cu, Result};
 
 use std::{
     f32,
     ffi::{CStr, CString},
-    ptr,
 };
-
-impl Default for complex_amplitude {
-    fn default() -> Self {
-        Self {
-            N_PX: 0,
-            N: 0,
-            amplitude: ptr::null_mut(),
-            phase: ptr::null_mut(),
-            M: ptr::null_mut(),
-            handle: ptr::null_mut(),
-            buffer: ptr::null_mut(),
-        }
-    }
-}
-impl Default for bundle {
-    fn default() -> Self {
-        Self {
-            N_RAY: 0,
-            d__ray: ptr::null_mut(),
-            N_BUNDLE: 0,
-            N_RAY_TOTAL: 0,
-            d__origin: ptr::null_mut(),
-            rot_angle: 0.,
-            d__chief_ray: ptr::null_mut(),
-            d__chief_origin: ptr::null_mut(),
-            V: Default::default(),
-            geom: [0; 8usize],
-            N_RADIUS: 0,
-            N_THETA: 0,
-            N_L: 0,
-            L: 0.,
-            d__sphere_distance: ptr::null_mut(),
-            d__sphere_radius: ptr::null_mut(),
-            d__sphere_origin: ptr::null_mut(),
-            d__piston_mask: ptr::null_mut(),
-            refractive_index: 0.,
-            d__Vx: ptr::null_mut(),
-            d__Vy: ptr::null_mut(),
-        }
-    }
-}
-impl Default for source {
-    fn default() -> Self {
-        Self {
-            N_SRC: 0,
-            zenith: 0.,
-            azimuth: 0.,
-            height: 0.,
-            theta_x: 0.,
-            theta_y: 0.,
-            _zenith_64_: 0.,
-            _azimuth_64_: 0.,
-            _height_64_: 0.,
-            _theta_x_64_: 0.,
-            _theta_y_64_: 0.,
-            photometric_band: ptr::null(),
-            magnitude: 0.,
-            N_PHOTON: 0.,
-            fwhm: 0.,
-            wavefront: Default::default(),
-            dev_ptr: ptr::null_mut(),
-            tag: [0; 8usize],
-            rays_exist: 0,
-            rays: Default::default(),
-        }
-    }
-}
 
 /// A system that mutates `Source` arguments should implement the `Propagation` trait
 pub trait Propagation {

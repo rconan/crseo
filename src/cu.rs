@@ -1,15 +1,5 @@
-use super::ceo_bindings::{gpu_double, gpu_float, stats};
+use super::ceo_bindings::{gpu_double, gpu_float};
 use core::ops::{AddAssign, Mul, SubAssign};
-use std::ptr;
-
-impl Default for stats {
-    fn default() -> Self {
-        Self {
-            handle: ptr::null_mut(),
-            status: 0,
-        }
-    }
-}
 
 pub type Single = gpu_float;
 pub type Double = gpu_double;
@@ -24,16 +14,7 @@ pub trait CuType {
 }
 impl CuType for Double {
     fn new() -> Self {
-        Self {
-            dev_data: ptr::null_mut(),
-            host_data: ptr::null_mut(),
-            N: 0,
-            nb: 0,
-            S: Default::default(),
-            stat: 0,
-            handle: ptr::null_mut(),
-            cusolverH: ptr::null_mut(),
-        }
+        Default::default()
     }
     fn build(&mut self, size: i32) {
         unsafe {
@@ -56,17 +37,7 @@ impl CuType for Double {
 }
 impl CuType for Single {
     fn new() -> Self {
-        Self {
-            dev_data: ptr::null_mut(),
-            host_data: ptr::null_mut(),
-            d_tau: ptr::null_mut(),
-            N: 0,
-            nb: 0,
-            S: Default::default(),
-            stat: 0,
-            handle: ptr::null_mut(),
-            cusolverH: ptr::null_mut(),
-        }
+        Default::default()
     }
     fn build(&mut self, size: i32) {
         unsafe {

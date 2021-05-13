@@ -1,31 +1,7 @@
 use super::{Builder, Cu, Propagation, Result, Source, SOURCE};
 use crate::ceo_bindings::pssn;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
-use std::{fmt, ptr};
-
-impl Default for pssn {
-    fn default() -> Self {
-        Self {
-            N_O: 0,
-            N_O0: 0,
-            n_byte: 0,
-            d__O: ptr::null_mut(),
-            d__O0: ptr::null_mut(),
-            buffer: ptr::null_mut(),
-            d__C: ptr::null_mut(),
-            N_PX: 0,
-            N: 0,
-            d__W: ptr::null_mut(),
-            N_OTF: 0,
-            N_OTF2: 0,
-            NN: 0,
-            plan: 0,
-            handle: ptr::null_mut(),
-            num: 0f32,
-            denom: ptr::null_mut(),
-        }
-    }
-}
+use std::fmt;
 
 /// CEO PSSn estimator
 ///

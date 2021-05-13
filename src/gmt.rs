@@ -18,132 +18,13 @@
 //! let mut gmt = ceo!(GMT, m1_n_mode = [27]);
 //! ```
 
-use super::ceo_bindings::{bundle, coordinate_system, gmt_m1, gmt_m2, modes, vector};
+use super::ceo_bindings::{gmt_m1, gmt_m2, vector};
 use super::{Builder, CrseoError, Propagation, Result, Source};
 use std::{
     env,
     ffi::{CStr, CString},
     path::Path,
-    ptr,
 };
-
-impl Default for coordinate_system {
-    fn default() -> Self {
-        Self {
-            origin: ptr::null_mut(),
-            euler_angles: ptr::null_mut(),
-            N: 0,
-            R: ptr::null_mut(),
-            d__R: ptr::null_mut(),
-            float_R: ptr::null_mut(),
-            d__origin: ptr::null_mut(),
-            tag: [0; 32usize],
-        }
-    }
-}
-impl Default for modes {
-    fn default() -> Self {
-        Self {
-            d__x_BM: ptr::null_mut(),
-            d__y_BM: ptr::null_mut(),
-            d__BM: ptr::null_mut(),
-            d__BMS: ptr::null_mut(),
-            BM_radius: 0.,
-            BM_N_SAMPLE: 0,
-            d__BM_buffer: ptr::null_mut(),
-            n_mode: 0,
-            b: ptr::null_mut(),
-            d__b: ptr::null_mut(),
-            N: 0,
-            filename: [0; 64usize],
-            N_SET: 0,
-            N_MODE: 0,
-            d__s2b: ptr::null_mut(),
-        }
-    }
-}
-impl Default for gmt_m1 {
-    fn default() -> Self {
-        Self {
-            M_ID: 0,
-            D_assembly: 0.,
-            D_clear: 0.,
-            D_full: 0.,
-            ri: 0.,
-            beta: 0.,
-            L: 0.,
-            area0: 0.,
-            area_fraction: 0.,
-            area0_px: 0.,
-            area: 0.,
-            N: 0,
-            depth: 0.,
-            aperture_CS: Default::default(),
-            conic_CS: Default::default(),
-            conic_origin: [Default::default(); 7usize],
-            d__conic_origin: ptr::null_mut(),
-            conic_c: 0.,
-            conic_k: 0.,
-            d__conic_c: ptr::null_mut(),
-            d__conic_k: ptr::null_mut(),
-            rigid_body_CS: Default::default(),
-            motion_CS: Default::default(),
-            height: 0.,
-            V: ptr::null_mut(),
-            idx_offset: 0,
-            ZS: ptr::null_mut(),
-            d__piston_mask: ptr::null_mut(),
-            TT_CS: Default::default(),
-            d__C: ptr::null_mut(),
-            d__D: ptr::null_mut(),
-            handle: ptr::null_mut(),
-            d__valid_segments: ptr::null_mut(),
-            BS: Default::default(),
-            d__segment_reflectivity: ptr::null_mut(),
-        }
-    }
-}
-impl Default for gmt_m2 {
-    fn default() -> Self {
-        Self {
-            M_ID: 0,
-            D_assembly: 0.,
-            D_clear: 0.,
-            D_full: 0.,
-            ri: 0.,
-            beta: 0.,
-            L: 0.,
-            area0: 0.,
-            area_fraction: 0.,
-            area0_px: 0.,
-            area: 0.,
-            N: 0,
-            depth: 0.,
-            aperture_CS: Default::default(),
-            conic_CS: Default::default(),
-            conic_origin: [Default::default(); 7usize],
-            d__conic_origin: ptr::null_mut(),
-            conic_c: 0.,
-            conic_k: 0.,
-            d__conic_c: ptr::null_mut(),
-            d__conic_k: ptr::null_mut(),
-            rigid_body_CS: Default::default(),
-            motion_CS: Default::default(),
-            height: 0.,
-            V: ptr::null_mut(),
-            idx_offset: 0,
-            ZS: ptr::null_mut(),
-            d__piston_mask: ptr::null_mut(),
-            TT_CS: Default::default(),
-            d__C: ptr::null_mut(),
-            d__D: ptr::null_mut(),
-            handle: ptr::null_mut(),
-            d__valid_segments: ptr::null_mut(),
-            BS: Default::default(),
-            d__segment_reflectivity: ptr::null_mut(),
-        }
-    }
-}
 
 #[doc(hidden)]
 #[derive(Debug, Clone)]
@@ -609,7 +490,7 @@ impl Propagation for Gmt {
     fn propagate(&mut self, src: &mut Source) -> &mut Self {
         unsafe {
             src.as_raw_mut_ptr().reset_rays();
-            let rays: &mut bundle = &mut src.as_raw_mut_ptr().rays;
+            let rays = &mut src.as_raw_mut_ptr().rays;
             self._c_m2.blocking(rays);
             self._c_m1.trace(rays);
             rays.gmt_truss_onaxis();

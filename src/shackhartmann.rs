@@ -14,7 +14,7 @@
 
 use super::ceo_bindings::{geometricShackHartmann, shackHartmann};
 use super::{cu::Single, Builder, Cu, Mask, Propagation, Result, Source, SOURCE};
-use std::{f32, ptr};
+use std::f32;
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
@@ -37,30 +37,7 @@ pub trait Model: Clone {
 }
 impl Model for Geometric {
     fn new() -> Self {
-        Self {
-            N_WFS: 0,
-            N_SIDE_LENSLET: 0,
-            N_LENSLET: 0,
-            N_ACTUATOR: 0,
-            N_SLOPE: 0,
-            d__c0: ptr::null_mut(),
-            d__cx0: ptr::null_mut(),
-            d__cy0: ptr::null_mut(),
-            valid_lenslet: Default::default(),
-            valid_actuator: Default::default(),
-            camera: Default::default(),
-            data_proc: Default::default(),
-            DFT_osf: 0,
-            lenslet_pitch: 0f32,
-            pixel_scale: 0f32,
-            intensity_threshold: 0f32,
-            slopes_gain: 0f32,
-            _d__c_: ptr::null_mut(),
-            _d__cx_: ptr::null_mut(),
-            _d__cy_: ptr::null_mut(),
-            N_FRAME: 0,
-            handle: ptr::null_mut(),
-        }
+        Default::default()
     }
     fn build(
         &mut self,
@@ -92,25 +69,7 @@ impl Model for Geometric {
 }
 impl Model for Diffractive {
     fn new() -> Self {
-        Self {
-            N_WFS: 0,
-            N_SIDE_LENSLET: 0,
-            N_LENSLET: 0,
-            N_ACTUATOR: 0,
-            N_SLOPE: 0,
-            d__c0: ptr::null_mut(),
-            d__cx0: ptr::null_mut(),
-            d__cy0: ptr::null_mut(),
-            valid_lenslet: Default::default(),
-            valid_actuator: Default::default(),
-            camera: Default::default(),
-            data_proc: Default::default(),
-            DFT_osf: 0,
-            lenslet_pitch: 0f32,
-            pixel_scale: 0f32,
-            intensity_threshold: 0f32,
-            slopes_gain: 0f32,
-        }
+        Default::default()
     }
     fn drop(&mut self) {
         unsafe {

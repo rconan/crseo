@@ -1,29 +1,10 @@
 use log;
 use serde::Deserialize;
 use std::f32;
-use std::{ffi::CString, ptr};
+use std::ffi::CString;
 
-use super::ceo_bindings::{atmosphere, profile};
+use super::ceo_bindings::atmosphere;
 use super::{Builder, Propagation, Result, Source};
-
-impl Default for profile {
-    fn default() -> Self {
-        Self {
-            L0: 0f32,
-            l0: 0f32,
-            L: 0f32,
-            f: 0f32,
-            delta: 0f32,
-            N_k: 0f32,
-            N_a: 0f32,
-            kmin: 0f32,
-            altitude: ptr::null_mut(),
-            xi0: ptr::null_mut(),
-            wind_speed: ptr::null_mut(),
-            wind_direction: ptr::null_mut(),
-        }
-    }
-}
 
 #[derive(Deserialize, Debug)]
 struct GmtAtmosphere {
@@ -184,36 +165,7 @@ impl Builder for ATMOSPHERE {
     /// Build the `Atmosphere`
     fn build(self) -> Result<Atmosphere> {
         let mut atm = Atmosphere {
-            _c_: atmosphere {
-                photometric_band: ptr::null_mut(),
-                wavelength: 0f32,
-                r0: 0f32,
-                wavenumber: 0f32,
-                N_LAYER: 0,
-                field_size: 0f32,
-                layers_OSF: 0,
-                layers_duration: 0f32,
-                layers_tau0: 0f32,
-                W: 0f32,
-                N_W: 0,
-                phase_screen_LAYER: ptr::null_mut(),
-                N_DURATION: 0,
-                LOCAL_RAND_SEED: 0,
-                ID: 0,
-                EPH: 0f32,
-                d__phase_screen_LAYER: ptr::null_mut(),
-                N_PHASE_LAYER: 0,
-                mmap_size: 0usize,
-                zeta1: ptr::null_mut(),
-                eta1: ptr::null_mut(),
-                zeta2: ptr::null_mut(),
-                eta2: ptr::null_mut(),
-                devStates: ptr::null_mut(),
-                turbulence: Default::default(),
-                d__turbulence: ptr::null_mut(),
-                layers: ptr::null_mut(),
-                d__layers: ptr::null_mut(),
-            },
+            _c_: Default::default(),
             r0_at_zenith: self.r0_at_zenith,
             oscale: self.oscale,
             zenith_angle: self.zenith_angle,

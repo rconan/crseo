@@ -64,15 +64,6 @@ pub use ceo_bindings::{geqrf, gpu_double, gpu_float, mask, ormqr, set_device, ve
 
 pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 
-impl Default for vector {
-    fn default() -> Self {
-        Self {
-            x: 0.,
-            y: 0.,
-            z: 0.,
-        }
-    }
-}
 /// CEO macro builder
 ///
 /// One macro to rule them all, one macro to find them, one macro to bring them all and in the darkness bind them all
