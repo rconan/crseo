@@ -1,4 +1,4 @@
-use super::{Builder, Cu, Propagation, Result, Source, SOURCE};
+use super::{cu, Builder, Cu, Propagation, Result, Source, SOURCE};
 use crate::ceo_bindings::pssn;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::fmt;
@@ -158,7 +158,7 @@ impl<S> PSSn<S> {
         (r0_at_zenith.powf(-5_f32 / 3_f32) / zenith_angle.cos()).powf(-3_f32 / 5_f32)
     }
     pub fn xotf(&mut self) -> &Self {
-        let mut d_otf = Cu::vector(2 * self._c_.NN as usize);
+        let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
             self._c_.xotf(d_otf.as_ptr());
@@ -167,7 +167,7 @@ impl<S> PSSn<S> {
         self
     }
     pub fn telescope_otf(&mut self) -> Vec<f32> {
-        let mut d_otf = Cu::vector(2 * self._c_.NN as usize);
+        let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
             self._c_.O0(d_otf.as_ptr());
@@ -175,7 +175,7 @@ impl<S> PSSn<S> {
         d_otf.from_dev()
     }
     pub fn telescope_error_otf(&mut self) -> Vec<f32> {
-        let mut d_otf = Cu::vector(2 * self._c_.NN as usize);
+        let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
             self._c_.O(d_otf.as_ptr());
@@ -183,7 +183,7 @@ impl<S> PSSn<S> {
         d_otf.from_dev()
     }
     pub fn telescope_error_into_otf(&mut self) -> &mut Self {
-        let mut d_otf = Cu::vector(2 * self._c_.NN as usize);
+        let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
             self._c_.O(d_otf.as_ptr());
@@ -192,7 +192,7 @@ impl<S> PSSn<S> {
         self
     }
     pub fn buffer_otf(&mut self) -> Vec<f32> {
-        let mut d_otf = Cu::vector(2 * self._c_.NN as usize);
+        let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
             self._c_.B(d_otf.as_ptr());
@@ -200,7 +200,7 @@ impl<S> PSSn<S> {
         d_otf.from_dev()
     }
     pub fn atmosphere_otf(&mut self) -> Vec<f32> {
-        let mut d_otf = Cu::vector(2 * self._c_.NN as usize);
+        let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
             self._c_.C(d_otf.as_ptr());

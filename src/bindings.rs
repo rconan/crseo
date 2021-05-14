@@ -4762,6 +4762,219 @@ impl zernikeS {
         zernikeS_projection(self, d__phase, d__r, d__o, N)
     }
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct aperture {
+    pub D_px: ::std::os::raw::c_int,
+    pub D: rtd,
+    pub ri: rtd,
+    pub D_seg: rtd,
+    pub N: ::std::os::raw::c_int,
+    pub V: mask,
+    pub ref_frame: coordinate_system,
+}
+#[test]
+fn bindgen_test_layout_aperture() {
+    assert_eq!(
+        ::std::mem::size_of::<aperture>(),
+        208usize,
+        concat!("Size of: ", stringify!(aperture))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<aperture>(),
+        8usize,
+        concat!("Alignment of ", stringify!(aperture))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<aperture>())).D_px as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(aperture),
+            "::",
+            stringify!(D_px)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<aperture>())).D as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(aperture),
+            "::",
+            stringify!(D)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<aperture>())).ri as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(aperture),
+            "::",
+            stringify!(ri)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<aperture>())).D_seg as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(aperture),
+            "::",
+            stringify!(D_seg)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<aperture>())).N as *const _ as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(aperture),
+            "::",
+            stringify!(N)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<aperture>())).V as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(aperture),
+            "::",
+            stringify!(V)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<aperture>())).ref_frame as *const _ as usize },
+        120usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(aperture),
+            "::",
+            stringify!(ref_frame)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8aperture5setupEdi6vectorS0_"]
+    pub fn aperture_setup(
+        this: *mut aperture,
+        _D_: rtd,
+        _D_px_: ::std::os::raw::c_int,
+        _origin_: vector,
+        _euler_angles_: vector,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8aperture5setupEddi6vectorS0_"]
+    pub fn aperture_setup1(
+        this: *mut aperture,
+        _D_: rtd,
+        _ri_: rtd,
+        _D_px_: ::std::os::raw::c_int,
+        _origin_: vector,
+        _euler_angles_: vector,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8aperture5setupEdddiP6vectorS1_i"]
+    pub fn aperture_setup2(
+        this: *mut aperture,
+        _D_: rtd,
+        _ri_: rtd,
+        _D_seg_: rtd,
+        _D_px_: ::std::os::raw::c_int,
+        _origin_: *mut vector,
+        _euler_angles_: *mut vector,
+        N_segment: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8aperture12setup_GMT_M1Edi"]
+    pub fn aperture_setup_GMT_M1(this: *mut aperture, _D_: rtd, _D_px_: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8aperture7cleanupEv"]
+    pub fn aperture_cleanup(this: *mut aperture);
+}
+extern "C" {
+    #[link_name = "\u{1}_ZN8aperture10vignettingEP6bundle"]
+    pub fn aperture_vignetting(this: *mut aperture, rays: *mut bundle);
+}
+impl aperture {
+    #[inline]
+    pub unsafe fn setup(
+        &mut self,
+        _D_: rtd,
+        _D_px_: ::std::os::raw::c_int,
+        _origin_: vector,
+        _euler_angles_: vector,
+    ) {
+        aperture_setup(self, _D_, _D_px_, _origin_, _euler_angles_)
+    }
+    #[inline]
+    pub unsafe fn setup1(
+        &mut self,
+        _D_: rtd,
+        _ri_: rtd,
+        _D_px_: ::std::os::raw::c_int,
+        _origin_: vector,
+        _euler_angles_: vector,
+    ) {
+        aperture_setup1(self, _D_, _ri_, _D_px_, _origin_, _euler_angles_)
+    }
+    #[inline]
+    pub unsafe fn setup2(
+        &mut self,
+        _D_: rtd,
+        _ri_: rtd,
+        _D_seg_: rtd,
+        _D_px_: ::std::os::raw::c_int,
+        _origin_: *mut vector,
+        _euler_angles_: *mut vector,
+        N_segment: ::std::os::raw::c_int,
+    ) {
+        aperture_setup2(
+            self,
+            _D_,
+            _ri_,
+            _D_seg_,
+            _D_px_,
+            _origin_,
+            _euler_angles_,
+            N_segment,
+        )
+    }
+    #[inline]
+    pub unsafe fn setup_GMT_M1(&mut self, _D_: rtd, _D_px_: ::std::os::raw::c_int) {
+        aperture_setup_GMT_M1(self, _D_, _D_px_)
+    }
+    #[inline]
+    pub unsafe fn cleanup(&mut self) {
+        aperture_cleanup(self)
+    }
+    #[inline]
+    pub unsafe fn vignetting(&mut self, rays: *mut bundle) {
+        aperture_vignetting(self, rays)
+    }
+}
+extern "C" {
+    #[link_name = "\u{1}_Z14transform_to_SP6bundleP5conic"]
+    pub fn transform_to_S(rays: *mut bundle, F: *mut conic);
+}
+extern "C" {
+    #[link_name = "\u{1}_Z14transform_to_SP6bundleP8aperture"]
+    pub fn transform_to_S1(rays: *mut bundle, A: *mut aperture);
+}
+extern "C" {
+    #[link_name = "\u{1}_Z14transform_to_RP6bundleP5conic"]
+    pub fn transform_to_R(rays: *mut bundle, F: *mut conic);
+}
+extern "C" {
+    #[link_name = "\u{1}_Z14transform_to_RP6bundleP8aperture"]
+    pub fn transform_to_R1(rays: *mut bundle, A: *mut aperture);
+}
 extern "C" {
     #[link_name = "\u{1}_Z9intersectP6bundleP5conic"]
     pub fn intersect(rays: *mut bundle, F: *mut conic);

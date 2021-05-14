@@ -283,6 +283,12 @@ impl Cu<Double> {
         }
         self
     }
+    pub fn as_ptr(&mut self) -> *mut f64 {
+        self._c_.dev_data
+    }
+    pub fn as_mut_ptr(&mut self) -> *mut f64 {
+        self._c_.dev_data
+    }
 }
 impl From<Vec<f64>> for Cu<Double> {
     fn from(item: Vec<f64>) -> Self {
@@ -299,6 +305,12 @@ impl From<Vec<Vec<f64>>> for Cu<Double> {
         let mut this = Cu::<Double>::array(n_rows, n_cols);
         this.to_dev(&mut flat_item);
         this
+    }
+}
+impl From<Cu<Double>> for Vec<f64> {
+    fn from(item: Cu<Double>) -> Self {
+        let mut q = item;
+        q.from_dev()
     }
 }
 

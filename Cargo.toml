@@ -26,6 +26,7 @@ ceo = { path = "CEO" }
 simple_logger = "1.11.0"
 criterion = "0.3"
 bincode = "1.3.2"
+gnuplot = "0.0.37"
 
 [[bench]]
 name = "ceo_benchmark"
