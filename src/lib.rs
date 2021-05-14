@@ -23,6 +23,7 @@ pub mod calibrations;
 pub mod centroiding;
 pub mod ceo_bindings;
 pub mod cu;
+#[cfg(feature = "dosio")]
 pub mod dos;
 pub mod error;
 pub mod fwhm;
