@@ -2,7 +2,7 @@ use crate::{
     shackhartmann::WavefrontSensor, shackhartmann::WavefrontSensorBuilder, Atmosphere, Builder,
     Geometric, Gmt, Propagation, ShackHartmann, Source, ATMOSPHERE, GMT, SOURCE,
 };
-use dosio::{io::IO, DOSIOSError, Dos, DosIoData};
+use dosio::{io::IO, DOSIOSError, Dos};
 
 /// GMT Optical Sensor Model
 pub struct GmtOpticalSensorModel<U, T>
@@ -91,7 +91,9 @@ impl<T: Propagation> Iterator for GmtOpticalSensorModelInner<T> {
     }
 }
 impl Dos for GmtOpticalSensorModelInner<ShackHartmann<Geometric>> {
-    fn inputs(&mut self, data: DosIoData) -> Result<&mut Self, DOSIOSError> {
+    type Input = Vec<f64>;
+    type Output = Vec<f64>;
+    fn inputs(&mut self, data: Option<Vec<IO<Self::Input>>>) -> Result<&mut Self, DOSIOSError> {
         match data {
             Some(data) => data
                 .into_iter()
@@ -118,7 +120,7 @@ impl Dos for GmtOpticalSensorModelInner<ShackHartmann<Geometric>> {
             None => Ok(self),
         }
     }
-    fn outputs(&mut self) -> DosIoData {
+    fn outputs(&mut self) -> Option<Vec<IO<Self::Output>>> {
         self.sensor.process();
         let data: Vec<f32> = self.sensor.get_data().into();
         self.sensor.reset();

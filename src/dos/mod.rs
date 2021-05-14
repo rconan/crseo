@@ -10,7 +10,7 @@ use crate::{pssn::TelescopeError, Atmosphere, PSSn};
 use super::{Builder, Gmt, Source, ATMOSPHERE, GMT, PSSN, SOURCE};
 use dosio::{
     io::{jar, IO},
-    DOSIOSError, Dos, DosIoData,
+    DOSIOSError, Dos,
 };
 
 /// GMT Optical Model
@@ -104,7 +104,9 @@ impl Iterator for GmtOpticalModelInner {
     }
 }
 impl Dos for GmtOpticalModelInner {
-    fn inputs(&mut self, data: DosIoData) -> Result<&mut Self, DOSIOSError> {
+    type Input = Vec<f64>;
+    type Output = Vec<f64>;
+    fn inputs(&mut self, data: Option<Vec<IO<Self::Input>>>) -> Result<&mut Self, DOSIOSError> {
         match data {
             Some(data) => data
                 .into_iter()
@@ -131,7 +133,7 @@ impl Dos for GmtOpticalModelInner {
             None => Ok(self),
         }
     }
-    fn outputs(&mut self) -> DosIoData {
+    fn outputs(&mut self) -> Option<Vec<IO<Self::Output>>> {
         self.outputs
             .clone()
             .iter()
