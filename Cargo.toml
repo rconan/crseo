@@ -16,7 +16,7 @@ rayon = "1.4"
 log = "0.4.11"
 nalgebra = "0.25.3"
 skyangle = { git = "https://github.com/rconan/skyangle.git", branch = "main" }
-dosio = { path = "../dosio", optional = true}
+dosio = { git = "https://github.com/rconan/dosio.git", branch = "main", optional = true}
 
 [build-dependencies]
 bindgen = "0.52.0"
