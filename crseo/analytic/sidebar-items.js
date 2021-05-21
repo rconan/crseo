@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["new_ray","Create a `NewRay` at the origin propagate downward (z<0)"]],"struct":[["Conic","Conic definition"],["Gmt",""],["NewRay","Ray builder"],["Ray","Ray definition"]],"trait":[["Arithmetic",""]],"type":[["Vector",""]]});

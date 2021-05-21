@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["GMT","`Gmt` builder"],["Gmt","gmt wrapper"]]});

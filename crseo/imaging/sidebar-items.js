@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Imaging","An optical imager with a detector"],["LensletArray","A square lenslet array"],["NoiseDataSheet","Detector noise specifications"]]});

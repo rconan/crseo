@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="CEO wrapper crate"><meta name="keywords" content="rust, rustlang, rust-lang, crseo"><title>crseo - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.0/dist/katex.min.css" integrity="sha384-t5CR+zwDAROtph0PXGte6ia8heboACF9R5l/DiY+WZ3P2lxNgvJkQk5n7GPvLMYw" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.0/dist/katex.min.js" integrity="sha384-FaFLTlohFghEIZkw6VGwmf9ISTubWAVYW8tG8+w2LAIftJEULZABrF9PPFv+tVkH" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.0/dist/contrib/auto-render.min.js" integrity="sha384-bHBqxz8fokvgoJ/sc17HODNxa42TlaEhB+w8ZJXTc2nZf1VgEaFZeZvT4Mznfz0v" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+<script>
+ "use strict";
+ document.addEventListener("DOMContentLoaded", function () {
+     var maths = document.getElementsByClassName("language-math");
+     for (var i=0; i<maths.length; i++) {
+         var el = maths[i];
+         katex.render(el.innerText, el, {displayMode: true});
+     }
+
+     var codes = document.getElementsByTagName("code");
+     for (i=0; i<codes.length; i++) {
+         el = codes[i];
+         if (el.classList.contains("language-math")) continue;
+         if (el.classList.contains("language-inline-math")) {
+             katex.render(el.innerText, el);
+             continue;
+         }
+
+         var parent = el.parentNode;
+         if (parent.nodeName.toLowerCase() === "pre") continue;
+         // TODO: Can this be done with DOM manipulation rather than string manipulation?
+         // https://stackoverflow.com/q/48438067/3019990
+         var inlineMath = "$" + el.outerHTML + "$";
+         if (parent.innerHTML.indexOf(inlineMath) !== -1) {
+             el.classList.add("language-inline-math");
+             parent.innerHTML = parent.innerHTML.replace("$" + el.outerHTML + "$", el.outerHTML);
+             i--;
+         }
+     }
+ });
+</script>
+
+<style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../crseo/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate crseo</p><div class="block version"><p>Version 0.1.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all crseo's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class="location"></p><div id="sidebar-vars" data-name="crseo" data-ty="mod" data-relpath="../"></div></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="">crseo</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/crseo/lib.rs.html#1-212" title="goto source code">[src]</a></span></h1><div class="docblock"><h1 id="ceo-wrapper-crate" class="section-header"><a href="#ceo-wrapper-crate">CEO wrapper crate</a></h1>
+<p>The CEO wrapper is the interface to <a href="https://github.com/rconan/CEO">CEO CUDA API</a>.
+CEO elements are created using the builder associated to each element.</p>
+<p>For example, the default CEO elements <code>Gmt</code> and <code>Source</code> are built with:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">ceo</span>::<span class="ident">ceo</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gmt</span> <span class="op">=</span> <span class="macro">ceo</span><span class="macro">!</span>(<span class="ident">GMT</span>);
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">src</span> <span class="op">=</span> <span class="macro">ceo</span><span class="macro">!</span>(<span class="ident">SOURCE</span>);
+<span class="ident">src</span>.<span class="ident">through</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gmt</span>).<span class="ident">xpupil</span>();
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;WFE RMS: {:?}nm&quot;</span>,<span class="ident">src</span>.<span class="ident">wfe_rms_10e</span>(<span class="op">-</span><span class="number">9</span>));</pre></div>
+<p><a href="macro.ceo.html"><code>ceo!</code></a> is a macro that incorporates the necessary boilerplate code to create CEO elements.</p>
+</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="module-item"><td><a class="mod" href="analytic/index.html" title="crseo::analytic mod">analytic</a></td><td class="docblock-short"><p>Analytic Ray Tracing</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="atmosphere/index.html" title="crseo::atmosphere mod">atmosphere</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="calibrations/index.html" title="crseo::calibrations mod">calibrations</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="centroiding/index.html" title="crseo::centroiding mod">centroiding</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="ceo_bindings/index.html" title="crseo::ceo_bindings mod">ceo_bindings</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="cu/index.html" title="crseo::cu mod">cu</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="dos/index.html" title="crseo::dos mod">dos</a></td><td class="docblock-short"><p>DOS Interface</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="error/index.html" title="crseo::error mod">error</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="fwhm/index.html" title="crseo::fwhm mod">fwhm</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="gmt/index.html" title="crseo::gmt mod">gmt</a></td><td class="docblock-short"><p>CEO gmt wrapper</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="imaging/index.html" title="crseo::imaging mod">imaging</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="lmmse/index.html" title="crseo::lmmse mod">lmmse</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="pssn/index.html" title="crseo::pssn mod">pssn</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="raytracing/index.html" title="crseo::raytracing mod">raytracing</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="mod" href="shackhartmann/index.html" title="crseo::shackhartmann mod">shackhartmann</a></td><td class="docblock-short"><p>CEO shackhartmann wrapper</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="source/index.html" title="crseo::source mod">source</a></td><td class="docblock-short"><p>CEO source wrapper</p>
+</td></tr></table><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
+<table><tr class="module-item"><td><a class="macro" href="macro.ceo.html" title="crseo::ceo macro">ceo</a></td><td class="docblock-short"><p>CEO macro builder</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.ATMOSPHERE.html" title="crseo::ATMOSPHERE struct">ATMOSPHERE</a></td><td class="docblock-short"><p><a href="../struct.CEO.html#impl-6"><code>CEO</code></a> <a href="../struct.Atmosphere.html"><code>Atmosphere</code></a> builder type</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Atmosphere.html" title="crseo::Atmosphere struct">Atmosphere</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.Calibration.html" title="crseo::Calibration struct">Calibration</a></td><td class="docblock-short"><p>GMT segment rigid body motion and surface figure calibration</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Centroiding.html" title="crseo::Centroiding struct">Centroiding</a></td><td class="docblock-short"><p>Wrapper for CEO centroiding</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.CeoError.html" title="crseo::CeoError struct">CeoError</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.Cu.html" title="crseo::Cu struct">Cu</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.Fwhm.html" title="crseo::Fwhm struct">Fwhm</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.GMT.html" title="crseo::GMT struct">GMT</a></td><td class="docblock-short"><p><code>Gmt</code> builder</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Gmt.html" title="crseo::Gmt struct">Gmt</a></td><td class="docblock-short"><p>gmt wrapper</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Imaging.html" title="crseo::Imaging struct">Imaging</a></td><td class="docblock-short"><p>An optical imager with a detector</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.LMMSE.html" title="crseo::LMMSE struct">LMMSE</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.LinearMinimumMeanSquareError.html" title="crseo::LinearMinimumMeanSquareError struct">LinearMinimumMeanSquareError</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.Mask.html" title="crseo::Mask struct">Mask</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.PSSN.html" title="crseo::PSSN struct">PSSN</a></td><td class="docblock-short"><p><a href="../struct.CEO.html#impl-1"><code>CEO</code></a> <a href="../struct.PSSn.html"><code>PSSn</code></a> builder type</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.PSSn.html" title="crseo::PSSn struct">PSSn</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.SH48.html" title="crseo::SH48 struct">SH48</a></td><td class="docblock-short"><p><code>ShackHartmann</code> “SH48” builder for GMT AGWS model</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SHACKHARTMANN.html" title="crseo::SHACKHARTMANN struct">SHACKHARTMANN</a></td><td class="docblock-short"><p><code>ShackHartmann</code> builder</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.SOURCE.html" title="crseo::SOURCE struct">SOURCE</a></td><td class="docblock-short"><p><code>Source</code> builder</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ShackHartmann.html" title="crseo::ShackHartmann struct">ShackHartmann</a></td><td class="docblock-short"><p>shackhartmann wrapper</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Source.html" title="crseo::Source struct">Source</a></td><td class="docblock-short"><p>source wrapper</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.CrseoError.html" title="crseo::CrseoError enum">CrseoError</a></td><td class="docblock-short"></td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.Builder.html" title="crseo::Builder trait">Builder</a></td><td class="docblock-short"><p>CEO builder type trait</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.Propagation.html" title="crseo::Propagation trait">Propagation</a></td><td class="docblock-short"><p>A system that mutates <code>Source</code> arguments should implement the <code>Propagation</code> trait</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.set_gpu.html" title="crseo::set_gpu fn">set_gpu</a></td><td class="docblock-short"></td></tr></table><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<table><tr class="module-item"><td><a class="type" href="type.Diffractive.html" title="crseo::Diffractive type">Diffractive</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="type" href="type.Geometric.html" title="crseo::Geometric type">Geometric</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="type" href="type.GeometricShackHartmann.html" title="crseo::GeometricShackHartmann type">GeometricShackHartmann</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="type" href="type.Result.html" title="crseo::Result type">Result</a></td><td class="docblock-short"></td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="crseo" data-search-js="../search-index.js"></div>
+    <script src="../main.js"></script></body></html>

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Mirror","GMT mirror functions"],["Segment","GMT segment functions"]],"struct":[["Calibration","GMT segment rigid body motion and surface figure calibration"]]});

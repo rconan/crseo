@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Centroiding","Wrapper for CEO centroiding"]]});

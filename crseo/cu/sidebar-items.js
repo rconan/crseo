@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Cu",""]],"trait":[["CuType",""]],"type":[["Double",""],["Single",""]]});

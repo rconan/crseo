@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SOURCE","`Source` builder"],["Source","source wrapper"]],"trait":[["Propagation","A system that mutates `Source` arguments should implement the `Propagation` trait"]]});

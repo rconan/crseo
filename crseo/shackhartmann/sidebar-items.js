@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SH48","`ShackHartmann` “SH48” builder for GMT AGWS model"],["SHACKHARTMANN","`ShackHartmann` builder"],["ShackHartmann","shackhartmann wrapper"]],"trait":[["Model",""],["WavefrontSensor",""],["WavefrontSensorBuilder",""]],"type":[["Diffractive",""],["Geometric",""]]});
