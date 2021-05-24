@@ -1,6 +1,7 @@
 use crate::{
-    shackhartmann::WavefrontSensor, shackhartmann::WavefrontSensorBuilder, Atmosphere, Builder,
-    Geometric, Gmt, Propagation, ShackHartmann, Source, ATMOSPHERE, GMT, SOURCE,
+    shackhartmann::Geometric as WFS_TYPE, shackhartmann::WavefrontSensor,
+    shackhartmann::WavefrontSensorBuilder, Atmosphere, Builder, Geometric, Gmt, Propagation,
+    ShackHartmann, Source, ATMOSPHERE, GMT, SH48, SOURCE,
 };
 use dosio::{io::IO, DOSIOSError, Dos};
 
@@ -16,21 +17,45 @@ where
     sensor: T,
     flux_threshold: f64,
 }
+impl GmtOpticalSensorModel<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>> {
+    /// Creates a new SH48 based GMT optical model
+    ///
+    /// Creates a new model based on the default parameters for [GMT] and the [SH48] sensor model
+    pub fn new() -> Self {
+        Self {
+            gmt: Default::default(),
+            src: SH48::<WFS_TYPE>::new().guide_stars(),
+            atm: None,
+            sensor: SH48::new(),
+            flux_threshold: 0.8,
+        }
+    }
+}
 impl<U, T> GmtOpticalSensorModel<U, T>
 where
     U: WavefrontSensor + Propagation,
-    T: WavefrontSensorBuilder + Builder<Component = U>,
+    T: WavefrontSensorBuilder + Builder<Component = U> + Clone,
 {
-    /// Creates a new GMT optical model
-    ///
-    /// Creates a default model based on the default parameters for [GMT] and the given sensor model
-    pub fn new(sensor: T, flux_threshold: f64) -> Self {
+    /*
+       /// Creates a new GMT optical model
+       ///
+       /// Creates a default model based on the default parameters for [GMT] and the given sensor model
+       pub fn new(sensor: T, flux_threshold: f64) -> Self {
+           Self {
+               gmt: Default::default(),
+               src: sensor.guide_stars(),
+               atm: None,
+               sensor,
+               flux_threshold,
+           }
+       }
+    */
+    pub fn sensor(self, sensor: T) -> Self {
+        let src = sensor.clone().guide_stars();
         Self {
-            gmt: Default::default(),
-            src: sensor.guide_stars(),
-            atm: None,
             sensor,
-            flux_threshold,
+            src,
+            ..self
         }
     }
     /// Sets the [atmosphere](ATMOSPHERE) template    
