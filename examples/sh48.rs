@@ -11,7 +11,7 @@ fn main() -> std::result::Result<(), CrseoError> {
     println!("M1 mode: {}", gmt.get_m1_mode_type());
     println!("M2 mode: {}", gmt.get_m2_mode_type());
     let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(1);
-    let mut gs = wfs_blueprint.guide_stars().build()?;
+    let mut gs = wfs_blueprint.guide_stars(None).build()?;
     println!("GS band: {}", gs.get_photometric_band());
 
     let mut gmt2wfs = Calibration::new(&gmt, &gs, wfs_blueprint.clone());

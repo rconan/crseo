@@ -121,7 +121,7 @@ impl Default for Detector {
     }
 }
 pub trait WavefrontSensorBuilder {
-    fn guide_stars(&self) -> SOURCE;
+    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE;
 }
 /// `ShackHartmann` builder
 ///
@@ -171,12 +171,15 @@ impl<T: Model> SHACKHARTMANN<T> {
     }
 }
 impl<T: Model> WavefrontSensorBuilder for SHACKHARTMANN<T> {
-    fn guide_stars(&self) -> SOURCE {
+    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
-        SOURCE::new()
-            .size(self.n_sensor)
-            .pupil_size(d * n_side_lenslet as f64)
-            .pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
+        match template {
+            Some(src) => src,
+            None => SOURCE::new(),
+        }
+        .size(self.n_sensor)
+        .pupil_size(d * n_side_lenslet as f64)
+        .pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
     }
 }
 impl<T: Model> Builder for SHACKHARTMANN<T> {
@@ -260,12 +263,15 @@ impl<T: Model> SH48<T> {
     }
 }
 impl<T: Model> WavefrontSensorBuilder for SH48<T> {
-    fn guide_stars(&self) -> SOURCE {
+    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
-        SOURCE::new()
-            .size(self.n_sensor)
-            .pupil_size(d * n_side_lenslet as f64)
-            .pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
+        match template {
+            Some(src) => src,
+            None => SOURCE::new(),
+        }
+        .size(self.n_sensor)
+        .pupil_size(d * n_side_lenslet as f64)
+        .pupil_sampling(n_px_lenslet * n_side_lenslet + 1)
     }
 }
 impl<T: Model> Builder for SH48<T> {
@@ -346,13 +352,18 @@ impl<S: Model> ShackHartmann<S> {
             centroids: Cu::vector((n_side_lenslet * n_side_lenslet * 2 * n_sensor) as usize),
         }
     }
-    pub fn guide_stars(&self) -> SOURCE {
-        SOURCE::new()
-            .size(self.n_sensor as usize)
-            .pupil_size(self.d * self.n_side_lenslet as f64)
-            .pupil_sampling((self.n_px_lenslet * self.n_side_lenslet + 1) as usize)
-            .band("R")
-    }
+    /*
+    pub fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
+        let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
+        match template {
+            Some(src) => src,
+            None => SOURCE::new(),
+        }
+        .size(self.n_sensor as usize)
+        .pupil_size(self.d * self.n_side_lenslet as f64)
+        .pupil_sampling((self.n_px_lenslet * self.n_side_lenslet + 1) as usize)
+        .band("R")
+    }*/
     pub fn drop_sh(&mut self) {
         self._c_.drop();
     }

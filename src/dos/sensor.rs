@@ -24,7 +24,7 @@ impl GmtOpticalSensorModel<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>> {
     pub fn new() -> Self {
         Self {
             gmt: Default::default(),
-            src: SH48::<WFS_TYPE>::new().guide_stars(),
+            src: SH48::<WFS_TYPE>::new().guide_stars(None),
             atm: None,
             sensor: SH48::new(),
             flux_threshold: 0.8,
@@ -51,7 +51,7 @@ where
        }
     */
     pub fn sensor(self, sensor: T) -> Self {
-        let src = sensor.clone().guide_stars();
+        let src = sensor.clone().guide_stars(Some(self.src));
         Self {
             sensor,
             src,
