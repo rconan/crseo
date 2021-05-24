@@ -138,9 +138,9 @@ impl Dos for GmtOpticalModelInner {
             .clone()
             .iter()
             .map(|io| match io {
-                IO::SrcWfeRms { .. } => Some(jar::SrcWfeRms::with(self.src.wfe_rms_f64())),
+                IO::SrcWfeRms { .. } => Some(jar::SrcWfeRms::io_with(self.src.wfe_rms_f64())),
                 IO::Pssn { .. } => match &mut self.pssn {
-                    Some(pssn) => Some(jar::Pssn::with(
+                    Some(pssn) => Some(jar::Pssn::io_with(
                         pssn.peek()
                             .estimates
                             .iter()
