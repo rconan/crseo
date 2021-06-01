@@ -18,6 +18,9 @@ nalgebra = "0.25.3"
 skyangle = { git = "https://github.com/rconan/skyangle.git", branch = "main" }
 dosio = { git = "https://github.com/rconan/dosio.git", branch = "main", optional = true}
 
+[features]
+dos = ["dosio"]
+
 [build-dependencies]
 bindgen = "0.52.0"
 ceo = { path = "CEO" }
