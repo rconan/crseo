@@ -1,5 +1,6 @@
 /target
 Cargo.lock
-*.*~
+*~
 *.bin
 *.pkl
+ markdown-code-fontification:rustic-mode

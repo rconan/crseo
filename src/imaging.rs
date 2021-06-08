@@ -3,7 +3,7 @@ use super::Propagation;
 use super::Source;
 use std::f32;
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 /// A square lenslet array
 pub struct LensletArray {
     /// The number of lenslet per side
@@ -11,9 +11,11 @@ pub struct LensletArray {
     /// Dimension [m] of one lenslet
     pub lenslet_size: f64,
 }
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 /// Detector noise specifications
 pub struct NoiseDataSheet {
+    /// Exposure time [s]
+    pub exposure_time: f64,
     /// Read-out noise rms (# of photo-electron per pixel)
     pub rms_read_out_noise: f64,
     /// Number of background photons per frame
@@ -22,18 +24,32 @@ pub struct NoiseDataSheet {
     pub noise_factor: f64,
 }
 impl NoiseDataSheet {
-    /// Creates a new `NoiseDataSheet` with `rms_read_out_noise` and the default values for the other arguments
-    pub fn read_out(rms_read_out_noise: f64) -> Self {
-        NoiseDataSheet {
-            rms_read_out_noise,
+    /// Creates a new `NoiseDataSheet` with only photon noise for the given exposure time
+    pub fn new(exposure_time: f64) -> Self {
+        Self {
+            exposure_time,
             ..Default::default()
         }
     }
-    /// Creates a new `NoiseDataSheet` with `n_background_photon` and the default values for the other arguments
-    pub fn background(n_background_photon: f64) -> Self {
+    /// Creates a new `NoiseDataSheet` with `rms_read_out_noise`
+    pub fn read_out(self, rms_read_out_noise: f64) -> Self {
+        NoiseDataSheet {
+            rms_read_out_noise,
+            ..self
+        }
+    }
+    /// Creates a new `NoiseDataSheet` with `n_background_photon`
+    pub fn background(self, n_background_photon: f64) -> Self {
         NoiseDataSheet {
             n_background_photon,
-            ..Default::default()
+            ..self
+        }
+    }
+    /// Creates a new `NoiseDataSheet` with `n_background_photon`
+    pub fn excess_noise(self, noise_factor: f64) -> Self {
+        NoiseDataSheet {
+            noise_factor,
+            ..self
         }
     }
 }
@@ -41,6 +57,7 @@ impl Default for NoiseDataSheet {
     /// Creates a new `NoiseDataSheet` with `rms_read_out_noise`=0, `n_background_photon`=0 and `noise_factor`=1
     fn default() -> Self {
         NoiseDataSheet {
+            exposure_time: 1f64,
             rms_read_out_noise: 0f64,
             n_background_photon: 0f64,
             noise_factor: 1f64,
