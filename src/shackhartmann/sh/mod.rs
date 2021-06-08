@@ -51,6 +51,18 @@ impl<T: Model> SHACKHARTMANN<T> {
             ..self
         }
     }
+    pub fn detector(
+        self,
+        n_px_framelet: usize,
+        n_px_imagelet: Option<usize>,
+        osf: Option<usize>,
+        detector_noise_specs: Option<NoiseDataSheet>,
+    ) -> Self {
+        Self {
+            detector: Detector(n_px_framelet, n_px_imagelet, osf, detector_noise_specs),
+            ..self
+        }
+    }
 }
 impl<T: Model> WavefrontSensorBuilder for SHACKHARTMANN<T> {
     fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
