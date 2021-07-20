@@ -32,6 +32,7 @@ pub mod imaging;
 pub mod lmmse;
 pub mod pssn;
 pub mod raytracing;
+pub mod sensitivities;
 pub mod shackhartmann;
 pub mod source;
 
@@ -55,6 +56,8 @@ pub use self::imaging::Imaging;
 pub use self::lmmse::{LinearMinimumMeanSquareError, LMMSE};
 #[doc(inline)]
 pub use self::pssn::{PSSn, PSSN};
+#[doc(inline)]
+pub use self::sensitivities::OpticalSensitivities;
 #[doc(inline)]
 pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH48, SHACKHARTMANN};
 #[doc(inline)]
@@ -117,7 +120,7 @@ macro_rules! ceo {
     ($element:ident, $($arg:ident = [$($val:expr),*]),*) => {
         $crate::Builder::build(<$crate::$element as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
     };
-    ($element:ident:$model:ident, $($arg:ident = [$($val:expr),*]),*) => {
+    ($element:ident:$model:ident) => {
         $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()).unwrap()
     };
     ($element:ident:$model:ident, $($arg:ident = [$($val:expr),*]),*) => {

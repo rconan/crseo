@@ -71,6 +71,7 @@ pub struct SOURCE {
     pub zenith: Vec<f32>,
     pub azimuth: Vec<f32>,
     pub magnitude: Vec<f32>,
+    pub rays_coordinates: Option<(Vec<f64>, Vec<f64>)>,
 }
 impl Default for SOURCE {
     fn default() -> Self {
@@ -82,6 +83,7 @@ impl Default for SOURCE {
             zenith: vec![0f32],
             azimuth: vec![0f32],
             magnitude: vec![0f32],
+            rays_coordinates: None,
         }
     }
 }
@@ -178,6 +180,13 @@ impl SOURCE {
             ..self
         }
     }
+    /// Set the [x,y] coordinates of the bundle of rays in the entrance pupil
+    pub fn rays_coordinates(self, rays_x: Vec<f64>, rays_y: Vec<f64>) -> Self {
+        Self {
+            rays_coordinates: Some((rays_x, rays_y)),
+            ..self
+        }
+    }
 }
 impl Builder for SOURCE {
     type Component = Source;
@@ -190,28 +199,47 @@ impl Builder for SOURCE {
             pupil_sampling: self.pupil_sampling as i32,
             _wfe_rms: vec![0.0; self.size],
             _phase: vec![0.0; self.pupil_sampling * self.pupil_sampling * self.size],
-            zenith: self.zenith,
-            azimuth: self.azimuth,
+            zenith: self.zenith.clone(),
+            azimuth: self.azimuth.clone(),
             magnitude: self.magnitude,
         };
-        unsafe {
-            let origin = vector {
-                x: 0.0,
-                y: 0.0,
-                z: 25.0,
-            };
-            let src_band = CString::new(self.band.into_bytes()).unwrap();
-            src._c_.setup7(
-                src_band.into_raw(),
-                src.magnitude.as_mut_ptr(),
-                src.zenith.as_mut_ptr(),
-                src.azimuth.as_mut_ptr(),
-                f32::INFINITY,
-                self.size as i32,
-                self.pupil_size,
-                self.pupil_sampling as i32,
-                origin,
-            );
+        let origin = vector {
+            x: 0.0,
+            y: 0.0,
+            z: 25.0,
+        };
+        let src_band = CString::new(self.band.into_bytes()).unwrap();
+        if let Some((mut rays_x, mut rays_y)) = self.rays_coordinates {
+            let mut zenith: Vec<_> = self.zenith.iter().map(|&x| x as f64).collect();
+            let mut azimuth: Vec<_> = self.azimuth.iter().map(|&x| x as f64).collect();
+            unsafe {
+                src._c_.setup9(
+                    src_band.into_raw(),
+                    src.magnitude.as_mut_ptr(),
+                    zenith.as_mut_ptr(),
+                    azimuth.as_mut_ptr(),
+                    f32::INFINITY,
+                    self.size as i32,
+                    rays_x.len() as i32,
+                    rays_x.as_mut_ptr(),
+                    rays_y.as_mut_ptr(),
+                    origin,
+                );
+            }
+        } else {
+            unsafe {
+                src._c_.setup7(
+                    src_band.into_raw(),
+                    src.magnitude.as_mut_ptr(),
+                    src.zenith.as_mut_ptr(),
+                    src.azimuth.as_mut_ptr(),
+                    f32::INFINITY,
+                    self.size as i32,
+                    self.pupil_size,
+                    self.pupil_sampling as i32,
+                    origin,
+                );
+            }
         }
         Ok(src)
     }
@@ -227,6 +255,7 @@ impl From<&Source> for SOURCE {
             zenith: src.zenith.clone(),
             azimuth: src.azimuth.clone(),
             magnitude: src.magnitude.clone(),
+            rays_coordinates: None,
         }
     }
 }
