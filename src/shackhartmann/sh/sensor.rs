@@ -19,41 +19,6 @@ pub struct ShackHartmann<S: Model> {
     /// The optional detector noise specifications
     pub detector_noise_model: Option<NoiseDataSheet>,
 }
-impl<S: Model> ShackHartmann<S> {
-    /// Creates a new `ShackHartmann` as either `Geometric` or `Diffractive` type
-    ///
-    /// * `n_sensor` - the number of WFS
-    /// * `n_side_lenslet` - the size of the square lenslet array
-    /// * `n_px_lenslet` - the number of pixel per lenslet in the telescope pupil
-    /// * `d` - the lenslet pitch [m]
-    pub fn new(n_sensor: i32, n_side_lenslet: i32, n_px_lenslet: i32, d: f64) -> ShackHartmann<S> {
-        ShackHartmann {
-            _c_: Model::new(),
-            n_side_lenslet,
-            n_px_lenslet,
-            d,
-            n_sensor,
-            n_centroids: 0,
-            centroids: Cu::vector((n_side_lenslet * n_side_lenslet * 2 * n_sensor) as usize),
-            detector_noise_model: None,
-        }
-    }
-    /*
-    pub fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
-        let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
-        match template {
-            Some(src) => src,
-            None => SOURCE::new(),
-        }
-        .size(self.n_sensor as usize)
-        .pupil_size(self.d * self.n_side_lenslet as f64)
-        .pupil_sampling((self.n_px_lenslet * self.n_side_lenslet + 1) as usize)
-        .band("R")
-    }*/
-    pub fn drop_sh(&mut self) {
-        self._c_.drop();
-    }
-}
 impl<S: Model> WavefrontSensor for ShackHartmann<S> {
     fn calibrate(&mut self, src: &mut Source, threshold: f64) {
         self._c_.calibrate(src, threshold);
@@ -142,7 +107,7 @@ impl ShackHartmann<Geometric> {
 }
 impl<S: Model> Drop for ShackHartmann<S> {
     fn drop(&mut self) {
-        self.drop_sh();
+        self._c_.drop();
     }
 }
 impl Propagation for ShackHartmann<Geometric> {
@@ -219,6 +184,17 @@ impl ShackHartmann<Diffractive> {
         }
         self
     }
+    pub fn detector_resolution(&self) -> usize {
+        (self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET) as usize
+    }
+    pub fn frame(&mut self) -> Vec<f32> {
+        let n =
+            self._c_.camera.N_PX_CAMERA * self._c_.camera.N_PX_CAMERA * self._c_.camera.N_LENSLET;
+        let m = self._c_.camera.N_SOURCE;
+        let mut data: Cu<Single> = Cu::array(n as usize, m as usize);
+        data.from_ptr(self._c_.camera.d__frame);
+        data.into()
+    }
     pub fn reset(&mut self) -> &mut Self {
         unsafe {
             self._c_.camera.reset();
@@ -252,7 +228,7 @@ impl From<ShackHartmann<Diffractive>> for Source {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crseo::{SHACKHARTMANN, SOURCE};
+    use crate::{Builder, SHACKHARTMANN, SOURCE};
 
     #[test]
     fn shack_hartmann_geometric_new() {

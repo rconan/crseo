@@ -210,8 +210,8 @@ impl Propagation for Imaging {
 #[cfg(test)]
 /// Imaging tests
 mod tests {
-    use super::*;
-    use crate::{ceo, Centroiding, Conversion};
+    use super::{Imaging, NoiseDataSheet};
+    use crate::{ceo, Builder, Centroiding, Conversion, Source, GMT};
 
     #[test]
     /// Test the intensity per lenslet
@@ -312,7 +312,7 @@ mod tests {
 
         sensor
             .reset()
-            .readout(1f64, Some(NoiseDataSheet::read_out(1f64)));
+            .readout(1f64, Some(NoiseDataSheet::new(1.).read_out(1f64)));
         let n = sensor.resolution().pow(2);
         let mut frame = vec![0f32; n as usize];
         sensor.frame_transfer(&mut frame);
@@ -333,9 +333,10 @@ mod tests {
 
         let n = sensor.resolution().pow(2);
         let nbg_px = 1000f64;
-        sensor
-            .reset()
-            .readout(1f64, Some(NoiseDataSheet::background(n as f64 * nbg_px)));
+        sensor.reset().readout(
+            1f64,
+            Some(NoiseDataSheet::new(1.).background(n as f64 * nbg_px)),
+        );
         let mut frame = vec![0f32; n as usize];
         sensor.frame_transfer(&mut frame);
 
