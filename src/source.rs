@@ -22,7 +22,7 @@
 //! ```
 
 use super::ceo_bindings::{dev2host, dev2host_int, source, vector};
-use super::{cu::Single, Builder, Centroiding, Cu, Result};
+use super::{cu::Double, cu::Single, Builder, Centroiding, Cu, Result};
 
 use std::{
     f32,
@@ -604,6 +604,18 @@ impl Source {
             dev2host(a.as_mut_ptr(), self._c_.wavefront.amplitude, n);
         }
         a
+    }
+    /// Returns the rays [x,y,z] coordinates
+    ///
+    /// Returns the coordinates as [x1,y1,z1,x2,y2,z2,...]
+    pub fn rays_coordinates(&mut self) -> Vec<f64> {
+        let n = 3 * self._c_.rays.N_RAY_TOTAL as usize;
+        let mut d_xyz = Cu::<Double>::vector(n);
+        //        let mut d_xyz: Cu<Double> = vec![0f64; n].into();
+        unsafe {
+            self._c_.rays.get_coordinates(d_xyz.malloc().as_mut_ptr());
+        }
+        d_xyz.into()
     }
     /// Returns the flux integrated in `n_let`X`n_let` bins
     pub fn fluxlet(&mut self, n_let: usize) -> Vec<f32> {
