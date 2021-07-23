@@ -313,7 +313,7 @@ impl Gmt {
     /// Keeps only the M1 segment specified in the vector `sid`
     ///
     /// * `sid` - vector of segment ID numbers in the range [1,7]
-    pub fn keep(&mut self, sid: &mut Vec<i32>) -> &mut Self {
+    pub fn keep(&mut self, sid: &mut [i32]) -> &mut Self {
         unsafe {
             self._c_m1.keep(sid.as_mut_ptr(), sid.len() as i32);
             self._c_m2.keep(sid.as_mut_ptr(), sid.len() as i32);
