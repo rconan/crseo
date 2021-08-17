@@ -38,20 +38,29 @@ pub trait Propagation {
 
 #[derive(Clone, Debug)]
 pub enum PupilSampling {
-    SquareGrid(usize),
+    SquareGrid {
+        size: Option<f64>,
+        resolution: usize,
+    },
     UserSet(usize),
 }
 impl PupilSampling {
     pub fn total(&self) -> usize {
         match &self {
-            PupilSampling::SquareGrid(n) => n * n,
+            PupilSampling::SquareGrid { resolution, .. } => resolution * resolution,
             PupilSampling::UserSet(n) => *n,
         }
     }
     pub fn side(&self) -> usize {
         match &self {
-            PupilSampling::SquareGrid(n) => *n,
+            PupilSampling::SquareGrid { resolution, .. } => *resolution,
             PupilSampling::UserSet(n) => *n,
+        }
+    }
+    pub fn size(&self) -> Option<f64> {
+        match &self {
+            PupilSampling::SquareGrid { size, .. } => *size,
+            _ => None,
         }
     }
 }
@@ -98,7 +107,10 @@ impl Default for SOURCE {
         SOURCE {
             size: 1,
             pupil_size: 25.5,
-            pupil_sampling: PupilSampling::SquareGrid(512),
+            pupil_sampling: PupilSampling::SquareGrid {
+                size: Some(25.5),
+                resolution: 512,
+            },
             band: "Vs".into(),
             zenith: vec![0f32],
             azimuth: vec![0f32],
@@ -113,9 +125,12 @@ impl SOURCE {
         Self { size, ..self }
     }
     /// Set the sampling of the pupil in pixels
-    pub fn pupil_sampling(self, pupil_sampling: usize) -> Self {
+    pub fn pupil_sampling(self, resolution: usize) -> Self {
         Self {
-            pupil_sampling: PupilSampling::SquareGrid(pupil_sampling),
+            pupil_sampling: PupilSampling::SquareGrid {
+                size: self.pupil_sampling.size().or(Some(25.5)),
+                resolution,
+            },
             ..self
         }
     }
@@ -276,7 +291,10 @@ impl From<&Source> for SOURCE {
         Self {
             size: src.size as usize,
             pupil_size: src.pupil_size,
-            pupil_sampling: PupilSampling::SquareGrid(src.pupil_sampling as usize),
+            pupil_sampling: PupilSampling::SquareGrid {
+                size: Some(src.pupil_size),
+                resolution: src.pupil_sampling as usize,
+            },
             band: src.get_photometric_band(),
             zenith: src.zenith.clone(),
             azimuth: src.azimuth.clone(),
@@ -287,7 +305,6 @@ impl From<&Source> for SOURCE {
 }
 
 /// source wrapper
-#[repr(C)]
 pub struct Source {
     _c_: source,
     /// The number of sources
@@ -608,7 +625,6 @@ impl Source {
     }
     /// Returns the wavefront phase [m] in the exit pupil of the telescope
     pub fn phase(&mut self) -> &Vec<f32> {
-        println!("N_PX: {}", self._c_.wavefront.N_PX);
         unsafe {
             dev2host(
                 self._phase.as_mut_ptr(),
