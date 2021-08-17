@@ -57,7 +57,7 @@ pub use self::lmmse::{LinearMinimumMeanSquareError, LMMSE};
 #[doc(inline)]
 pub use self::pssn::{PSSn, PSSN};
 #[doc(inline)]
-pub use self::sensitivities::OpticalSensitivities;
+pub use self::sensitivities::{from_opticals, OpticalSensitivities};
 #[doc(inline)]
 pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH48, SHACKHARTMANN};
 #[doc(inline)]
