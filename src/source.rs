@@ -215,7 +215,7 @@ impl SOURCE {
             ..self
         }
     }
-    /// Set the [x,y] coordinates of the bundle of rays in the entrance pupil
+    /// Set the \[x,y\] coordinates of the bundle of rays in the entrance pupil
     pub fn rays_coordinates(self, rays_x: Vec<f64>, rays_y: Vec<f64>) -> Self {
         assert_eq!(
             rays_x.len(),
@@ -309,9 +309,9 @@ pub struct Source {
     _c_: source,
     /// The number of sources
     pub size: i32,
-    /// The diameter of the entrance pupil [m]
+    /// The diameter of the entrance pupil \[m\]
     pub pupil_size: f64,
-    /// The sampling of the entrance pupil [px]
+    /// The sampling of the entrance pupil \[px\]
     pub pupil_sampling: i32,
     pub _wfe_rms: Vec<f32>,
     pub _phase: Vec<f32>,
@@ -336,8 +336,8 @@ impl Source {
     }
     /// Creates a new `Source` with the arguments:
     ///
-    /// * `pupil_size` - the diameter of the entrance pupil [m]
-    /// * `pupil_sampling` - the sampling of the entrance pupil [px]
+    /// * `pupil_size` - the diameter of the entrance pupil \[m\]
+    /// * `pupil_sampling` - the sampling of the entrance pupil \[px\]
     pub fn new(size: i32, pupil_size: f64, pupil_sampling: i32) -> Source {
         Source {
             _c_: Default::default(),
@@ -357,8 +357,8 @@ impl Source {
     /// Sets the `Source` parameters:
     ///
     /// * `band` - the photometric band: Vs, V, R, I, J, H, K or R+I
-    /// * `zenith` - the zenith angle [rd]
-    /// * `azimuth` - the azimuth angle [rd]
+    /// * `zenith` - the zenith angle \[rd\]
+    /// * `azimuth` - the azimuth angle \[rd\]
     /// * `magnitude` - the magnitude at the specified photometric band
     pub fn build(
         &mut self,
@@ -404,7 +404,7 @@ impl Source {
             )
         }
     }
-    /// Returns the `Source` wavelength [m]
+    /// Returns the `Source` wavelength \[m\]
     pub fn wavelength(&mut self) -> f64 {
         unsafe { self._c_.wavelength() as f64 }
     }
@@ -412,7 +412,7 @@ impl Source {
     pub fn fwhm(&mut self, value: f64) {
         self._c_.fwhm = value as f32;
     }
-    /// Set the pupil rotation angle [degree]
+    /// Set the pupil rotation angle \[degree\]
     pub fn rotate_rays(&mut self, angle: f64) {
         self._c_.rays.rot_angle = angle;
     }
@@ -431,7 +431,7 @@ impl Source {
         }
         self
     }
-    /// Returns the wavefront error root mean square [m]
+    /// Returns the wavefront error root mean square \[m\]
     pub fn wfe_rms(&mut self) -> Vec<f32> {
         unsafe {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
@@ -448,7 +448,7 @@ impl Source {
             .map(|x| x as f64)
             .collect()
     }
-    /// Returns the wavefront error root mean square [m]x10^-`exp`
+    /// Returns the wavefront error root mean square \[m\]x10^-`exp`
     pub fn wfe_rms_10e(&mut self, exp: i32) -> Vec<f32> {
         unsafe {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
@@ -623,7 +623,7 @@ impl Source {
         }
         self
     }
-    /// Returns the wavefront phase [m] in the exit pupil of the telescope
+    /// Returns the wavefront phase \[m\] in the exit pupil of the telescope
     pub fn phase(&mut self) -> &Vec<f32> {
         unsafe {
             dev2host(
@@ -648,9 +648,9 @@ impl Source {
         }
         a
     }
-    /// Returns the rays [x,y,z] coordinates
+    /// Returns the rays \[x,y,z\] coordinates
     ///
-    /// Returns the coordinates as [x1,y1,z1,x2,y2,z2,...]
+    /// Returns the coordinates as \[x1,y1,z1,x2,y2,z2,...\]
     pub fn rays_coordinates(&mut self) -> Vec<f64> {
         let n = 3 * self._c_.rays.N_RAY_TOTAL as usize;
         let mut d_xyz = Cu::<Double>::vector(n);
@@ -732,7 +732,7 @@ pub struct Rays<'a> {
     _c_: &'a mut bundle,
 }
 impl<'a> Rays<'a> {
-    /// Returns the rays [x,y,z] coordinates
+    /// Returns the rays \[x,y,z\] coordinates
     ///
     /// Returns the coordinates as [x1,y1,z1,x2,y2,z2,...]
     pub fn coordinates(&mut self) -> Vec<f64> {
@@ -743,7 +743,7 @@ impl<'a> Rays<'a> {
         }
         d_xyz.into()
     }
-    /// Returns the rays [k,l,m] directions
+    /// Returns the rays \[k,l,m\] directions
     ///
     /// Returns the directions as [k1,l1,m1,k2,l2,m2,...]
     pub fn directions(&mut self) -> Vec<f64> {

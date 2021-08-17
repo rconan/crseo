@@ -95,6 +95,20 @@ impl ShackHartmann<Geometric> {
         mask.from_ptr(self._c_.valid_lenslet.f);
         mask
     }
+    pub fn valid_lenslet_from(&mut self, wfs: &mut ShackHartmann<Diffractive>) {
+        unsafe {
+            self._c_.valid_lenslet.reset();
+            self._c_.valid_lenslet.add(&mut wfs._c_.valid_lenslet);
+            self._c_.valid_actuator.reset();
+            self._c_.valid_actuator.add(&mut wfs._c_.valid_actuator);
+            self._c_.valid_lenslet.set_filter();
+            self._c_.valid_lenslet.set_index();
+            self._c_.valid_actuator.set_filter();
+        }
+    }
+    pub fn set_reference_slopes(&mut self, src: &mut Source) {
+        unsafe { self._c_.set_reference_slopes(src.as_raw_mut_ptr()) }
+    }
     pub fn lenlet_flux(&mut self) -> Cu<Single> {
         let mut flux: Cu<Single> =
             Cu::vector((self.n_side_lenslet * self.n_side_lenslet * self.n_sensor) as usize);
@@ -171,6 +185,9 @@ impl ShackHartmann<Diffractive> {
         }
         self
     }
+    pub fn n_valid_lenslet(&mut self) -> usize {
+        self._c_.valid_lenslet.nnz as usize
+    }
     pub fn readout(&mut self) -> &mut Self {
         if let Some(noise_model) = self.detector_noise_model {
             unsafe {
@@ -184,8 +201,9 @@ impl ShackHartmann<Diffractive> {
         }
         self
     }
-    pub fn detector_resolution(&self) -> usize {
-        (self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET) as usize
+    pub fn detector_resolution(&self) -> (usize, usize) {
+        let res = (self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET) as usize;
+        (res, res)
     }
     pub fn frame(&mut self) -> Vec<f32> {
         let n =

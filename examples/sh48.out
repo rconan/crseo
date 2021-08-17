@@ -1,0 +1,15 @@
+M1 mode: CEO/gmtMirrors/bending modes.ceo
+M2 mode: CEO/gmtMirrors/Karhunen-Loeve.ceo
+GS band: Vs
+GTM 2 WFS calibration [2242x14] in 5s
+Poke sum: 44.41289
+GS WFE RMS: 0.7962924nm
+# valid lenslet: 1121
+#1: [-0.0,-0.0]
+#2: [+1.0,+0.0]
+#3: [-0.0,-0.0]
+#4: [-0.0,-0.0]
+#5: [+0.0,+1.0]
+#6: [+0.0,-0.0]
+#7: [+1.0,+1.0]
+WFE RMS [nm] without and with atmosphere: 383/1359
