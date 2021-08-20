@@ -474,7 +474,17 @@ impl Gmt {
         }
         self.m1_modes(&mut a);
     }
-    */
+     */
+    pub fn trace_all(&mut self, src: &mut Source) -> &mut Self {
+        unsafe {
+            src.as_raw_mut_ptr().reset_rays();
+            let rays = &mut src.as_raw_mut_ptr().rays;
+            self._c_m1.traceall(rays);
+            self._c_m2.traceall(rays);
+            rays.to_sphere1(-5.830, 2.197173);
+        }
+        self
+    }
 }
 impl Drop for Gmt {
     /// Frees CEO memory before dropping `Gmt`
@@ -491,10 +501,10 @@ impl Propagation for Gmt {
         unsafe {
             src.as_raw_mut_ptr().reset_rays();
             let rays = &mut src.as_raw_mut_ptr().rays;
-            self._c_m2.blocking(rays);
-            self._c_m1.trace(rays);
-            rays.gmt_truss_onaxis();
-            rays.gmt_m2_baffle();
+            //self._c_m2.blocking(rays);
+            self._c_m1.traceall(rays);
+            //rays.gmt_truss_onaxis();
+            //rays.gmt_m2_baffle();
             self._c_m2.trace(rays);
             rays.to_sphere1(-5.830, 2.197173);
         }
