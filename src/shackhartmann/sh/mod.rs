@@ -1,3 +1,10 @@
+use super::{
+    Detector, Diffractive, Geometric, LensletArray, Model, WavefrontSensor, WavefrontSensorBuilder,
+};
+use crate::{imaging::NoiseDataSheet, Builder, Cu, Result, SOURCE};
+pub mod sensor;
+pub use sensor::ShackHartmann;
+
 /// `ShackHartmann` builder
 ///
 /// Default properties:
@@ -17,13 +24,6 @@
 /// use ceo::{Builder,  SHACKHARTMANN, Geometric};
 /// let mut wfs = SHACKHARTMANN::<Geometric>::new().build();
 /// ```
-use super::{
-    Detector, Diffractive, Geometric, LensletArray, Model, WavefrontSensor, WavefrontSensorBuilder,
-};
-use crate::{imaging::NoiseDataSheet, Builder, Cu, Result, SOURCE};
-pub mod sensor;
-pub use sensor::ShackHartmann;
-
 #[derive(Debug, Clone)]
 pub struct SHACKHARTMANN<T: Model> {
     pub n_sensor: usize,
