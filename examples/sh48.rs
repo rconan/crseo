@@ -1,5 +1,5 @@
 use crseo::{
-    calibrations, ceo, shackhartmann::Diffractive as WFS_TYPE, shackhartmann::Geometric,
+    calibrations, ceo, shackhartmann::Geometric as WFS_TYPE, shackhartmann::Geometric,
     shackhartmann::WavefrontSensor, shackhartmann::WavefrontSensorBuilder, Builder, Calibration,
     CrseoError, GMT, SH48,
 };
@@ -32,8 +32,8 @@ fn main() -> std::result::Result<(), CrseoError> {
     gmt2wfs.calibrate(
         mirror,
         segments,
-        calibrations::ValidLensletCriteria::OtherSensor(&mut wfs),
-        //        calibrations::ValidLensletCriteria::Threshold(Some(0.8)),
+        //        calibrations::ValidLensletCriteria::OtherSensor(&mut wfs),
+        calibrations::ValidLensletCriteria::Threshold(Some(0.8)),
     );
     println!(
         "GTM 2 WFS calibration [{}x{}] in {}s",
