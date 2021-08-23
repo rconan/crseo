@@ -33,9 +33,8 @@ criterion = "0.3"
 bincode = "1.3.2"
 gnuplot = "0.0.37"
 plotters = "0.3.1"
-complot = { path = "/home/rconan/projects/complot/" }
+complot = { git = "https://github.com/rconan/complot.git", branch = "ns-opm-im" }
 indicatif = "0.16.2"
-glass = { path = "/home/rconan/Documents/GMT/Notes/M1/Thermal/CFD/glass/" }
 
 [[bench]]
 name = "ceo_benchmark"
