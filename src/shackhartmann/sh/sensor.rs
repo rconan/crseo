@@ -170,6 +170,11 @@ impl ShackHartmann<Diffractive> {
             self.n_px_lenslet * self.n_side_lenslet + 1,
         )
     }
+    /// Returns the centroids corresponding to the valid lenslets
+    ///
+    /// The first half of the valid lenslet centroids contains all the valid centroids
+    /// of all the guide stars along the X–axis direction and the second half contains
+    /// all the valid slopes of  all the guide stars along the Y–axis direction
     pub fn get_data(&mut self) -> Cu<Single> {
         let m = self._c_.valid_lenslet.nnz as usize * 2usize;
         let mut data: Cu<Single> = Cu::vector(m);
