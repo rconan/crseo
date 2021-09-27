@@ -20,10 +20,10 @@ impl GmtOpticalSensorModel<ShackHartmann<Geometric>, SH48<Geometric>> {
     /// Creates a new SH48 based GMT optical model
     ///
     /// Creates a new model based on the default parameters for [GMT] and the [SH48] sensor model
-    pub fn new() -> Self {
+    pub fn new(src_template: Option<SOURCE>) -> Self {
         Self {
             gmt: Default::default(),
-            src: SH48::<Geometric>::new().guide_stars(None),
+            src: SH48::<Geometric>::new().guide_stars(src_template),
             atm: None,
             sensor: SH48::new(),
             flux_threshold: 0.8,
@@ -34,10 +34,10 @@ impl GmtOpticalSensorModel<ShackHartmann<Diffractive>, SH48<Diffractive>> {
     /// Creates a new SH48 based GMT optical model
     ///
     /// Creates a new model based on the default parameters for [GMT] and the [SH48] sensor model
-    pub fn new() -> Self {
+    pub fn new(src_template: Option<SOURCE>) -> Self {
         Self {
             gmt: Default::default(),
-            src: SH48::<Diffractive>::new().guide_stars(None),
+            src: SH48::<Diffractive>::new().guide_stars(src_template),
             atm: None,
             sensor: SH48::new(),
             flux_threshold: 0.8,
@@ -50,19 +50,24 @@ where
     T: WavefrontSensorBuilder + Builder<Component = U> + Clone,
 {
     /*
-       /// Creates a new GMT optical model
-       ///
-       /// Creates a default model based on the default parameters for [GMT] and the given sensor model
-       pub fn new(sensor: T, flux_threshold: f64) -> Self {
-           Self {
-               gmt: Default::default(),
-               src: sensor.guide_stars(),
-               atm: None,
-               sensor,
-               flux_threshold,
-           }
-       }
+      /// Creates a new GMT optical model
+      ///
+      /// Creates a default model based on the default parameters for [GMT] and the given sensor model
+      pub fn new(sensor: T, flux_threshold: f64) -> Self {
+          Self {
+              gmt: Default::default(),
+              src: sensor.guide_stars(),
+              atm: None,
+              sensor,
+              flux_threshold,
+          }
+      }
     */
+    /// Sets the GMT model
+    pub fn gmt(self, gmt: GMT) -> Self {
+        Self { gmt, ..self }
+    }
+    /// Sets the wavefront sensor
     pub fn sensor(self, sensor: T) -> Self {
         let src = sensor.clone().guide_stars(Some(self.src));
         Self {
@@ -174,7 +179,7 @@ impl Dos for GmtOpticalSensorModelInner<ShackHartmann<Diffractive>> {
         match data {
             Some(data) => data
                 .into_iter()
-                .try_for_each(|io| match io {
+                .try_for_each(|mut io| match io {
                     IO::OSSM1Lcl { data: Some(values) } => {
                         values.chunks(6).enumerate().for_each(|(sid0, v)| {
                             self.gmt
@@ -189,6 +194,13 @@ impl Dos for GmtOpticalSensorModelInner<ShackHartmann<Diffractive>> {
                         });
                         Ok(())
                     }
+                    IO::M1modes {
+                        data: Some(ref mut values),
+                    } => {
+                        self.gmt.m1_modes(values);
+                        Ok(())
+                    }
+                    IO::M1modes { data: None } => Ok(()),
                     IO::OSSM1Lcl { data: None } => Ok(()),
                     IO::MCM2Lcl6D { data: None } => Ok(()),
                     _ => Err(DOSIOSError::Inputs("GmtOpticalModel invalid inputs".into())),

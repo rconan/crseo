@@ -4,22 +4,32 @@ use crseo::{
     dos::{GmtOpticalModel, GmtOpticalSensorModel},
     shackhartmann::Diffractive as WFS_TYPE,
     shackhartmann::Geometric,
-    Builder, CrseoError, ShackHartmann, SH48,
+    Builder, CrseoError, ShackHartmann, SH48, SOURCE,
 };
 use dosio::{ios, Dos};
+use skyangle::Conversion;
 use std::time::Instant;
 
 fn main() -> std::result::Result<(), CrseoError> {
-    let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(1);
-    let mut gosm = GmtOpticalSensorModel::<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>>::new()
-        .sensor(wfs_blueprint.clone())
-        .build()?;
-    gosm.src.fwhm(6f64);
+    let n_sensor = 3;
+    let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(n_sensor);
+    let mut gosm = GmtOpticalSensorModel::<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>>::new(Some(
+        SOURCE::new()
+            .size(n_sensor)
+            .on_ring(6f32.from_arcmin())
+            .fwhm(6f64),
+    ))
+    .sensor(wfs_blueprint.clone())
+    .build()?;
     println!("M1 mode: {}", gosm.gmt.get_m1_mode_type());
     println!("M2 mode: {}", gosm.gmt.get_m2_mode_type());
     println!("GS band: {}", gosm.src.get_photometric_band());
 
-    let mut gmt2wfs = Calibration::new(&gosm.gmt, &gosm.src, SH48::<Geometric>::new().n_sensor(1));
+    let mut gmt2wfs = Calibration::new(
+        &gosm.gmt,
+        &gosm.src,
+        SH48::<Geometric>::new().n_sensor(n_sensor),
+    );
     let mirror = vec![calibrations::Mirror::M2];
     let segments = vec![vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))]; 7];
     let now = Instant::now();
@@ -29,7 +39,7 @@ fn main() -> std::result::Result<(), CrseoError> {
         calibrations::ValidLensletCriteria::OtherSensor(&mut gosm.sensor),
     );
     println!(
-        "GTM 2 WFS calibration [{}x{}] in {}s",
+        "GMT 2 WFS calibration [{}x{}] in {}s",
         gmt2wfs.n_data,
         gmt2wfs.n_mode,
         now.elapsed().as_secs()

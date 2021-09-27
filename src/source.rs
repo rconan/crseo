@@ -101,6 +101,7 @@ pub struct SOURCE {
     pub azimuth: Vec<f32>,
     pub magnitude: Vec<f32>,
     pub rays_coordinates: Option<(Vec<f64>, Vec<f64>)>,
+    pub fwhm: Option<f64>,
 }
 impl Default for SOURCE {
     fn default() -> Self {
@@ -116,6 +117,7 @@ impl Default for SOURCE {
             azimuth: vec![0f32],
             magnitude: vec![0f32],
             rays_coordinates: None,
+            fwhm: None,
         }
     }
 }
@@ -228,6 +230,13 @@ impl SOURCE {
             ..self
         }
     }
+    /// Sets the `Source` full width at half maximum in un-binned detector pixel
+    pub fn fwhm(self, value: f64) -> Self {
+        Self {
+            fwhm: Some(value),
+            ..self
+        }
+    }
 }
 impl Builder for SOURCE {
     type Component = Source;
@@ -244,6 +253,7 @@ impl Builder for SOURCE {
             azimuth: self.azimuth.clone(),
             magnitude: self.magnitude,
         };
+
         let origin = vector {
             x: 0.0,
             y: 0.0,
@@ -282,6 +292,9 @@ impl Builder for SOURCE {
                 );
             }
         }
+        if let Some(fwhm) = self.fwhm {
+            src._c_.fwhm = fwhm as f32;
+        }
         Ok(src)
     }
 }
@@ -300,6 +313,7 @@ impl From<&Source> for SOURCE {
             azimuth: src.azimuth.clone(),
             magnitude: src.magnitude.clone(),
             rays_coordinates: None,
+            fwhm: Some(src._c_.fwhm as f64),
         }
     }
 }
