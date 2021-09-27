@@ -110,7 +110,7 @@ impl OpticalSensitivities {
             _ => Err(OpticalSensitivitiesError::SegmentTipTilt),
         }
     }
-    /// Returns M2 segment tip-tilt sensitivities [14x42]
+    /// Returns M2 segment tip-tilt sensitivities [14x14]
     pub fn m2_rxy(&self) -> Result<Matrix, OpticalSensitivitiesError> {
         match self {
             OpticalSensitivities::SegmentTipTilt(sens) => {
