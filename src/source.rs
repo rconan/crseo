@@ -512,6 +512,12 @@ impl Source {
         }
         segment_wfe_std
     }
+    pub fn segment_wfe_rms_f64(&mut self) -> Vec<f64> {
+        self.segment_wfe_rms()
+            .into_iter()
+            .map(|x| x as f64)
+            .collect()
+    }
     pub fn segment_wfe_rms_10e(&mut self, exp: i32) -> Vec<f32> {
         self.segment_wfe_rms()
             .iter()
@@ -543,6 +549,12 @@ impl Source {
         }
         segment_mean
     }
+    pub fn segment_piston_f64(&mut self) -> Vec<f64> {
+        self.segment_piston()
+            .into_iter()
+            .map(|x| x as f64)
+            .collect()
+    }
     pub fn segment_piston_10e(&mut self, exp: i32) -> Vec<f32> {
         self.segment_piston()
             .iter()
@@ -561,7 +573,7 @@ impl Source {
         mask
     }
     /// Returns the x and y gradient of the wavefront in average over each of the GMT segments
-    pub fn segments_gradients(&mut self) -> Vec<Vec<f32>> {
+    pub fn segment_gradients(&mut self) -> Vec<Vec<f32>> {
         let mut sxy: Vec<Vec<f32>> = vec![vec![0.; 7 * self.size as usize]; 2];
         unsafe {
             self._c_.wavefront.segments_gradient_averageFast(
@@ -572,6 +584,12 @@ impl Source {
             );
         }
         sxy
+    }
+    pub fn segment_gradients_f64(&mut self) -> Vec<f64> {
+        self.segment_gradients()
+            .into_iter()
+            .flat_map(|x| x.into_iter().map(|x| x as f64).collect::<Vec<f64>>())
+            .collect()
     }
     /// Returns the x and y gradient of the wavefront in average over each lenslet of a `n_lenslet`x`n_lenslet` array, the gradients are saved in `Centroiding`
     pub fn lenslet_gradients(

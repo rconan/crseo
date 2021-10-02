@@ -322,7 +322,7 @@ impl OpticalSensitivities {
                 let push_phase = src.phase().to_owned();
                 let push_tip_tilt = src.gradients();
                 let push_segment_piston = src.segment_piston();
-                let push_segment_tip_tilt = src.segments_gradients();
+                let push_segment_tip_tilt = src.segment_gradients();
 
                 m1_rbm[sid][dof] = -stroke;
                 gmt.update(Some(&m1_rbm), None, None, None);
@@ -354,7 +354,7 @@ impl OpticalSensitivities {
                         .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke),
                 );
                 segment_tip_tilt.extend(
-                    src.segments_gradients()
+                    src.segment_gradients()
                         .into_iter()
                         .zip(push_segment_tip_tilt.into_iter())
                         .flat_map(|(left, right)| {
@@ -384,7 +384,7 @@ impl OpticalSensitivities {
                 let push_phase = src.phase().to_owned();
                 let push_tip_tilt = src.gradients();
                 let push_segment_piston = src.segment_piston();
-                let push_segment_tip_tilt = src.segments_gradients();
+                let push_segment_tip_tilt = src.segment_gradients();
 
                 m2_rbm[sid][dof] = -stroke;
                 gmt.update(None, Some(&m2_rbm), None, None);
@@ -416,7 +416,7 @@ impl OpticalSensitivities {
                         .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke),
                 );
                 segment_tip_tilt.extend(
-                    src.segments_gradients()
+                    src.segment_gradients()
                         .into_iter()
                         .zip(push_segment_tip_tilt.into_iter())
                         .flat_map(|(left, right)| {
