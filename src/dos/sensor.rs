@@ -1,6 +1,6 @@
 use crate::{
     shackhartmann::WavefrontSensor, shackhartmann::WavefrontSensorBuilder, Atmosphere, Builder,
-    Diffractive, Geometric, Gmt, Propagation, ShackHartmann, Source, ATMOSPHERE, GMT, SH48, SOURCE,
+    Diffractive, Geometric, Gmt, Propagation, ShackHartmann, Source, ATMOSPHERE, GMT, SOURCE,
 };
 use dosio::{io::IO, DOSIOSError, Dos};
 
@@ -16,53 +16,23 @@ where
     sensor: T,
     flux_threshold: f64,
 }
-impl GmtOpticalSensorModel<ShackHartmann<Geometric>, SH48<Geometric>> {
-    /// Creates a new SH48 based GMT optical model
-    ///
-    /// Creates a new model based on the default parameters for [GMT] and the [SH48] sensor model
-    pub fn new(src_template: Option<SOURCE>) -> Self {
-        Self {
-            gmt: Default::default(),
-            src: SH48::<Geometric>::new().guide_stars(src_template),
-            atm: None,
-            sensor: SH48::new(),
-            flux_threshold: 0.8,
-        }
-    }
-}
-impl GmtOpticalSensorModel<ShackHartmann<Diffractive>, SH48<Diffractive>> {
-    /// Creates a new SH48 based GMT optical model
-    ///
-    /// Creates a new model based on the default parameters for [GMT] and the [SH48] sensor model
-    pub fn new(src_template: Option<SOURCE>) -> Self {
-        Self {
-            gmt: Default::default(),
-            src: SH48::<Diffractive>::new().guide_stars(src_template),
-            atm: None,
-            sensor: SH48::new(),
-            flux_threshold: 0.8,
-        }
-    }
-}
 impl<U, T> GmtOpticalSensorModel<U, T>
 where
     U: WavefrontSensor + Propagation,
     T: WavefrontSensorBuilder + Builder<Component = U> + Clone,
 {
-    /*
-      /// Creates a new GMT optical model
-      ///
-      /// Creates a default model based on the default parameters for [GMT] and the given sensor model
-      pub fn new(sensor: T, flux_threshold: f64) -> Self {
-          Self {
-              gmt: Default::default(),
-              src: sensor.guide_stars(),
-              atm: None,
-              sensor,
-              flux_threshold,
-          }
-      }
-    */
+    /// Creates a new  wavefront sensor based GMT optical model
+    ///
+    /// Creates a new model based on the default parameters for [GMT] and the wavefront sensor model
+    pub fn new(src_template: Option<SOURCE>) -> Self {
+        Self {
+            gmt: Default::default(),
+            src: <T as Builder>::new().guide_stars(src_template),
+            atm: None,
+            sensor: Builder::new(),
+            flux_threshold: 0.8,
+        }
+    }
     /// Sets the GMT model
     pub fn gmt(self, gmt: GMT) -> Self {
         Self { gmt, ..self }
