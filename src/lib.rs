@@ -59,7 +59,7 @@ pub use self::pssn::{PSSn, PSSN};
 #[doc(inline)]
 pub use self::sensitivities::{from_opticals, OpticalSensitivities};
 #[doc(inline)]
-pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH48, SHACKHARTMANN};
+pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH24, SH48, SHACKHARTMANN};
 #[doc(inline)]
 pub use self::source::Propagation;
 #[doc(inline)]

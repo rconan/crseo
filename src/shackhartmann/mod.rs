@@ -19,6 +19,8 @@ pub mod sh;
 pub use sh::{ShackHartmann, SHACKHARTMANN};
 pub mod sh48;
 pub use sh48::SH48;
+pub mod sh24;
+pub use sh24::SH24;
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
