@@ -483,6 +483,7 @@ impl Source {
         }
         sxy.into_iter().flatten().collect()
     }
+    /// Returns the wavefront error RMS over each segment
     pub fn segment_wfe_rms(&mut self) -> Vec<f32> {
         let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
         unsafe {
@@ -512,18 +513,21 @@ impl Source {
         }
         segment_wfe_std
     }
+    /// Returns the wavefront error RMS over each segment
     pub fn segment_wfe_rms_f64(&mut self) -> Vec<f64> {
         self.segment_wfe_rms()
             .into_iter()
             .map(|x| x as f64)
             .collect()
     }
+    /// Returns the wavefront error RMS over each segment (x10^-exp)
     pub fn segment_wfe_rms_10e(&mut self, exp: i32) -> Vec<f32> {
         self.segment_wfe_rms()
             .iter()
             .map(|x| x * 10_f32.powi(-exp))
             .collect()
     }
+    /// Returns the mean phase over each segment
     pub fn segment_piston(&mut self) -> Vec<f32> {
         let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
         unsafe {
@@ -549,18 +553,56 @@ impl Source {
         }
         segment_mean
     }
+    /// Returns the phase of the wavefront with the mean over each segment removed
+    pub fn segment_phase(&mut self) -> Vec<f32> {
+        let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
+        unsafe {
+            dev2host_int(
+                mask.as_mut_ptr(),
+                self._c_.rays.d__piston_mask,
+                self._c_.rays.N_RAY_TOTAL,
+            );
+        }
+        self.phase();
+        let mut segment_mean: Vec<f32> = Vec::with_capacity(7);
+        for k in 1..8 {
+            let segment_phase = mask
+                .iter()
+                .zip(self._phase.iter())
+                .filter(|x| *x.0 == k)
+                .map(|x| *x.1)
+                .collect::<Vec<f32>>();
+            let n = segment_phase.len() as f32;
+            let mean = segment_phase.iter().sum::<f32>() / n;
+            //let var = segment_phase.iter().map(|x| (x-mean).powi(2)).sum::<f32>()/n;
+            segment_mean.push(mean);
+        }
+        let mut phase = self._phase.clone();
+        for (k, piston) in segment_mean.into_iter().enumerate() {
+            mask.iter()
+                .zip(phase.iter_mut())
+                .filter(|&(m, _)| *m == (k as i32 + 1))
+                .for_each(|(_, p)| *p -= piston);
+        }
+        phase
+    }
+    /// Returns the mean phase over each segment
     pub fn segment_piston_f64(&mut self) -> Vec<f64> {
         self.segment_piston()
             .into_iter()
             .map(|x| x as f64)
             .collect()
     }
+    /// Returns the mean phase over each segment (x10^-exp)
     pub fn segment_piston_10e(&mut self, exp: i32) -> Vec<f32> {
         self.segment_piston()
             .iter()
             .map(|x| x * 10_f32.powi(-exp))
             .collect()
     }
+    /// Returns the pupil mask with segment identifiers
+    ///
+    /// Returns 0 outside the pupil or the segment # (1,...,7) inside
     pub fn segment_mask(&mut self) -> Vec<i32> {
         let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
         unsafe {
