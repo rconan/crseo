@@ -1,7 +1,7 @@
 use super::{Model, ShackHartmann, WavefrontSensorBuilder};
 use crate::{imaging::NoiseDataSheet, Builder, Result, SHACKHARTMANN, SOURCE};
 
-/// `ShackHartmann` "SH48" builder for GMT AGWS model
+/// `ShackHartmann` "SH24" builder for GMT AGWS model
 ///
 /// Default properties:
 ///  - n_sensor: 1
