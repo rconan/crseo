@@ -2,13 +2,30 @@
 //!
 //! The `dos` module implements the `Dos` trait from the `dosio` crate for 2 new structure: `GmtOpticalModelInner` and `GMTOpticalSensorModelInner`.
 //! Both structure are created with their respective Builders i.e. `GmtOpticalModel` and `GmtOpticalSensorModel`.
+pub mod dome_seeing;
 pub mod sensor;
+pub use dome_seeing::DomeSeeing;
 pub use sensor::GmtOpticalSensorModel;
 
-use crate::{pssn::TelescopeError, Atmosphere, PSSn};
-
-use super::{Builder, Gmt, Source, ATMOSPHERE, GMT, PSSN, SOURCE};
+use crate::{
+    pssn::TelescopeError, Atmosphere, Builder, Gmt, PSSn, Source, ATMOSPHERE, GMT, PSSN, SOURCE,
+};
 use dosio::{io::IO, ios, DOSIOSError, Dos};
+
+pub struct CfdDataBase {
+    region: String,
+    bucket: String,
+    path: String,
+}
+impl Default for CfdDataBase {
+    fn default() -> Self {
+        Self {
+            region: "us-west-2".to_string(),
+            bucket: "gmto.modeling".to_string(),
+            path: "Baseline2020".to_string(),
+        }
+    }
+}
 
 /// GMT Optical Model
 #[derive(Default)]
@@ -16,6 +33,7 @@ pub struct GmtOpticalModel {
     gmt: GMT,
     src: SOURCE,
     atm: Option<ATMOSPHERE>,
+    dome_seeing: Option<DomeSeeing>,
     outputs: Vec<IO<()>>,
     pssn: Option<PSSN<TelescopeError>>,
 }
@@ -30,12 +48,45 @@ impl GmtOpticalModel {
     pub fn gmt(self, gmt: GMT) -> Self {
         Self { gmt, ..self }
     }
+    /// Sets the `Source` model
+    pub fn source(self, src: SOURCE) -> Self {
+        Self { src, ..self }
+    }
     /// Sets the [atmosphere](ATMOSPHERE) template
     pub fn atmosphere(self, atm: ATMOSPHERE) -> Self {
         Self {
             atm: Some(atm),
             ..self
         }
+    }
+    /// Sets the dome seeing model
+    pub async fn dome_seeing(
+        self,
+        cfd_case: &str,
+        duration: f64,
+        sampling_rate: f64,
+        cfd_data_base: Option<CfdDataBase>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let CfdDataBase {
+            region,
+            bucket,
+            path,
+        } = cfd_data_base.unwrap_or_default();
+        let cfd_duration = (duration * 5f64).ceil() as usize;
+        let cfd_rate = sampling_rate as usize / 5;
+        let mut ds = DomeSeeing::new(
+            &region,
+            &bucket,
+            &path,
+            cfd_case,
+            cfd_duration,
+            Some(cfd_rate),
+        );
+        ds.get_keys().await?.load_opd().await?;
+        Ok(Self {
+            dome_seeing: Some(ds),
+            ..self
+        })
     }
     /// Sets the output type
     ///
@@ -66,6 +117,7 @@ impl GmtOpticalModel {
                 Some(atm) => Some(atm.build()?),
                 None => None,
             },
+            dome_seeing: self.dome_seeing,
             pssn: match self.pssn {
                 Some(pssn) => Some(pssn.source(&(self.src.build()?)).build()?),
                 None => None,
@@ -88,6 +140,7 @@ pub struct GmtOpticalModelInner {
     pub gmt: Gmt,
     pub src: Source,
     pub atm: Option<Atmosphere>,
+    pub dome_seeing: Option<DomeSeeing>,
     pub pssn: Option<PSSn<TelescopeError>>,
     pub outputs: Vec<IO<()>>,
 }
@@ -95,6 +148,10 @@ impl Iterator for GmtOpticalModelInner {
     type Item = ();
     fn next(&mut self) -> Option<Self::Item> {
         self.src.through(&mut self.gmt).xpupil();
+        if let Some(ds) = &mut self.dome_seeing {
+            ds.next();
+            self.src.through(ds);
+        }
         if let Some(atm) = &mut self.atm {
             self.src.through(atm);
         }

@@ -1,6 +1,9 @@
 use crate::{
-    shackhartmann::WavefrontSensor, shackhartmann::WavefrontSensorBuilder, Atmosphere, Builder,
-    Diffractive, Geometric, Gmt, Propagation, ShackHartmann, Source, ATMOSPHERE, GMT, SOURCE,
+    dos::{CfdDataBase, DomeSeeing},
+    shackhartmann::WavefrontSensor,
+    shackhartmann::WavefrontSensorBuilder,
+    Atmosphere, Builder, Diffractive, Geometric, Gmt, Propagation, ShackHartmann, Source,
+    ATMOSPHERE, GMT, SOURCE,
 };
 use dosio::{io::IO, DOSIOSError, Dos};
 
@@ -13,6 +16,7 @@ where
     gmt: GMT,
     src: SOURCE,
     atm: Option<ATMOSPHERE>,
+    dome_seeing: Option<DomeSeeing>,
     sensor: T,
     flux_threshold: f64,
 }
@@ -31,6 +35,7 @@ where
             atm: None,
             sensor: Builder::new(),
             flux_threshold: 0.8,
+            dome_seeing: None,
         }
     }
     /// Sets the GMT model
@@ -53,6 +58,35 @@ where
             ..self
         }
     }
+    /// Sets the dome seeing model
+    pub async fn dome_seeing(
+        self,
+        cfd_case: &str,
+        duration: f64,
+        sampling_rate: f64,
+        cfd_data_base: Option<CfdDataBase>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let CfdDataBase {
+            region,
+            bucket,
+            path,
+        } = cfd_data_base.unwrap_or_default();
+        let cfd_duration = (duration * 5f64).ceil() as usize;
+        let cfd_rate = sampling_rate as usize / 5;
+        let mut ds = DomeSeeing::new(
+            &region,
+            &bucket,
+            &path,
+            cfd_case,
+            cfd_duration,
+            Some(cfd_rate),
+        );
+        ds.get_keys().await?.load_opd().await?;
+        Ok(Self {
+            dome_seeing: Some(ds),
+            ..self
+        })
+    }
     /// Builds a new GMT optical sensor model
     pub fn build(self) -> crate::Result<GmtOpticalSensorModelInner<U>> {
         let mut gmt = self.gmt.build()?;
@@ -68,6 +102,7 @@ where
                 Some(atm) => Some(atm.build()?),
                 None => None,
             },
+            dome_seeing: self.dome_seeing,
         })
     }
 }
@@ -78,23 +113,44 @@ where
 /// The propagation through the optical system happened each time the [Self::next()] method of the [Iterator] trait is invoked.
 /// The states of the GMT M1 and M2 segments are set with the `OSSM1Lcl` and `MCM2Lcl6D` variant of the `IO` type of the `dosio` module that are passed to the [Self::inputs()] method of the `Dos` trait.
 /// Sensor data are collected with the [Self::outputs()] method of the `Dos` trait wrapped into the `dosio::io::IO::SensorData` .
-pub struct GmtOpticalSensorModelInner<T: Propagation> {
+pub struct GmtOpticalSensorModelInner<S>
+where
+    S: Propagation,
+{
     pub gmt: Gmt,
     pub src: Source,
-    pub sensor: T,
+    pub sensor: S,
     pub atm: Option<Atmosphere>,
+    pub dome_seeing: Option<DomeSeeing>,
 }
 impl<T: Propagation> Iterator for GmtOpticalSensorModelInner<T> {
     type Item = ();
     fn next(&mut self) -> Option<Self::Item> {
-        match &mut self.atm {
-            Some(atm) => self
+        match (&mut self.atm, &mut self.dome_seeing) {
+            (Some(atm), None) => self
                 .src
                 .through(&mut self.gmt)
                 .xpupil()
                 .through(atm)
                 .through(&mut self.sensor),
-            None => self
+            (None, Some(ds)) => {
+                ds.next();
+                self.src
+                    .through(&mut self.gmt)
+                    .xpupil()
+                    .through(ds)
+                    .through(&mut self.sensor)
+            }
+            (Some(atm), Some(ds)) => {
+                ds.next();
+                self.src
+                    .through(&mut self.gmt)
+                    .xpupil()
+                    .through(ds)
+                    .through(atm)
+                    .through(&mut self.sensor)
+            }
+            (None, None) => self
                 .src
                 .through(&mut self.gmt)
                 .xpupil()
