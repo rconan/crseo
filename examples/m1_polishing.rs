@@ -1,13 +1,14 @@
 use crseo::ceo;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let m1_n_mode = 28;
+    let m1_n_mode = 331;
     let mut gmt = ceo!(
         GMT,
-        m1 = ["m1_eigen-modes-27_raw-polishing", m1_n_mode],
+        m1 = ["m1_eigen-modes_raw-polishing_print-through", m1_n_mode],
         m1_default_state = [(0..7)
             .flat_map(|_| {
                 let mut a1 = vec![0f64; m1_n_mode];
+                a1[m1_n_mode - 2] = 1f64;
                 a1[m1_n_mode - 1] = 1f64;
                 a1
             })
