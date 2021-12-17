@@ -4,8 +4,6 @@ version = "0.1.0"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 rand = "0.7"
 serde = { version = "1", features = ["derive"] }
@@ -14,11 +12,11 @@ libm = "0.2.1"
 roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
-skyangle = { git = "https://github.com/rconan/skyangle.git", branch = "main" }
 thiserror = "1.0.26"
 bincode = "1.3.3"
-dosio = { git = "https://github.com/rconan/dosio.git", branch = "ns-opm-im", optional = true }
 nalgebra = "0.29.0"
+skyangle = "0.1.0"
+dosio = { version = "0.1.2", optional = true }
 
 [features]
 dos = ["dosio"]
@@ -33,8 +31,8 @@ criterion = "0.3"
 bincode = "1.3.2"
 gnuplot = "0.0.37"
 plotters = "0.3.1"
-complot = { git = "https://github.com/rconan/complot.git", branch = "ns-opm-im" }
 indicatif = "0.16.2"
+complot = "0.3.1"
 
 [[bench]]
 name = "ceo_benchmark"
