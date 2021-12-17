@@ -23,7 +23,7 @@ pub fn sh48_benchmark(c: &mut Criterion) {
         .map(|n_sensor| {
             SH48::<Geometric>::new()
                 .n_sensor(n_sensor)
-                .guide_stars()
+                .guide_stars(None)
                 .on_ring(6f32.from_arcmin())
                 .build()
                 .unwrap()

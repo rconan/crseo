@@ -39,7 +39,7 @@ fn main() {
 
     let res = wfs.detector_resolution();
     let frame = wfs.frame();
-    println!("WFS resolution: {}; frame: {}", res, frame.len());
+    println!("WFS resolution: {:?}; frame: {}", res, frame.len());
 
     let n_sample = 1_000;
     let pb = ProgressBar::new(n_sample);
@@ -59,13 +59,9 @@ fn main() {
     }
     pb.finish();
 
-    for (i, frame) in wfs.frame().chunks(res * res).enumerate() {
+    for (i, frame) in wfs.frame().chunks(res.0 * res.1).enumerate() {
         //println!("#{}: Flux: {}", i + 1, frame.iter().sum::<f32>());
         let filename = format!("examples/wfs_frame_{}.png", i + 1);
-        plt::heatmap(
-            (frame, (res, res)),
-            Some(plt::Config::new().filename(filename)),
-        )
-        .unwrap();
+        let _: plt::Heatmap = ((frame, res), Some(plt::Config::new().filename(filename))).into();
     }
 }

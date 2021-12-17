@@ -1,8 +1,12 @@
-use ceo::{
-    ceo, cu::Single, shackhartmann::Geometric, Builder, Cu, ATMOSPHERE, LMMSE, SH48, SOURCE, SkyAngle,
+use crseo::{
+    ceo,
+    cu::Single,
+    shackhartmann::{Geometric, WavefrontSensor, WavefrontSensorBuilder},
+    Builder, Cu, ATMOSPHERE, LMMSE, SH48, SOURCE,
 };
 use nalgebra as na;
 use serde_pickle as pickle;
+use skyangle::SkyAngle;
 use std::fs::File;
 use std::time::Instant;
 
@@ -11,24 +15,27 @@ fn main() {
     let n_kl = 70;
 
     let atm_blueprint = ATMOSPHERE::new();
-    let wfs_blueprint = SH48::<Geometric>::new(); //.set_n_sensor(1);
-    let gs_blueprint = wfs_blueprint.guide_stars().set_on_ring(SkyAngle::Arcminute(6f32).to_radians());
-    let src_blueprint = SOURCE::new().set_pupil_sampling(n_actuator);
+    let wfs_blueprint = SH48::<Geometric>::new(); //.n_sensor(1);
+    let gs_blueprint = wfs_blueprint
+        .guide_stars(None)
+        .on_ring(SkyAngle::Arcminute(6f32).to_radians());
+    let src_blueprint = SOURCE::new().pupil_sampling(n_actuator);
 
-    let mut gmt = ceo!(GMT, set_m2_n_mode = [n_kl]);
-    let mut mmse_src = src_blueprint.clone().build();
+    let mut gmt = ceo!(GMT, m2_n_mode = [n_kl]);
+    let mut mmse_src = src_blueprint.clone().build().unwrap();
 
-    let mut gs = gs_blueprint.build();
+    let mut gs = gs_blueprint.build().unwrap();
 
     let mut lmmse = LMMSE::new()
-        .set_atmosphere(atm_blueprint.clone())
-        .set_guide_star(&gs)
-        .set_mmse_star(&mmse_src)
-        .set_n_side_lenslet(n_actuator - 1)
-        .build();
+        .atmosphere(atm_blueprint.clone())
+        .guide_star(&gs)
+        .mmse_star(&mmse_src)
+        .n_side_lenslet(n_actuator - 1)
+        .build()
+        .unwrap();
 
-    let mut atm = atm_blueprint.build();
-    let mut wfs = wfs_blueprint.build();
+    let mut atm = atm_blueprint.build().unwrap();
+    let mut wfs = wfs_blueprint.build().unwrap();
 
     gs.through(&mut gmt).xpupil();
     wfs.calibrate(&mut gs, 0.5);
@@ -94,7 +101,7 @@ fn main() {
     let mut file = File::create("SRC_phase.pkl").unwrap();
     pickle::to_writer(&mut file, &src_phase, true).unwrap();
 
-    gmt.set_m2_modes(&mut kl_coefs);
+    gmt.m2_modes(&mut kl_coefs);
     src.through(&mut gmt).xpupil().through(&mut atm);
     println!("KL residual WFE RMS: {}nm", src.wfe_rms_10e(-9)[0]);
 

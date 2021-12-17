@@ -3,7 +3,7 @@ use dosio::{io::jar, Dos};
 use std::time::Instant;
 
 fn main() {
-    let mut gosm = GmtOpticalModel::new().build();
+    let mut gosm = GmtOpticalModel::new().build().unwrap();
 
     let mut m2_seg_rbm = vec![vec![0f64; 6]; 7];
     m2_seg_rbm[1][3] = 1e-6;

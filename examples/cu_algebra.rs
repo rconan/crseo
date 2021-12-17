@@ -1,4 +1,4 @@
-use ceo::{cu::CuType, cu::Single, Cu};
+use crseo::{cu::CuType, cu::Single, Cu};
 
 fn test_algebra() {
     let x: Cu<Single> = vec![1f32, 2f32, 3f32].into();
@@ -78,5 +78,4 @@ fn main() {
         u += ss.y.clone();
         println!("{:2}: {:.?}", k, Vec::<f32>::from(ss.update(&u)));
     });*/
-
 }

@@ -106,7 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .through(&mut atm)
             .through(&mut diff_wfs);
     }
-    pb.finish();
+
     let frame = diff_wfs.frame();
     let filename = "wfs+atm.png";
     let _: complot::Heatmap = (

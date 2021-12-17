@@ -1,4 +1,5 @@
 /target
+/purgatory
 Cargo.lock
 *~
 *.bin

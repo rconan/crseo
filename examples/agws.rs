@@ -6,9 +6,9 @@ use std::time::Instant;
 
 fn main() {
     let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(3);
-    let mut gosm =
-        GmtOpticalSensorModel::<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>>::new(wfs_blueprint, 0.8)
-            .build();
+    let mut gosm = GmtOpticalSensorModel::<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>>::new(None)
+        .build()
+        .unwrap();
 
     let mut m2_seg_rbm = vec![vec![0f64; 6]; 7];
     m2_seg_rbm[1][3] = 1e-6;
