@@ -6854,7 +6854,7 @@ pub struct modes {
     pub b: *mut rtd,
     pub d__b: *mut rtd,
     pub N: ::std::os::raw::c_int,
-    pub filename: [::std::os::raw::c_char; 64usize],
+    pub filename: [::std::os::raw::c_char; 256usize],
     pub N_SET: ::std::os::raw::c_int,
     pub N_MODE: ::std::os::raw::c_int,
     pub d__s2b: *mut ::std::os::raw::c_int,
@@ -6863,7 +6863,7 @@ pub struct modes {
 fn bindgen_test_layout_modes() {
     assert_eq!(
         ::std::mem::size_of::<modes>(),
-        168usize,
+        360usize,
         concat!("Size of: ", stringify!(modes))
     );
     assert_eq!(
@@ -6983,7 +6983,7 @@ fn bindgen_test_layout_modes() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<modes>())).N_SET as *const _ as usize },
-        148usize,
+        340usize,
         concat!(
             "Offset of field: ",
             stringify!(modes),
@@ -6993,7 +6993,7 @@ fn bindgen_test_layout_modes() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<modes>())).N_MODE as *const _ as usize },
-        152usize,
+        344usize,
         concat!(
             "Offset of field: ",
             stringify!(modes),
@@ -7003,7 +7003,7 @@ fn bindgen_test_layout_modes() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<modes>())).d__s2b as *const _ as usize },
-        160usize,
+        352usize,
         concat!(
             "Offset of field: ",
             stringify!(modes),
@@ -7177,7 +7177,7 @@ pub struct gmt_m1 {
 fn bindgen_test_layout_gmt_m1() {
     assert_eq!(
         ::std::mem::size_of::<gmt_m1>(),
-        1000usize,
+        1192usize,
         concat!("Size of: ", stringify!(gmt_m1))
     );
     assert_eq!(
@@ -7512,7 +7512,7 @@ fn bindgen_test_layout_gmt_m1() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<gmt_m1>())).d__segment_reflectivity as *const _ as usize },
-        992usize,
+        1184usize,
         concat!(
             "Offset of field: ",
             stringify!(gmt_m1),
@@ -7786,7 +7786,7 @@ pub struct gmt_m2 {
 fn bindgen_test_layout_gmt_m2() {
     assert_eq!(
         ::std::mem::size_of::<gmt_m2>(),
-        1000usize,
+        1192usize,
         concat!("Size of: ", stringify!(gmt_m2))
     );
     assert_eq!(
@@ -8121,7 +8121,7 @@ fn bindgen_test_layout_gmt_m2() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<gmt_m2>())).d__segment_reflectivity as *const _ as usize },
-        992usize,
+        1184usize,
         concat!(
             "Offset of field: ",
             stringify!(gmt_m2),

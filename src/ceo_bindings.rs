@@ -118,7 +118,7 @@ impl Default for modes {
             b: ptr::null_mut(),
             d__b: ptr::null_mut(),
             N: 0,
-            filename: [0; 64usize],
+            filename: [0; 256usize],
             N_SET: 0,
             N_MODE: 0,
             d__s2b: ptr::null_mut(),
