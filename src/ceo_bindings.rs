@@ -6,6 +6,7 @@ use std::ptr;
 
 include!("bindings.rs");
 
+unsafe impl Send for vector {}
 impl Default for vector {
     fn default() -> Self {
         Self {
@@ -24,6 +25,7 @@ impl From<[f64; 3]> for vector {
         }
     }
 }
+unsafe impl Send for complex_amplitude {}
 impl Default for complex_amplitude {
     fn default() -> Self {
         Self {
@@ -37,6 +39,7 @@ impl Default for complex_amplitude {
         }
     }
 }
+unsafe impl Send for bundle {}
 impl Default for bundle {
     fn default() -> Self {
         Self {
@@ -64,6 +67,7 @@ impl Default for bundle {
         }
     }
 }
+unsafe impl Send for source {}
 impl Default for source {
     fn default() -> Self {
         Self {
@@ -90,6 +94,7 @@ impl Default for source {
         }
     }
 }
+unsafe impl Send for coordinate_system {}
 impl Default for coordinate_system {
     fn default() -> Self {
         Self {
@@ -104,6 +109,7 @@ impl Default for coordinate_system {
         }
     }
 }
+unsafe impl Send for modes {}
 impl Default for modes {
     fn default() -> Self {
         Self {
@@ -125,6 +131,7 @@ impl Default for modes {
         }
     }
 }
+unsafe impl Send for gmt_m1 {}
 impl Default for gmt_m1 {
     fn default() -> Self {
         Self {
@@ -166,6 +173,7 @@ impl Default for gmt_m1 {
         }
     }
 }
+unsafe impl Send for gmt_m2 {}
 impl Default for gmt_m2 {
     fn default() -> Self {
         Self {
@@ -207,6 +215,7 @@ impl Default for gmt_m2 {
         }
     }
 }
+unsafe impl Send for geometricShackHartmann {}
 impl Default for geometricShackHartmann {
     fn default() -> Self {
         Self {
@@ -235,6 +244,7 @@ impl Default for geometricShackHartmann {
         }
     }
 }
+unsafe impl Send for shackHartmann {}
 impl Default for shackHartmann {
     fn default() -> Self {
         Self {
@@ -258,6 +268,7 @@ impl Default for shackHartmann {
         }
     }
 }
+unsafe impl Send for profile {}
 impl Default for profile {
     fn default() -> Self {
         Self {
@@ -276,6 +287,7 @@ impl Default for profile {
         }
     }
 }
+unsafe impl Send for atmosphere {}
 impl Default for atmosphere {
     fn default() -> Self {
         Self {
@@ -310,6 +322,7 @@ impl Default for atmosphere {
         }
     }
 }
+unsafe impl Send for imaging {}
 impl Default for imaging {
     fn default() -> Self {
         Self {
@@ -343,6 +356,7 @@ impl Default for imaging {
         }
     }
 }
+unsafe impl Send for stopwatch {}
 impl Default for stopwatch {
     fn default() -> Self {
         Self {
@@ -352,6 +366,7 @@ impl Default for stopwatch {
         }
     }
 }
+unsafe impl Send for aaStats {}
 impl Default for aaStats {
     fn default() -> Self {
         Self {
@@ -379,6 +394,7 @@ impl Default for aaStats {
         }
     }
 }
+unsafe impl Send for paStats {}
 impl Default for paStats {
     fn default() -> Self {
         Self {
@@ -410,6 +426,7 @@ impl Default for paStats {
         }
     }
 }
+unsafe impl Send for BTBT {}
 impl Default for BTBT {
     fn default() -> Self {
         Self {
@@ -447,6 +464,7 @@ impl Default for BTBT {
         }
     }
 }
+unsafe impl Send for GBTBT {}
 impl Default for GBTBT {
     fn default() -> Self {
         Self {
@@ -493,6 +511,7 @@ impl Default for GBTBT {
         }
     }
 }
+unsafe impl Send for iterativeSolvers {}
 impl Default for iterativeSolvers {
     fn default() -> Self {
         Self {
@@ -523,6 +542,7 @@ impl Default for iterativeSolvers {
         }
     }
 }
+unsafe impl Send for LMMSE {}
 impl Default for LMMSE {
     fn default() -> Self {
         Self {
@@ -564,6 +584,7 @@ impl Default for LMMSE {
         }
     }
 }
+unsafe impl Send for centroiding {}
 impl Default for centroiding {
     fn default() -> Self {
         Self {
@@ -584,6 +605,7 @@ impl Default for centroiding {
         }
     }
 }
+unsafe impl Send for pssn {}
 impl Default for pssn {
     fn default() -> Self {
         Self {
@@ -607,6 +629,7 @@ impl Default for pssn {
         }
     }
 }
+unsafe impl Send for stats {}
 impl Default for stats {
     fn default() -> Self {
         Self {
@@ -615,6 +638,7 @@ impl Default for stats {
         }
     }
 }
+unsafe impl Send for gpu_double {}
 impl Default for gpu_double {
     fn default() -> Self {
         Self {
@@ -629,6 +653,7 @@ impl Default for gpu_double {
         }
     }
 }
+unsafe impl Send for gpu_float {}
 impl Default for gpu_float {
     fn default() -> Self {
         Self {
@@ -644,6 +669,7 @@ impl Default for gpu_float {
         }
     }
 }
+unsafe impl Send for conic {}
 impl Default for conic {
     fn default() -> Self {
         Self {
