@@ -88,10 +88,10 @@ pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 /// use ceo::ceo;
 /// let mut wfs = ceo!(
 ///     SHACKHARTMANN:Geometric,
-///     set_n_sensor = [1],
-///     set_lenslet_array = [48, 16, 25.5 / 48f64]
+///     n_sensor = [1],
+///     lenslet_array = [48, 16, 25.5 / 48f64]
 /// );
-/// let mut src = ceo!(SOURCE, set_pupil_sampling = [48 * 16 + 1]);
+/// let mut src = ceo!(SOURCE, pupil_sampling = [48 * 16 + 1]);
 /// let mut gmt = ceo!(GMT);
 /// src.through(&mut gmt).xpupil().through(&mut wfs);
 /// println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
@@ -100,17 +100,17 @@ pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 ///  * Diffractive Shack-Hartmann
 ///
 /// ```
-/// /*use ceo::ceo;
+/// use ceo::ceo;
 /// let mut wfs = ceo!(
 ///     SHACKHARTMANN<Diffractive>,
-///     set_n_sensor = [1],
-///     set_lenslet_array = [48, 16, 25.5 / 48f64],
-///     set_detector = [8, Some(24), None]
+///     n_sensor = [1],
+///     lenslet_array = [48, 16, 25.5 / 48f64],
+///     detector = [8, Some(24), None]
 /// );
-/// let mut src = ceo!(SOURCE, set_pupil_sampling = [48 * 16 + 1]);
+/// let mut src = ceo!(SOURCE, pupil_sampling = [48 * 16 + 1]);
 /// let mut gmt = ceo!(GMT);
 /// src.through(&mut gmt).xpupil().through(&mut wfs);
-/// println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);*/
+/// println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
 /// ```
 #[macro_export]
 macro_rules! ceo {

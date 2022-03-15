@@ -1,4 +1,4 @@
-use crseo::{ceo, ATMOSPHERE, Builder};
+use crseo::{ceo, Builder, ATMOSPHERE};
 use serde_pickle as pkl;
 use std::fs::File;
 
@@ -7,19 +7,27 @@ fn main() {
     let mut src = ceo!(SOURCE);
 
     let mut atm_1 = ATMOSPHERE::new()
-        .set_single_turbulence_layer(0f32, None, None)
-        .build();
+        .single_turbulence_layer(0f32, None, None)
+        .build()
+        .unwrap();
     let mut atm_2 = ATMOSPHERE::new()
-        .set_single_turbulence_layer(0f32, None, None)
-        .set_ray_tracing(25.5, 512, 0., 1., Some("atm_2.bin".to_owned()), None)
-        .build();
+        .single_turbulence_layer(0f32, None, None)
+        .ray_tracing(25.5, 512, 0., 1., Some("atm_2.bin".to_owned()), None)
+        .build()
+        .unwrap();
 
     let dump = |data: &Vec<f32>, filename: &str| {
         let mut file = File::create(filename).unwrap();
         pkl::to_writer(&mut file, data, true).unwrap();
     };
-    dump(&(src.through(&mut gmt).xpupil().through(&mut atm_1).phase()),"atm_1.pkl");
-    dump(&(src.through(&mut gmt).xpupil().through(&mut atm_2).phase()),"atm_2.pkl");
+    dump(
+        &(src.through(&mut gmt).xpupil().through(&mut atm_1).phase()),
+        "atm_1.pkl",
+    );
+    dump(
+        &(src.through(&mut gmt).xpupil().through(&mut atm_2).phase()),
+        "atm_2.pkl",
+    );
     /*
     let mut atm = ceo!(ATMOSPHERE);
     let dt = 10_f64;

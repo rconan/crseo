@@ -1,3 +1,5 @@
+use crate::shackhartmann;
+
 use super::{
     cu::Single, shackhartmann::Geometric, Builder, Cu, Gmt, ShackHartmann, Source, WavefrontSensor,
     GMT, SOURCE,
@@ -5,6 +7,11 @@ use super::{
 use log;
 use std::ops::Range;
 //use std::time::Instant;
+
+pub enum ValidLensletCriteria<'a> {
+    Threshold(Option<f64>),
+    OtherSensor(&'a mut ShackHartmann<shackhartmann::Diffractive>),
+}
 
 #[derive(Clone, Debug)]
 /// GMT mirror functions
@@ -105,7 +112,7 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
         Calibration {
             gmt_blueprint: gmt.into(),
             src_blueprint: src.into(),
-            wfs_blueprint: wfs_blueprint,
+            wfs_blueprint,
             n_data: 0,
             n_mode: 0,
             poke: Cu::new(),
@@ -182,12 +189,13 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
     ///
     /// * `mirror`: `Vec` of `Mirror` functions
     /// * `segments`: a `Vec` the same size as the number of segment in the `mirror` with `Vec` elements of `Segment` functions
-    pub fn calibrate(
+    pub fn calibrate<'a>(
         &mut self,
         mirror: Vec<Mirror>,
         segments: Vec<Vec<Segment>>,
-        wfs_intensity_threshold: Option<f64>,
+        mut valid_lenslet_criteria: ValidLensletCriteria<'a>,
     ) {
+        use ValidLensletCriteria::*;
         self.n_mode = segments
             .iter()
             .flat_map(|x| x.iter().map(|y| y.n_mode()))
@@ -195,7 +203,6 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
             * mirror.len();
         let mut calibration: Vec<f32> = vec![];
         let mut nnz = 0_usize;
-        let wfs_intensity_threshold = wfs_intensity_threshold.unwrap_or(0.0);
         for (k, segment) in segments.iter().enumerate() {
             for m in mirror.iter() {
                 for rbm in segment.iter() {
@@ -205,19 +212,20 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
                     let mut wfs = self.wfs_blueprint.clone().build().unwrap();
                     let mut src = self.src_blueprint.clone().build().unwrap();
                     src.through(&mut gmt).xpupil();
-                    wfs.calibrate(&mut src, wfs_intensity_threshold);
+                    match valid_lenslet_criteria {
+                        Threshold(value) => {
+                            wfs.calibrate(&mut src, value.unwrap_or(0f64));
+                        }
+                        OtherSensor(ref mut other_wfs) => {
+                            wfs.valid_lenslet_from(*other_wfs);
+                            wfs.set_reference_slopes(&mut src);
+                        }
+                    }
                     nnz = wfs.n_valid_lenslet();
                     //println!("# valid lenslet: {}", wfs.n_valid_lenslet());
                     for l in idx {
                         calibration.extend::<Vec<f32>>(Calibration::<T>::sample(
-                            &mut gmt,
-                            &mut src,
-                            &mut wfs,
-                            k,
-                            m,
-                            l,
-                            stroke,
-                            wfs_intensity_threshold > 0f64,
+                            &mut gmt, &mut src, &mut wfs, k, m, l, stroke, true,
                         ));
                     }
                 }

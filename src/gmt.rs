@@ -27,10 +27,38 @@ use std::{
 };
 
 #[doc(hidden)]
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Mirror {
-    pub mode_type: String,
-    pub n_mode: usize,
+    mode_type: String,
+    n_mode: usize,
+    a: Vec<f64>,
+}
+impl Mirror {
+    /// Sets the type of mirror modes
+    pub fn mode_type(self, mode_type: &str) -> Self {
+        Self {
+            mode_type: mode_type.into(),
+            ..self
+        }
+    }
+    /// Sets the number of modes
+    pub fn n_mode(self, n_mode: usize) -> Self {
+        Self {
+            n_mode,
+            a: vec![0f64; 7 * n_mode],
+            ..self
+        }
+    }
+    /// Sets the default values of the modal coefficients
+    pub fn default_state(self, a: Vec<f64>) -> Self {
+        assert!(
+            a.len() == 7 * self.n_mode,
+            "Incorrect number of modal coeffcients, expected: {}, found: {}",
+            7 * self.n_mode,
+            a.len()
+        );
+        Self { a, ..self }
+    }
 }
 /// `Gmt` builder
 ///
@@ -55,51 +83,63 @@ pub struct Mirror {
 /// ```
 #[derive(Debug, Clone)]
 pub struct GMT {
-    pub m1: Mirror,
-    pub m2: Mirror,
+    m1: Mirror,
+    m2: Mirror,
 }
 impl Default for GMT {
     fn default() -> Self {
         GMT {
             m1: Mirror {
                 mode_type: "bending modes".into(),
-                n_mode: 0,
+                ..Default::default()
             },
             m2: Mirror {
                 mode_type: "Karhunen-Loeve".into(),
-                n_mode: 0,
+                ..Default::default()
             },
         }
     }
 }
 impl GMT {
+    /// Set the type and number of modes of M1
     pub fn m1(self, mode_type: &str, n_mode: usize) -> Self {
         Self {
-            m1: Mirror {
-                mode_type: mode_type.into(),
-                n_mode,
-            },
+            m1: self.m1.mode_type(mode_type).n_mode(n_mode),
             ..self
         }
     }
+    /// Set the number of modes of M1
     pub fn m1_n_mode(self, n_mode: usize) -> Self {
         Self {
-            m1: Mirror { n_mode, ..self.m1 },
+            m1: self.m1.n_mode(n_mode),
             ..self
         }
     }
+    /// Set the default M1 modal coefficients
+    pub fn m1_default_state(self, a: Vec<f64>) -> Self {
+        Self {
+            m1: self.m1.default_state(a),
+            ..self
+        }
+    }
+    /// Set the type and number of modes of M2
     pub fn m2(self, mode_type: &str, n_mode: usize) -> Self {
         Self {
-            m2: Mirror {
-                mode_type: mode_type.into(),
-                n_mode,
-            },
+            m2: self.m2.mode_type(mode_type).n_mode(n_mode),
             ..self
         }
     }
+    /// Set the number of modes of M2
     pub fn m2_n_mode(self, n_mode: usize) -> Self {
         Self {
-            m2: Mirror { n_mode, ..self.m2 },
+            m2: self.m2.n_mode(n_mode),
+            ..self
+        }
+    }
+    /// Set the default M2 modal coefficients
+    pub fn m2_default_state(self, a: Vec<f64>) -> Self {
+        Self {
+            m2: self.m2.default_state(a),
             ..self
         }
     }
@@ -130,23 +170,22 @@ impl Builder for GMT {
             m1_n_mode: 0,
             m2_n_mode: 0,
             m2_max_n: 0,
-            a1: vec![0.],
-            a2: vec![0.],
+            a1: self.m1.a.clone(),
+            a2: self.m2.a.clone(),
         };
         let m1_mode_type = CString::new(self.m1.mode_path()?)?;
         gmt.m1_n_mode = self.m1.n_mode;
-        gmt.a1 = vec![0.0; 7 * gmt.m1_n_mode as usize];
         unsafe {
             gmt._c_m1
                 .setup1(m1_mode_type.into_raw(), 7, gmt.m1_n_mode as i32);
         }
         let m2_mode_type = CString::new(self.m2.mode_path()?)?;
         gmt.m2_n_mode = self.m2.n_mode;
-        gmt.a2 = vec![0.0; 7 * gmt.m2_n_mode as usize];
         unsafe {
             gmt._c_m2
                 .setup1(m2_mode_type.into_raw(), 7, gmt.m2_n_mode as i32);
         }
+        gmt.reset();
         Ok(gmt)
     }
 }
@@ -160,110 +199,20 @@ impl From<&Gmt> for GMT {
 }
 /// gmt wrapper
 pub struct Gmt {
-    pub _c_m1: gmt_m1,
-    pub _c_m2: gmt_m2,
+    _c_m1: gmt_m1,
+    _c_m2: gmt_m2,
     /// M1 number of bending modes per segment
     pub m1_n_mode: usize,
     /// M2 number of bending modes per segment
     pub m2_n_mode: usize,
     /// M2 largest Zernike radial order per segment
     pub m2_max_n: usize,
+    // default M1 coefs values: Vec of 0f64
     pub a1: Vec<f64>,
+    // default M2 coefs values: Vec of 0f64
     pub a2: Vec<f64>,
 }
 impl Gmt {
-    /*
-        /// Creates a new `Gmt`
-        pub fn new() -> Gmt {
-            Gmt {
-                _c_m1_modes: unsafe { mem::zeroed() },
-                _c_m2_modes: unsafe { mem::zeroed() },
-                _c_m1: unsafe { mem::zeroed() },
-                _c_m2: unsafe { mem::zeroed() },
-                m1_n_mode: 0,
-                m2_n_mode: 1,
-                m2_max_n: 0,
-                a1: vec![0.],
-                a2: vec![0.],
-            }
-        }
-        /// Sets the `Gmt` parameters:
-        ///
-        /// * `m1_n_mode` - the number of of modes on each M1 segment
-        /// * `m2_max_n` - M2 largest Zernike radial order per segment
-        pub fn build(&mut self, m1_n_mode: usize, m2_max_n: Option<usize>) -> &mut Gmt {
-            let mode_type = CString::new("bending modes").unwrap();
-            self.m1_n_mode = m1_n_mode;
-            self.m2_max_n = match m2_max_n {
-                Some(m2_max_n) => m2_max_n,
-                None => 0,
-            };
-            self.m2_n_mode = (self.m2_max_n + 1) * (self.m2_max_n + 2) / 2;
-            if self.m1_n_mode > 0 {
-                self.a1 = vec![0.0; 7 * self.m1_n_mode as usize];
-            }
-            self.a2 = vec![0.0; 7 * self.m2_n_mode as usize];
-            unsafe {
-                self._c_m1_modes
-                    .setup(mode_type.into_raw(), 7, self.m1_n_mode as i32);
-                self._c_m1.setup1(&mut self._c_m1_modes);
-                self._c_m2_modes.setup(
-                    CString::new("Karhunen-Loeve").unwrap().into_raw(),
-                    7,
-                    self.m2_n_mode as i32,
-                );
-                self._c_m2.setup1(&mut self._c_m2_modes);
-            }
-            self
-        }
-        /// Sets the `Gmt` M1 parameters:
-        ///
-        /// * `mode_type` - the type of modes: "bending modes", "KarhunenLoeve", ...
-        /// * `m1_n_mode` - the number of modes on each M1 segment
-        pub fn build_m1(&mut self, mode_type: &str, m1_n_mode: usize) -> &mut Self {
-            let m1_mode_type = CString::new(mode_type).unwrap();
-            self.m1_n_mode = m1_n_mode;
-            if self.m1_n_mode > 0 {
-                self.a1 = vec![0.0; 7 * self.m1_n_mode as usize];
-            }
-            unsafe {
-                self._c_m1_modes
-                    .setup(m1_mode_type.into_raw(), 7, self.m1_n_mode as i32);
-                self._c_m1.setup1(&mut self._c_m1_modes);
-            }
-            self
-        }
-        pub fn from_m2_modes(&mut self, mode_type: &str, m2_n_mode: usize) -> &mut Self {
-            let m2_mode_type = CString::new(mode_type).unwrap();
-            self.m2_n_mode = m2_n_mode;
-            if self.m2_n_mode > 0 {
-                self.a1 = vec![0.0; 7 * self.m2_n_mode as usize];
-            }
-            unsafe {
-                self._c_m2_modes
-                    .setup(m2_mode_type.into_raw(), 7, self.m2_n_mode as i32);
-                self._c_m2.setup1(&mut self._c_m2_modes);
-            }
-            self
-        }
-        /// Sets the `Gmt` M2 parameters:
-        ///
-        /// * `m2_n_mode` - the number of Karhunen-Loeve modes on each M2 segment
-        pub fn build_m2(&mut self, m2_n_mode: Option<usize>) -> &mut Self {
-            let m2_mode_type = CString::new("Karhunen-Loeve").unwrap();
-            self.m2_n_mode = match m2_n_mode {
-                Some(m2_n_mode) => m2_n_mode,
-                None => 0,
-            };
-            self.a2 = vec![0.0; 7 * self.m2_n_mode as usize];
-            unsafe {
-                self._c_m2_modes
-                    .setup(m2_mode_type.into_raw(), 7, self.m2_n_mode as i32);
-                self._c_m2.setup1(&mut self._c_m2_modes);
-            }
-            self
-        }
-    */
     /// Returns `Gmt` M1 mode type
     pub fn get_m1_mode_type(&self) -> String {
         unsafe {
@@ -279,6 +228,7 @@ impl Gmt {
         Mirror {
             mode_type: self.get_m1_mode_type(),
             n_mode: self.m1_n_mode,
+            a: self.a1.clone(),
         }
     }
     /// Returns `Gmt` M2 properties
@@ -286,6 +236,7 @@ impl Gmt {
         Mirror {
             mode_type: self.get_m2_mode_type(),
             n_mode: self.m2_n_mode,
+            a: self.a2.clone(),
         }
     }
     /// Returns `Gmt` M2 mode type
@@ -300,20 +251,18 @@ impl Gmt {
     }
     /// Resets M1 and M2 to their aligned states
     pub fn reset(&mut self) -> &mut Self {
-        let mut a1: Vec<f64> = vec![0.0; 7 * self.m1_n_mode as usize];
-        let mut a2: Vec<f64> = vec![0.0; 7 * self.m2_n_mode as usize];
         unsafe {
             self._c_m1.reset();
             self._c_m2.reset();
-            self._c_m1.BS.update(a1.as_mut_ptr());
-            self._c_m2.BS.update(a2.as_mut_ptr());
+            self._c_m1.BS.update(self.a1.as_mut_ptr());
+            self._c_m2.BS.update(self.a2.as_mut_ptr());
         }
         self
     }
     /// Keeps only the M1 segment specified in the vector `sid`
     ///
     /// * `sid` - vector of segment ID numbers in the range [1,7]
-    pub fn keep(&mut self, sid: &mut Vec<i32>) -> &mut Self {
+    pub fn keep(&mut self, sid: &mut [i32]) -> &mut Self {
         unsafe {
             self._c_m1.keep(sid.as_mut_ptr(), sid.len() as i32);
             self._c_m2.keep(sid.as_mut_ptr(), sid.len() as i32);
@@ -362,9 +311,23 @@ impl Gmt {
         }
     }
     /// Sets M1 modal coefficients
-    pub fn m1_modes(&mut self, a: &mut Vec<f64>) {
-        unsafe {
-            self._c_m1.BS.update(a.as_mut_ptr());
+    ///
+    /// The coefficients are given segment wise
+    pub fn m1_modes(&mut self, a: &mut [f64]) {
+        let a_n_mode = a.len() / 7;
+        if self.m1_n_mode > a_n_mode {
+            let buf: Vec<_> = a
+                .chunks(a_n_mode)
+                .zip(self.a1.chunks(self.m1_n_mode))
+                .flat_map(|(a, a1)| vec![a, &a1[a_n_mode..]])
+                .collect();
+            unsafe {
+                self._c_m1.BS.update(buf.concat().as_mut_ptr());
+            }
+        } else {
+            unsafe {
+                self._c_m1.BS.update(a.as_mut_ptr());
+            }
         }
     }
     pub fn m1_modes_ij(&mut self, i: usize, j: usize, value: f64) {
@@ -375,9 +338,19 @@ impl Gmt {
         }
     }
     /// Sets M2 modal coefficients
-    pub fn m2_modes(&mut self, a: &mut Vec<f64>) {
-        unsafe {
-            self._c_m2.BS.update(a.as_mut_ptr());
+    pub fn m2_modes(&mut self, a: &mut [f64]) {
+        if self.m2_n_mode > a.len() {
+            unsafe {
+                self._c_m2.BS.update(
+                    [a, &self.a2[self.m2_n_mode - a.len()..]]
+                        .concat()
+                        .as_mut_ptr(),
+                );
+            }
+        } else {
+            unsafe {
+                self._c_m2.BS.update(a.as_mut_ptr());
+            }
         }
     }
     pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
@@ -474,7 +447,17 @@ impl Gmt {
         }
         self.m1_modes(&mut a);
     }
-    */
+     */
+    pub fn trace_all(&mut self, src: &mut Source) -> &mut Self {
+        unsafe {
+            src.as_raw_mut_ptr().reset_rays();
+            let rays = &mut src.as_raw_mut_ptr().rays;
+            self._c_m1.traceall(rays);
+            self._c_m2.traceall(rays);
+            rays.to_sphere1(-5.830, 2.197173);
+        }
+        self
+    }
 }
 impl Drop for Gmt {
     /// Frees CEO memory before dropping `Gmt`
@@ -534,10 +517,10 @@ mod tests {
         use crate::SOURCE;
         let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
         let mut gmt = GMT::new().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
         gmt.update(Some(&rt), None, None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
         let mut delta: Vec<f32> = Vec::with_capacity(7);
         for k in 0..7 {
             delta
@@ -551,10 +534,10 @@ mod tests {
         use crate::SOURCE;
         let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
         let mut gmt = GMT::new().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
         gmt.update(Some(&rt), None, None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
         let mut delta: Vec<f32> = Vec::with_capacity(7);
         for k in 0..7 {
             delta
@@ -568,10 +551,10 @@ mod tests {
         use crate::SOURCE;
         let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
         let mut gmt = GMT::new().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
         gmt.update(None, Some(&rt), None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
         let mut delta: Vec<f32> = Vec::with_capacity(7);
         for k in 0..7 {
             delta
@@ -585,10 +568,10 @@ mod tests {
         use crate::SOURCE;
         let mut src = SOURCE::new().pupil_sampling(1001).build().unwrap();
         let mut gmt = GMT::new().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
         gmt.update(None, Some(&rt), None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segments_gradients();
+        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
         let mut delta: Vec<f32> = Vec::with_capacity(7);
         for k in 0..7 {
             delta

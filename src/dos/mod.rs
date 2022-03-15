@@ -8,10 +8,7 @@ pub use sensor::GmtOpticalSensorModel;
 use crate::{pssn::TelescopeError, Atmosphere, PSSn};
 
 use super::{Builder, Gmt, Source, ATMOSPHERE, GMT, PSSN, SOURCE};
-use dosio::{
-    io::{jar, IO},
-    DOSIOSError, Dos,
-};
+use dosio::{io::IO, ios, DOSIOSError, Dos};
 
 /// GMT Optical Model
 #[derive(Default)]
@@ -28,6 +25,10 @@ impl GmtOpticalModel {
     /// Creates a default model based on the default parameters for [GMT] and [SOURCE]
     pub fn new() -> Self {
         Default::default()
+    }
+    /// Sets the GMT model
+    pub fn gmt(self, gmt: GMT) -> Self {
+        Self { gmt, ..self }
     }
     /// Sets the [atmosphere](ATMOSPHERE) template
     pub fn atmosphere(self, atm: ATMOSPHERE) -> Self {
@@ -110,7 +111,7 @@ impl Dos for GmtOpticalModelInner {
         match data {
             Some(data) => data
                 .into_iter()
-                .try_for_each(|io| match io {
+                .try_for_each(|mut io| match io {
                     IO::OSSM1Lcl { data: Some(values) } => {
                         values.chunks(6).enumerate().for_each(|(sid0, v)| {
                             self.gmt
@@ -125,6 +126,13 @@ impl Dos for GmtOpticalModelInner {
                         });
                         Ok(())
                     }
+                    IO::M1modes {
+                        data: Some(ref mut values),
+                    } => {
+                        self.gmt.m1_modes(values);
+                        Ok(())
+                    }
+                    IO::M1modes { data: None } => Ok(()),
                     IO::OSSM1Lcl { data: None } => Ok(()),
                     IO::MCM2Lcl6D { data: None } => Ok(()),
                     _ => Err(DOSIOSError::Inputs("GmtOpticalModel invalid inputs".into())),
@@ -138,16 +146,25 @@ impl Dos for GmtOpticalModelInner {
             .clone()
             .iter()
             .map(|io| match io {
-                IO::SrcWfeRms { .. } => Some(jar::SrcWfeRms::io_with(self.src.wfe_rms_f64())),
+                IO::SrcWfeRms { .. } => Some(ios!(SrcWfeRms(self.src.wfe_rms_f64()))),
+                IO::SrcSegmentWfeRms { .. } => {
+                    Some(ios!(SrcSegmentWfeRms(self.src.segment_wfe_rms_f64())))
+                }
+                IO::SrcSegmentPiston { .. } => {
+                    Some(ios!(SrcSegmentPiston(self.src.segment_piston_f64())))
+                }
+                IO::SrcSegmentGradients { .. } => {
+                    Some(ios!(SrcSegmentGradients(self.src.segment_gradients_f64())))
+                }
                 IO::Pssn { .. } => match &mut self.pssn {
-                    Some(pssn) => Some(jar::Pssn::io_with(
+                    Some(pssn) => Some(ios!(Pssn(
                         pssn.peek()
                             .estimates
                             .iter()
                             .cloned()
                             .map(|x| x as f64)
-                            .collect(),
-                    )),
+                            .collect()
+                    ))),
                     None => None,
                 },
                 _ => None,

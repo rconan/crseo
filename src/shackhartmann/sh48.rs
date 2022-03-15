@@ -1,3 +1,8 @@
+use super::{Model, ShackHartmann};
+use crate::{
+    imaging::NoiseDataSheet, Builder, Result, WavefrontSensorBuilder, SHACKHARTMANN, SOURCE,
+};
+
 /// `ShackHartmann` "SH48" builder for GMT AGWS model
 ///
 /// Default properties:
@@ -17,11 +22,6 @@
 /// use ceo::{Builder, SH48, Geometric};
 /// let mut wfs = SH48::<Geometric>::new().build();
 /// ```
-use super::{Model, ShackHartmann};
-use crate::{
-    imaging::NoiseDataSheet, Builder, Result, WavefrontSensorBuilder, SHACKHARTMANN, SOURCE,
-};
-
 #[derive(Debug, Clone)]
 pub struct SH48<T: Model>(SHACKHARTMANN<T>);
 

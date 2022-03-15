@@ -21,18 +21,48 @@
 //! let mut src = ceo!(SOURCE, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use super::ceo_bindings::{dev2host, dev2host_int, source, vector};
-use super::{cu::Single, Builder, Centroiding, Cu, Result};
+use super::ceo_bindings::{bundle, dev2host, dev2host_int, source, vector};
+use super::{cu::Double, cu::Single, Builder, Centroiding, Cu, Result};
 
 use std::{
     f32,
     ffi::{CStr, CString},
+    usize,
 };
 
 /// A system that mutates `Source` arguments should implement the `Propagation` trait
 pub trait Propagation {
     fn propagate(&mut self, src: &mut Source) -> &mut Self;
     fn time_propagate(&mut self, secs: f64, src: &mut Source) -> &mut Self;
+}
+
+#[derive(Clone, Debug)]
+pub enum PupilSampling {
+    SquareGrid {
+        size: Option<f64>,
+        resolution: usize,
+    },
+    UserSet(usize),
+}
+impl PupilSampling {
+    pub fn total(&self) -> usize {
+        match &self {
+            PupilSampling::SquareGrid { resolution, .. } => resolution * resolution,
+            PupilSampling::UserSet(n) => *n,
+        }
+    }
+    pub fn side(&self) -> usize {
+        match &self {
+            PupilSampling::SquareGrid { resolution, .. } => *resolution,
+            PupilSampling::UserSet(n) => *n,
+        }
+    }
+    pub fn size(&self) -> Option<f64> {
+        match &self {
+            PupilSampling::SquareGrid { size, .. } => *size,
+            _ => None,
+        }
+    }
 }
 
 /// `Source` builder
@@ -61,29 +91,33 @@ pub trait Propagation {
 /// use ceo::{Builder, SOURCE, Conversion};
 /// let mut src = SOURCE::new().size(3).on_ring(8f32.from_arcmin()).build();
 /// ```
-#[repr(C)]
 #[derive(Debug, Clone)]
 pub struct SOURCE {
     pub size: usize,
     pub pupil_size: f64,
-    pub pupil_sampling: usize,
+    pub pupil_sampling: PupilSampling,
     pub band: String,
     pub zenith: Vec<f32>,
     pub azimuth: Vec<f32>,
     pub magnitude: Vec<f32>,
     pub rays_coordinates: Option<(Vec<f64>, Vec<f64>)>,
+    pub fwhm: Option<f64>,
 }
 impl Default for SOURCE {
     fn default() -> Self {
         SOURCE {
             size: 1,
             pupil_size: 25.5,
-            pupil_sampling: 512,
+            pupil_sampling: PupilSampling::SquareGrid {
+                size: Some(25.5),
+                resolution: 512,
+            },
             band: "Vs".into(),
             zenith: vec![0f32],
             azimuth: vec![0f32],
             magnitude: vec![0f32],
             rays_coordinates: None,
+            fwhm: None,
         }
     }
 }
@@ -93,9 +127,12 @@ impl SOURCE {
         Self { size, ..self }
     }
     /// Set the sampling of the pupil in pixels
-    pub fn pupil_sampling(self, pupil_sampling: usize) -> Self {
+    pub fn pupil_sampling(self, resolution: usize) -> Self {
         Self {
-            pupil_sampling,
+            pupil_sampling: PupilSampling::SquareGrid {
+                size: self.pupil_sampling.size().or(Some(25.5)),
+                resolution,
+            },
             ..self
         }
     }
@@ -180,10 +217,23 @@ impl SOURCE {
             ..self
         }
     }
-    /// Set the [x,y] coordinates of the bundle of rays in the entrance pupil
+    /// Set the \[x,y\] coordinates of the bundle of rays in the entrance pupil
     pub fn rays_coordinates(self, rays_x: Vec<f64>, rays_y: Vec<f64>) -> Self {
+        assert_eq!(
+            rays_x.len(),
+            rays_y.len(),
+            "x and y rays coordinates vector must have the same lenght"
+        );
         Self {
+            pupil_sampling: PupilSampling::UserSet(rays_x.len()),
             rays_coordinates: Some((rays_x, rays_y)),
+            ..self
+        }
+    }
+    /// Sets the `Source` full width at half maximum in un-binned detector pixel
+    pub fn fwhm(self, value: f64) -> Self {
+        Self {
+            fwhm: Some(value),
             ..self
         }
     }
@@ -196,13 +246,14 @@ impl Builder for SOURCE {
             _c_: Default::default(),
             size: self.size as i32,
             pupil_size: self.pupil_size,
-            pupil_sampling: self.pupil_sampling as i32,
+            pupil_sampling: self.pupil_sampling.side() as i32,
             _wfe_rms: vec![0.0; self.size],
-            _phase: vec![0.0; self.pupil_sampling * self.pupil_sampling * self.size],
+            _phase: vec![0.0; self.pupil_sampling.total() * self.size],
             zenith: self.zenith.clone(),
             azimuth: self.azimuth.clone(),
             magnitude: self.magnitude,
         };
+
         let origin = vector {
             x: 0.0,
             y: 0.0,
@@ -236,10 +287,13 @@ impl Builder for SOURCE {
                     f32::INFINITY,
                     self.size as i32,
                     self.pupil_size,
-                    self.pupil_sampling as i32,
+                    self.pupil_sampling.side() as i32,
                     origin,
                 );
             }
+        }
+        if let Some(fwhm) = self.fwhm {
+            src._c_.fwhm = fwhm as f32;
         }
         Ok(src)
     }
@@ -250,25 +304,28 @@ impl From<&Source> for SOURCE {
         Self {
             size: src.size as usize,
             pupil_size: src.pupil_size,
-            pupil_sampling: src.pupil_sampling as usize,
+            pupil_sampling: PupilSampling::SquareGrid {
+                size: Some(src.pupil_size),
+                resolution: src.pupil_sampling as usize,
+            },
             band: src.get_photometric_band(),
             zenith: src.zenith.clone(),
             azimuth: src.azimuth.clone(),
             magnitude: src.magnitude.clone(),
             rays_coordinates: None,
+            fwhm: Some(src._c_.fwhm as f64),
         }
     }
 }
 
 /// source wrapper
-#[repr(C)]
 pub struct Source {
     _c_: source,
     /// The number of sources
     pub size: i32,
-    /// The diameter of the entrance pupil [m]
+    /// The diameter of the entrance pupil \[m\]
     pub pupil_size: f64,
-    /// The sampling of the entrance pupil [px]
+    /// The sampling of the entrance pupil \[px\]
     pub pupil_sampling: i32,
     pub _wfe_rms: Vec<f32>,
     pub _phase: Vec<f32>,
@@ -293,8 +350,8 @@ impl Source {
     }
     /// Creates a new `Source` with the arguments:
     ///
-    /// * `pupil_size` - the diameter of the entrance pupil [m]
-    /// * `pupil_sampling` - the sampling of the entrance pupil [px]
+    /// * `pupil_size` - the diameter of the entrance pupil \[m\]
+    /// * `pupil_sampling` - the sampling of the entrance pupil \[px\]
     pub fn new(size: i32, pupil_size: f64, pupil_sampling: i32) -> Source {
         Source {
             _c_: Default::default(),
@@ -314,8 +371,8 @@ impl Source {
     /// Sets the `Source` parameters:
     ///
     /// * `band` - the photometric band: Vs, V, R, I, J, H, K or R+I
-    /// * `zenith` - the zenith angle [rd]
-    /// * `azimuth` - the azimuth angle [rd]
+    /// * `zenith` - the zenith angle \[rd\]
+    /// * `azimuth` - the azimuth angle \[rd\]
     /// * `magnitude` - the magnitude at the specified photometric band
     pub fn build(
         &mut self,
@@ -361,7 +418,7 @@ impl Source {
             )
         }
     }
-    /// Returns the `Source` wavelength [m]
+    /// Returns the `Source` wavelength \[m\]
     pub fn wavelength(&mut self) -> f64 {
         unsafe { self._c_.wavelength() as f64 }
     }
@@ -369,7 +426,7 @@ impl Source {
     pub fn fwhm(&mut self, value: f64) {
         self._c_.fwhm = value as f32;
     }
-    /// Set the pupil rotation angle [degree]
+    /// Set the pupil rotation angle \[degree\]
     pub fn rotate_rays(&mut self, angle: f64) {
         self._c_.rays.rot_angle = angle;
     }
@@ -388,13 +445,7 @@ impl Source {
         }
         self
     }
-    /// Returns the wavefront error root mean square [m]
-    pub fn wfe_rms_f32(&mut self) -> Vec<f32> {
-        unsafe {
-            self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
-        }
-        self._wfe_rms.clone()
-    }
+    /// Returns the wavefront error root mean square \[m\]
     pub fn wfe_rms(&mut self) -> Vec<f64> {
         unsafe {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
@@ -457,8 +508,8 @@ impl Source {
     }
     pub fn segment_wfe_rms_10e(&mut self, exp: i32) -> Vec<f64> {
         self.segment_wfe_rms()
-            .iter()
-            .map(|x| *x * 10_f64.powi(-exp))
+            .into_iter()
+            .map(|x| x * 10_f64.powi(-exp))
             .collect()
     }
     pub fn segment_piston(&mut self) -> Vec<f64> {
@@ -582,7 +633,7 @@ impl Source {
         }
         self
     }
-    /// Returns the wavefront phase [m] in the exit pupil of the telescope
+    /// Returns the wavefront phase \[m\] in the exit pupil of the telescope
     pub fn phase(&mut self) -> &Vec<f32> {
         unsafe {
             dev2host(
@@ -606,6 +657,18 @@ impl Source {
             dev2host(a.as_mut_ptr(), self._c_.wavefront.amplitude, n);
         }
         a
+    }
+    /// Returns the rays \[x,y,z\] coordinates
+    ///
+    /// Returns the coordinates as \[x1,y1,z1,x2,y2,z2,...\]
+    pub fn rays_coordinates(&mut self) -> Vec<f64> {
+        let n = 3 * self._c_.rays.N_RAY_TOTAL as usize;
+        let mut d_xyz = Cu::<Double>::vector(n);
+        //        let mut d_xyz: Cu<Double> = vec![0f64; n].into();
+        unsafe {
+            self._c_.rays.get_coordinates(d_xyz.malloc().as_mut_ptr());
+        }
+        d_xyz.into()
     }
     /// Returns the flux integrated in `n_let`X`n_let` bins
     pub fn fluxlet(&mut self, n_let: usize) -> Vec<f32> {
@@ -654,6 +717,12 @@ impl Source {
     pub fn light_collecting_area(&self) -> f32 {
         self._c_.rays.V.area
     }
+    /// Return the source rays
+    pub fn rays(&mut self) -> Rays {
+        Rays {
+            _c_: &mut self._c_.rays,
+        }
+    }
 }
 impl Drop for Source {
     /// Frees CEO memory before dropping `Source`
@@ -666,6 +735,45 @@ impl Drop for Source {
 impl Default for Source {
     fn default() -> Self {
         Self::empty()
+    }
+}
+
+pub struct Rays<'a> {
+    _c_: &'a mut bundle,
+}
+impl<'a> Rays<'a> {
+    /// Returns the rays \[x,y,z\] coordinates
+    ///
+    /// Returns the coordinates as [x1,y1,z1,x2,y2,z2,...]
+    pub fn coordinates(&mut self) -> Vec<f64> {
+        let n = 3 * self._c_.N_RAY_TOTAL as usize;
+        let mut d_xyz = Cu::<Double>::vector(n);
+        unsafe {
+            self._c_.get_coordinates(d_xyz.malloc().as_mut_ptr());
+        }
+        d_xyz.into()
+    }
+    /// Returns the rays \[k,l,m\] directions
+    ///
+    /// Returns the directions as [k1,l1,m1,k2,l2,m2,...]
+    pub fn directions(&mut self) -> Vec<f64> {
+        let n = 3 * self._c_.N_RAY_TOTAL as usize;
+        let mut d_klm = Cu::<Double>::vector(n);
+        unsafe {
+            self._c_.get_directions(d_klm.malloc().as_mut_ptr());
+        }
+        d_klm.into()
+    }
+    /// Returns the rays optical path difference
+    pub fn opd(&mut self) -> Vec<f64> {
+        let n = self._c_.N_RAY_TOTAL as usize;
+        let mut d_opd = Cu::<Double>::vector(n);
+        //        let mut d_opd: Cu<Double> = vec![0f64; n].into();
+        unsafe {
+            self._c_
+                .get_optical_path_difference(d_opd.malloc().as_mut_ptr());
+        }
+        d_opd.into()
     }
 }
 

@@ -101,6 +101,9 @@ impl<T: CuType> Cu<T> {
     pub fn n_cols(&self) -> usize {
         self.n_cols
     }
+    pub fn is_empty(&self) -> bool {
+        self.size() == 0
+    }
     pub fn malloc(&mut self) -> &mut Self {
         let s = self.size();
         self._c_.build(s as i32);

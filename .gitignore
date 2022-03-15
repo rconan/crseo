@@ -1,6 +1,9 @@
 /target
+/purgatory
 Cargo.lock
 *~
 *.bin
 *.pkl
+*.png
+*.svg
  markdown-code-fontification:rustic-mode

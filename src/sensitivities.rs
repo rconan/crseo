@@ -4,8 +4,7 @@ use bincode;
 use nalgebra as na;
 use serde::{Deserialize, Serialize};
 use skyangle::Conversion;
-use std::io;
-use std::{env, fs::File, io::BufReader, io::BufWriter, path::Path, time::Instant};
+use std::{env, fs::File, io, io::BufReader, io::BufWriter, path::Path, time::Instant};
 use thiserror::Error;
 
 type Matrix =
@@ -38,8 +37,54 @@ pub enum OpticalSensitivities {
     SegmentPiston(Vec<f64>),
     SegmentMask(Vec<i32>),
 }
+impl<'a> From<&'a OpticalSensitivities> for &'a [f64] {
+    fn from(sens: &'a OpticalSensitivities) -> Self {
+        use OpticalSensitivities::*;
+        match sens {
+            Wavefront(val) | TipTilt(val) | SegmentTipTilt(val) | SegmentPiston(val) => {
+                Some(val.as_slice())
+            }
+            _ => None,
+        }
+        .unwrap()
+    }
+}
+impl<'a> From<&'a OpticalSensitivities> for na::DMatrix<f64> {
+    fn from(sens: &'a OpticalSensitivities) -> Self {
+        use OpticalSensitivities::*;
+        match sens {
+            Wavefront(val) => Some(na::DMatrix::from_column_slice(val.len() / 84, 84, val)),
+            TipTilt(val) => Some(na::DMatrix::from_column_slice(2, 84, val)),
+            SegmentTipTilt(val) => Some(na::DMatrix::from_column_slice(14, 84, val)),
+            SegmentPiston(val) => Some(na::DMatrix::from_column_slice(7, 84, val)),
+            _ => None,
+        }
+        .unwrap()
+    }
+}
+pub fn from_opticals(senses: &[OpticalSensitivities]) -> na::DMatrix<f64> {
+    let mats: Vec<na::DMatrix<f64>> = senses.iter().map(|s| s.into()).collect();
+    let n_rows = mats.iter().map(|m| m.nrows()).sum::<usize>();
+    let cols: Vec<_> = mats
+        .iter()
+        .flat_map(|m| {
+            m.column_iter()
+                .map(|c| na::DVector::from_column_slice(c.as_slice()))
+                .collect::<Vec<na::DVector<f64>>>()
+        })
+        .collect();
+    let data: Vec<_> = (0..84)
+        .flat_map(|k| {
+            (0..senses.len())
+                .flat_map(|l| cols[k + l * 84].as_slice().to_vec())
+                .collect::<Vec<f64>>()
+        })
+        .collect();
+    na::DMatrix::from_column_slice(n_rows, 84, &data)
+}
+
 impl OpticalSensitivities {
-    /// Load precomputed optical sensitivities
+    /// Loads precomputed optical sensitivities
     ///
     /// Look in the current directory for the file: "optical_sensitivities.rs.bin"
     pub fn load() -> Result<Vec<Self>, OpticalSensitivitiesError> {
@@ -50,7 +95,22 @@ impl OpticalSensitivities {
             File::open(data_path)?,
         ))?)
     }
-    /// Compute M2 segment tip-tilt sensitivity [14x42]
+    /// Returns M1 wavefront sensitivities [nx42]
+    pub fn m1_wavefront(&self) -> Result<Matrix, OpticalSensitivitiesError> {
+        match self {
+            OpticalSensitivities::Wavefront(sens) => {
+                let n = sens.len() / 84;
+                let (_, m1_tr) = sens.split_at(n * 42);
+                Ok(na::DMatrix::from_iterator(
+                    n,
+                    42,
+                    m1_tr.chunks(n).flat_map(|x| x.to_vec()),
+                ))
+            }
+            _ => Err(OpticalSensitivitiesError::SegmentTipTilt),
+        }
+    }
+    /// Returns M2 segment tip-tilt sensitivities [14x14]
     pub fn m2_rxy(&self) -> Result<Matrix, OpticalSensitivitiesError> {
         match self {
             OpticalSensitivities::SegmentTipTilt(sens) => {
@@ -62,8 +122,7 @@ impl OpticalSensitivities {
                         .chunks(14 * 3)
                         .skip(1)
                         .step_by(2)
-                        .flat_map(|x| (&x[..14 * 2]).to_vec())
-                        .into_iter(),
+                        .flat_map(|x| (&x[..14 * 2]).to_vec()),
                 ))
             }
             _ => Err(OpticalSensitivitiesError::SegmentTipTilt),
@@ -228,7 +287,7 @@ impl OpticalSensitivities {
            }
        }
     */
-    /// Compute all the sensitivities
+    /// Computes all the sensitivities
     ///
     /// Optionally provides an optical model or uses: [`ceo!(GMT)`](crate::GMT) and [`ceo!(SOURCE)`](crate::SOURCE)
     pub fn compute(
@@ -236,10 +295,7 @@ impl OpticalSensitivities {
     ) -> std::result::Result<Vec<OpticalSensitivities>, Box<dyn std::error::Error>> {
         println!("Computing optical sensitivities ...");
         let now = Instant::now();
-        let (mut gmt, mut src) = match model {
-            Some(model) => model,
-            None => (ceo!(GMT), ceo!(SOURCE)),
-        };
+        let (mut gmt, mut src) = model.unwrap_or((ceo!(GMT), ceo!(SOURCE)));
         let stroke_fn = |dof| if dof < 3 { 1e-6 } else { 1f64.from_arcsec() };
 
         let mut tip_tilt = vec![];
@@ -266,7 +322,7 @@ impl OpticalSensitivities {
                 let push_phase = src.phase().to_owned();
                 let push_tip_tilt = src.gradients();
                 let push_segment_piston = src.segment_piston();
-                let push_segment_tip_tilt = src.segments_gradients();
+                let push_segment_tip_tilt = src.segment_gradients();
 
                 m1_rbm[sid][dof] = -stroke;
                 gmt.update(Some(&m1_rbm), None, None, None);
@@ -298,7 +354,7 @@ impl OpticalSensitivities {
                         .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke),
                 );
                 segment_tip_tilt.extend(
-                    src.segments_gradients()
+                    src.segment_gradients()
                         .into_iter()
                         .zip(push_segment_tip_tilt.into_iter())
                         .flat_map(|(left, right)| {
@@ -328,7 +384,7 @@ impl OpticalSensitivities {
                 let push_phase = src.phase().to_owned();
                 let push_tip_tilt = src.gradients();
                 let push_segment_piston = src.segment_piston();
-                let push_segment_tip_tilt = src.segments_gradients();
+                let push_segment_tip_tilt = src.segment_gradients();
 
                 m2_rbm[sid][dof] = -stroke;
                 gmt.update(None, Some(&m2_rbm), None, None);
@@ -360,7 +416,7 @@ impl OpticalSensitivities {
                         .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke),
                 );
                 segment_tip_tilt.extend(
-                    src.segments_gradients()
+                    src.segment_gradients()
                         .into_iter()
                         .zip(push_segment_tip_tilt.into_iter())
                         .flat_map(|(left, right)| {
@@ -402,16 +458,19 @@ impl OpticalSensitivities {
     }
 }
 /// Sensitivities serialization into a bincode file
-pub trait ToBin {
-    fn to_bin(self) -> Result<Self, Box<dyn std::error::Error>>
+pub trait Bin {
+    fn dump(self) -> Result<Self, Box<dyn std::error::Error>>
+    where
+        Self: Sized;
+    fn load() -> Result<Self, Box<dyn std::error::Error>>
     where
         Self: Sized;
 }
-impl ToBin for Vec<OpticalSensitivities> {
+impl Bin for Vec<OpticalSensitivities> {
     /// Serializes sensitivities
     ///
     /// Saves sensitivities into the file: "optical_sensitivities.rs.bin"
-    fn to_bin(self) -> Result<Self, Box<dyn std::error::Error>> {
+    fn dump(self) -> Result<Self, Box<dyn std::error::Error>> {
         //let repo = env::var("CFD_REPO")?;
         let path = Path::new(".");
         bincode::serialize_into(
@@ -423,22 +482,34 @@ impl ToBin for Vec<OpticalSensitivities> {
         )?;
         Ok(self)
     }
+    fn load() -> Result<Self, Box<dyn std::error::Error>> {
+        //let repo = env::var("CFD_REPO")?;
+        let data_path = Path::new("optical_sensitivities.rs.bin");
+        println!("Loading sensitivities from {:?}", data_path);
+        bincode::deserialize_from(BufReader::with_capacity(100_000, File::open(data_path)?))
+            .map_err(|e| e.into())
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl PartialEq<OpticalSensitivities> for OpticalSensitivities {
+    fn eq(&self, other: &OpticalSensitivities) -> bool {
+        use OpticalSensitivities::*;
+        match (self, other) {
+            (Wavefront(_), Wavefront(_)) => true,
+            (TipTilt(_), TipTilt(_)) => true,
+            (SegmentTipTilt(_), SegmentTipTilt(_)) => true,
+            (SegmentPiston(_), SegmentPiston(_)) => true,
+            (SegmentMask(_), SegmentMask(_)) => true,
+            _ => false,
+        }
+    }
+}
+impl std::ops::Index<OpticalSensitivities> for &[OpticalSensitivities] {
+    type Output = OpticalSensitivities;
 
-    #[test]
-    fn sens_m2_rxy() {
-        /*let sensitivities = OpticalSensitivities::load()
-        .or_else(|_| OpticalSensitivities::compute().unwrap().to_bin())
-        .unwrap();*/
-        let sensitivities = OpticalSensitivities::compute(None)
+    fn index(&self, index: OpticalSensitivities) -> &Self::Output {
+        self.iter()
+            .find_map(|s| if index == *s { Some(s) } else { None })
             .unwrap()
-            .to_bin()
-            .unwrap();
-        let m2_rxy = sensitivities[3].m2_rxy().unwrap();
-        println!("M2 Rxy : {:.3}", m2_rxy);
     }
 }
