@@ -1,7 +1,9 @@
-use super::{Model, ShackHartmann, WavefrontSensorBuilder};
-use crate::{imaging::NoiseDataSheet, Builder, Result, SHACKHARTMANN, SOURCE};
+use super::{Model, ShackHartmann};
+use crate::{
+    imaging::NoiseDataSheet, Builder, Result, WavefrontSensorBuilder, SHACKHARTMANN, SOURCE,
+};
 
-/// `ShackHartmann` "SH48" builder for GMT AGWS model
+/// `ShackHartmann` "SH24" builder for GMT AGWS model
 ///
 /// Default properties:
 ///  - n_sensor: 1
@@ -17,8 +19,8 @@ use crate::{imaging::NoiseDataSheet, Builder, Result, SHACKHARTMANN, SOURCE};
 /// # Examples
 ///
 /// ```
-/// use ceo::{Builder, SH48, Geometric};
-/// let mut wfs = SH48::<Geometric>::new().build();
+/// use ceo::{Builder, SH24, Geometric};
+/// let mut wfs = SH24::<Geometric>::new().build();
 /// ```
 #[derive(Debug, Clone)]
 pub struct SH24<T: Model>(SHACKHARTMANN<T>);
