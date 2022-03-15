@@ -6,6 +6,7 @@ use std::ffi::CString;
 use super::ceo_bindings::atmosphere;
 use super::{Builder, Propagation, Result, Source};
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct GmtAtmosphere {
     r0: f32,

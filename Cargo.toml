@@ -14,7 +14,7 @@ libm = "0.2.1"
 roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
-nalgebra = "0.25.3"
+nalgebra = "0.30"
 skyangle = { git = "https://github.com/rconan/skyangle.git", branch = "main" }
 dosio = { git = "https://github.com/rconan/dosio.git", branch = "main", optional = true}
 thiserror = "1.0.26"

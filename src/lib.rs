@@ -32,7 +32,7 @@ pub mod imaging;
 pub mod lmmse;
 pub mod pssn;
 pub mod raytracing;
-pub mod sensitivities;
+//pub mod sensitivities;
 pub mod shackhartmann;
 pub mod source;
 
@@ -56,10 +56,10 @@ pub use self::imaging::Imaging;
 pub use self::lmmse::{LinearMinimumMeanSquareError, LMMSE};
 #[doc(inline)]
 pub use self::pssn::{PSSn, PSSN};
+//#[doc(inline)]
+//pub use self::sensitivities::OpticalSensitivities;
 #[doc(inline)]
-pub use self::sensitivities::OpticalSensitivities;
-#[doc(inline)]
-pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH48, SHACKHARTMANN};
+pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH24, SH48, SHACKHARTMANN};
 #[doc(inline)]
 pub use self::source::Propagation;
 #[doc(inline)]
@@ -151,6 +151,17 @@ pub trait Builder: Default {
         Default::default()
     }
     fn build(self) -> Result<Self::Component>;
+}
+
+/// Interface for wavefront sensor builders
+pub trait WavefrontSensorBuilder {
+    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE;
+    fn detector_noise_specs(self, noise_specs: imaging::NoiseDataSheet) -> Self;
+}
+
+/// Interface for wavefront sensors
+pub trait WavefrontSensor {
+    fn calibrate(&mut self, src: &mut Source, threshold: f64);
 }
 
 pub fn set_gpu(id: i32) {

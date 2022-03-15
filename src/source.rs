@@ -389,13 +389,13 @@ impl Source {
         self
     }
     /// Returns the wavefront error root mean square [m]
-    pub fn wfe_rms(&mut self) -> Vec<f32> {
+    pub fn wfe_rms_f32(&mut self) -> Vec<f32> {
         unsafe {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
         }
         self._wfe_rms.clone()
     }
-    pub fn wfe_rms_f64(&mut self) -> Vec<f64> {
+    pub fn wfe_rms(&mut self) -> Vec<f64> {
         unsafe {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
         }
@@ -406,13 +406,13 @@ impl Source {
             .collect()
     }
     /// Returns the wavefront error root mean square [m]x10^-`exp`
-    pub fn wfe_rms_10e(&mut self, exp: i32) -> Vec<f32> {
+    pub fn wfe_rms_10e(&mut self, exp: i32) -> Vec<f64> {
         unsafe {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
         }
         self._wfe_rms
             .iter()
-            .map(|x| x * 10_f32.powi(-exp))
+            .map(|x| *x as f64 * 10_f64.powi(-exp))
             .collect()
     }
     pub fn gradients(&mut self) -> Vec<f32> {
@@ -426,7 +426,7 @@ impl Source {
         }
         sxy.into_iter().flatten().collect()
     }
-    pub fn segment_wfe_rms(&mut self) -> Vec<f32> {
+    pub fn segment_wfe_rms(&mut self) -> Vec<f64> {
         let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
         unsafe {
             dev2host_int(
@@ -436,7 +436,7 @@ impl Source {
             );
         }
         self.phase();
-        let mut segment_wfe_std: Vec<f32> = Vec::with_capacity(7);
+        let mut segment_wfe_std: Vec<f64> = Vec::with_capacity(7);
         for k in 1..8 {
             let segment_phase = mask
                 .iter()
@@ -451,17 +451,17 @@ impl Source {
                 .map(|x| (x - mean).powi(2))
                 .sum::<f32>()
                 / n;
-            segment_wfe_std.push(var.sqrt());
+            segment_wfe_std.push(var.sqrt() as f64);
         }
         segment_wfe_std
     }
-    pub fn segment_wfe_rms_10e(&mut self, exp: i32) -> Vec<f32> {
+    pub fn segment_wfe_rms_10e(&mut self, exp: i32) -> Vec<f64> {
         self.segment_wfe_rms()
             .iter()
-            .map(|x| x * 10_f32.powi(-exp))
+            .map(|x| *x * 10_f64.powi(-exp))
             .collect()
     }
-    pub fn segment_piston(&mut self) -> Vec<f32> {
+    pub fn segment_piston(&mut self) -> Vec<f64> {
         let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
         unsafe {
             dev2host_int(
@@ -471,7 +471,7 @@ impl Source {
             );
         }
         self.phase();
-        let mut segment_mean: Vec<f32> = Vec::with_capacity(7);
+        let mut segment_mean: Vec<f64> = Vec::with_capacity(7);
         for k in 1..8 {
             let segment_phase = mask
                 .iter()
@@ -482,14 +482,14 @@ impl Source {
             let n = segment_phase.len() as f32;
             let mean = segment_phase.iter().sum::<f32>() / n;
             //let var = segment_phase.iter().map(|x| (x-mean).powi(2)).sum::<f32>()/n;
-            segment_mean.push(mean);
+            segment_mean.push(mean as f64);
         }
         segment_mean
     }
-    pub fn segment_piston_10e(&mut self, exp: i32) -> Vec<f32> {
+    pub fn segment_piston_10e(&mut self, exp: i32) -> Vec<f64> {
         self.segment_piston()
             .iter()
-            .map(|x| x * 10_f32.powi(-exp))
+            .map(|x| x * 10_f64.powi(-exp))
             .collect()
     }
     pub fn segment_mask(&mut self) -> Vec<i32> {
@@ -504,7 +504,7 @@ impl Source {
         mask
     }
     /// Returns the x and y gradient of the wavefront in average over each of the GMT segments
-    pub fn segments_gradients(&mut self) -> Vec<Vec<f32>> {
+    pub fn segment_gradients(&mut self) -> Vec<f64> {
         let mut sxy: Vec<Vec<f32>> = vec![vec![0.; 7 * self.size as usize]; 2];
         unsafe {
             self._c_.wavefront.segments_gradient_averageFast(
@@ -514,7 +514,9 @@ impl Source {
                 self._c_.rays.d__piston_mask,
             );
         }
-        sxy
+        sxy.into_iter()
+            .flat_map(|x| x.into_iter().map(|x| x as f64).collect::<Vec<f64>>())
+            .collect()
     }
     /// Returns the x and y gradient of the wavefront in average over each lenslet of a `n_lenslet`x`n_lenslet` array, the gradients are saved in `Centroiding`
     pub fn lenslet_gradients(

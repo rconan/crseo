@@ -17,10 +17,10 @@
 /// use ceo::{Builder,  SHACKHARTMANN, Geometric};
 /// let mut wfs = SHACKHARTMANN::<Geometric>::new().build();
 /// ```
-use super::{
-    Detector, Diffractive, Geometric, LensletArray, Model, WavefrontSensor, WavefrontSensorBuilder,
+use super::{Detector, Diffractive, Geometric, LensletArray, Model};
+use crate::{
+    imaging::NoiseDataSheet, Builder, Cu, Result, WavefrontSensor, WavefrontSensorBuilder, SOURCE,
 };
-use crate::{imaging::NoiseDataSheet, Builder, Cu, Result, SOURCE};
 pub mod sensor;
 pub use sensor::ShackHartmann;
 

@@ -12,13 +12,19 @@
 //! let mut wfs = ceo!(SHACKHARTMANN:Geometric);
 //! ```
 
-use super::ceo_bindings::{geometricShackHartmann, shackHartmann};
+use super::{
+    ceo_bindings::{geometricShackHartmann, shackHartmann},
+    imaging::NoiseDataSheet,
+    Source,
+};
 use std::f32;
 
 pub mod sh;
 pub use sh::{ShackHartmann, SHACKHARTMANN};
-pub mod sh48;
+mod sh48;
 pub use sh48::SH48;
+mod sh24;
+pub use sh24::SH24;
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
@@ -131,17 +137,4 @@ impl Default for Detector {
     fn default() -> Self {
         Detector(512, None, None, None)
     }
-}
-
-use crate::{imaging::NoiseDataSheet, Source, SOURCE};
-
-/// Interface for wavefront sensor builders
-pub trait WavefrontSensorBuilder {
-    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE;
-    fn detector_noise_specs(self, noise_specs: NoiseDataSheet) -> Self;
-}
-
-/// Interface for wavefront sensors
-pub trait WavefrontSensor {
-    fn calibrate(&mut self, src: &mut Source, threshold: f64);
 }
