@@ -243,6 +243,13 @@ impl From<Vec<f32>> for Cu<Single> {
         this
     }
 }
+impl From<Vec<f64>> for Cu<Single> {
+    fn from(item: Vec<f64>) -> Self {
+        let mut this = Cu::<Single>::vector(item.len());
+        this.to_dev(&mut item.into_iter().map(|x| x as f32).collect::<Vec<f32>>());
+        this
+    }
+}
 impl From<Vec<Vec<f32>>> for Cu<Single> {
     fn from(item: Vec<Vec<f32>>) -> Self {
         let n_cols = item.len();
@@ -258,6 +265,12 @@ impl From<Cu<Single>> for Vec<f32> {
     fn from(item: Cu<Single>) -> Self {
         let mut q = item;
         q.from_dev()
+    }
+}
+impl From<Cu<Single>> for Vec<f64> {
+    fn from(item: Cu<Single>) -> Self {
+        let mut q = item;
+        q.from_dev().into_iter().map(|x| x as f64).collect()
     }
 }
 

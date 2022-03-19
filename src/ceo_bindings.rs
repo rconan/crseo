@@ -309,7 +309,7 @@ impl Default for atmosphere {
             EPH: 0f32,
             d__phase_screen_LAYER: ptr::null_mut(),
             N_PHASE_LAYER: 0,
-            mmap_size: 0usize,
+            mmap_size: 0u64,
             zeta1: ptr::null_mut(),
             eta1: ptr::null_mut(),
             zeta2: ptr::null_mut(),

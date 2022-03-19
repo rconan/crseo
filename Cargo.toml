@@ -29,7 +29,7 @@ dosio = { version = "0.1.2", optional = true }
 dos = ["dosio"]
 
 [build-dependencies]
-bindgen = "0.52.0"
+bindgen = "0.59"
 ceo = { version = "0.1.0", path = "CEO" }
 
 [dev-dependencies]
