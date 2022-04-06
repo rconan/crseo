@@ -1,7 +1,6 @@
 use crseo::{
-    calibrations, ceo, shackhartmann::Diffractive as WFS_TYPE, shackhartmann::Geometric,
-    shackhartmann::WavefrontSensor, shackhartmann::WavefrontSensorBuilder, Builder, Calibration,
-    CrseoError, GMT, SH48,
+    calibrations, ceo, shackhartmann::Diffractive, shackhartmann::Geometric, Builder, Calibration,
+    CrseoError, WavefrontSensor, WavefrontSensorBuilder, GMT, SH48,
 };
 use serde_pickle as pickle;
 use skyangle::Conversion;
@@ -22,6 +21,8 @@ fn main() -> std::result::Result<(), CrseoError> {
     //gs.fwhm(6f64);
     println!("GS band: {}", gs.get_photometric_band());
 
+    type WFS_TYPE = Geometric;
+
     let mut wfs = wfs_blueprint.build().unwrap();
     let mut src = ceo!(SOURCE);
     let mut atm = ceo!(ATMOSPHERE);
@@ -34,12 +35,17 @@ fn main() -> std::result::Result<(), CrseoError> {
     let mut gmt2wfs = Calibration::new(&gmt, &gs, SH48::<Geometric>::new().n_sensor(n_sensor));
     let mirror = vec![calibrations::Mirror::M2];
     let segments = vec![vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))]; 7];
+    let spec = vec![(
+        calibrations::Mirror::M2,
+        vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))],
+    )];
     let now = Instant::now();
     gmt2wfs.calibrate(
-        mirror,
-        segments,
-        calibrations::ValidLensletCriteria::OtherSensor(&mut wfs),
-        //calibrations::ValidLensletCriteria::Threshold(Some(0.8)),
+        //mirror,
+        //segments,
+        vec![Some(spec); 7],
+        //calibrations::ValidLensletCriteria::OtherSensor(&mut wfs),
+        calibrations::ValidLensletCriteria::Threshold(Some(0.8)),
     );
     println!(
         "GTM 2 WFS calibration [{}x{}] in {}s",

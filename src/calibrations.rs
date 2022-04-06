@@ -191,42 +191,56 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
     /// * `segments`: a `Vec` the same size as the number of segment in the `mirror` with `Vec` elements of `Segment` functions
     pub fn calibrate<'a>(
         &mut self,
-        mirror: Vec<Mirror>,
-        segments: Vec<Vec<Segment>>,
+        //mirror: Vec<Mirror>,
+        //segments: Vec<Vec<Segment>>,
+        specs: Vec<Option<Vec<(Mirror, Vec<Segment>)>>>,
         mut valid_lenslet_criteria: ValidLensletCriteria<'a>,
     ) {
         use ValidLensletCriteria::*;
-        self.n_mode = segments
+        self.n_mode = specs
             .iter()
-            .flat_map(|x| x.iter().map(|y| y.n_mode()))
-            .sum::<usize>()
-            * mirror.len();
+            .filter_map(|spec| {
+                if let Some(spec) = spec {
+                    Some(
+                        spec.iter()
+                            .map(|(_, y)| y.iter().map(|z| z.n_mode()).sum::<usize>())
+                            .sum::<usize>(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .sum::<usize>();
+
         let mut calibration: Vec<f32> = vec![];
         let mut nnz = 0_usize;
-        for (k, segment) in segments.iter().enumerate() {
-            for m in mirror.iter() {
-                for rbm in segment.iter() {
-                    log::trace!("segment: {:?}", rbm);
-                    let (stroke, idx) = rbm.strip();
-                    let mut gmt = self.gmt_blueprint.clone().build().unwrap();
-                    let mut wfs = self.wfs_blueprint.clone().build().unwrap();
-                    let mut src = self.src_blueprint.clone().build().unwrap();
-                    src.through(&mut gmt).xpupil();
-                    match valid_lenslet_criteria {
-                        Threshold(value) => {
-                            wfs.calibrate(&mut src, value.unwrap_or(0f64));
+        //for (k, segment) in segments.iter().enumerate() {
+        for (k, spec) in specs.into_iter().enumerate() {
+            if let Some(spec) = spec {
+                for (m, segment) in spec.iter() {
+                    for rbm in segment.iter() {
+                        log::trace!("segment: {:?}", rbm);
+                        let (stroke, idx) = rbm.strip();
+                        let mut gmt = self.gmt_blueprint.clone().build().unwrap();
+                        let mut wfs = self.wfs_blueprint.clone().build().unwrap();
+                        let mut src = self.src_blueprint.clone().build().unwrap();
+                        src.through(&mut gmt).xpupil();
+                        match valid_lenslet_criteria {
+                            Threshold(value) => {
+                                wfs.calibrate(&mut src, value.unwrap_or(0f64));
+                            }
+                            OtherSensor(ref mut other_wfs) => {
+                                wfs.valid_lenslet_from(*other_wfs);
+                                wfs.set_reference_slopes(&mut src);
+                            }
                         }
-                        OtherSensor(ref mut other_wfs) => {
-                            wfs.valid_lenslet_from(*other_wfs);
-                            wfs.set_reference_slopes(&mut src);
+                        nnz = wfs.n_valid_lenslet();
+                        //println!("# valid lenslet: {}", wfs.n_valid_lenslet());
+                        for l in idx {
+                            calibration.extend::<Vec<f32>>(Calibration::<T>::sample(
+                                &mut gmt, &mut src, &mut wfs, k, &m, l, stroke, true,
+                            ));
                         }
-                    }
-                    nnz = wfs.n_valid_lenslet();
-                    //println!("# valid lenslet: {}", wfs.n_valid_lenslet());
-                    for l in idx {
-                        calibration.extend::<Vec<f32>>(Calibration::<T>::sample(
-                            &mut gmt, &mut src, &mut wfs, k, m, l, stroke, true,
-                        ));
                     }
                 }
             }
