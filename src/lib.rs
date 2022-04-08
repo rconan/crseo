@@ -33,6 +33,7 @@ pub mod lmmse;
 pub mod pssn;
 pub mod raytracing;
 //pub mod sensitivities;
+pub mod piston_sensor;
 pub mod shackhartmann;
 pub mod source;
 
@@ -49,7 +50,7 @@ pub use self::error::CrseoError;
 #[doc(inline)]
 pub use self::fwhm::Fwhm;
 #[doc(inline)]
-pub use self::gmt::{Gmt, GMT};
+use self::gmt::{Gmt, GMT};
 #[doc(inline)]
 pub use self::imaging::Imaging;
 #[doc(inline)]
@@ -58,6 +59,8 @@ pub use self::lmmse::{LinearMinimumMeanSquareError, LMMSE};
 pub use self::pssn::{PSSn, PSSN};
 //#[doc(inline)]
 //pub use self::sensitivities::OpticalSensitivities;
+#[doc(inline)]
+pub use self::piston_sensor::{PistonSensor, PistonSensorBuilder};
 #[doc(inline)]
 pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH24, SH48, SHACKHARTMANN};
 #[doc(inline)]
@@ -155,13 +158,27 @@ pub trait Builder: Default {
 
 /// Interface for wavefront sensor builders
 pub trait WavefrontSensorBuilder {
-    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE;
-    fn detector_noise_specs(self, noise_specs: imaging::NoiseDataSheet) -> Self;
+    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
+        template.unwrap_or_default()
+    }
+    fn detector_noise_specs(self, _noise_specs: imaging::NoiseDataSheet) -> Self
+    where
+        Self: Sized,
+    {
+        self
+    }
 }
 
 /// Interface for wavefront sensors
 pub trait WavefrontSensor {
     fn calibrate(&mut self, src: &mut Source, threshold: f64);
+    fn reset(&mut self) -> &mut Self {
+        self
+    }
+    fn process(&mut self) -> &mut Self {
+        self
+    }
+    fn data(&mut self) -> Vec<f32>;
 }
 
 pub fn set_gpu(id: i32) {

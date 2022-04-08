@@ -19,9 +19,57 @@ pub struct ShackHartmann<S: Model> {
     /// The optional detector noise specifications
     pub detector_noise_model: Option<NoiseDataSheet>,
 }
-impl<S: Model> WavefrontSensor for ShackHartmann<S> {
+/*impl<S: Model> WavefrontSensor for ShackHartmann<S> {
     fn calibrate(&mut self, src: &mut Source, threshold: f64) {
         self._c_.calibrate(src, threshold);
+    }
+}*/
+impl WavefrontSensor for ShackHartmann<Diffractive>
+where
+    Diffractive: Model,
+{
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) {
+        <Diffractive as Model>::calibrate(&mut self._c_, src, threshold);
+    }
+    fn reset(&mut self) -> &mut Self {
+        unsafe {
+            self._c_.camera.reset();
+        }
+        self
+    }
+    fn process(&mut self) -> &mut Self {
+        unsafe {
+            self._c_.process();
+        }
+        self
+    }
+
+    fn data(&mut self) -> Vec<f32> {
+        self.get_data().from_dev()
+    }
+}
+impl WavefrontSensor for ShackHartmann<Geometric>
+where
+    Geometric: Model,
+{
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) {
+        <Geometric as Model>::calibrate(&mut self._c_, src, threshold);
+    }
+    fn reset(&mut self) -> &mut Self {
+        unsafe {
+            self._c_.reset();
+        }
+        self
+    }
+    fn process(&mut self) -> &mut Self {
+        unsafe {
+            self._c_.process();
+        }
+        self
+    }
+
+    fn data(&mut self) -> Vec<f32> {
+        self.get_data().from_dev()
     }
 }
 impl ShackHartmann<Geometric> {
@@ -48,12 +96,6 @@ impl ShackHartmann<Geometric> {
             self.d * self.n_side_lenslet as f64,
             self.n_px_lenslet * self.n_side_lenslet + 1,
         )
-    }
-    pub fn process(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.process();
-        }
-        self
     }
     pub fn get_data(&mut self) -> Cu<Single> {
         let m = self._c_.valid_lenslet.nnz as usize * 2usize;
@@ -82,12 +124,6 @@ impl ShackHartmann<Geometric> {
     }
     pub fn n_valid_lenslet(&mut self) -> usize {
         self._c_.valid_lenslet.nnz as usize
-    }
-    pub fn reset(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.reset();
-        }
-        self
     }
     pub fn lenset_mask(&mut self) -> Cu<Single> {
         let mut mask: Cu<Single> =
@@ -184,12 +220,6 @@ impl ShackHartmann<Diffractive> {
         }
         data
     }
-    pub fn process(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.process();
-        }
-        self
-    }
     pub fn n_valid_lenslet(&mut self) -> usize {
         self._c_.valid_lenslet.nnz as usize
     }
@@ -217,12 +247,6 @@ impl ShackHartmann<Diffractive> {
         let mut data: Cu<Single> = Cu::array(n as usize, m as usize);
         data.from_ptr(self._c_.camera.d__frame);
         data.into()
-    }
-    pub fn reset(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.camera.reset();
-        }
-        self
     }
 }
 impl Propagation for ShackHartmann<Diffractive> {

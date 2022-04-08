@@ -1,8 +1,8 @@
 use crate::shackhartmann;
 
 use super::{
-    cu::Single, shackhartmann::Geometric, Builder, Cu, Gmt, ShackHartmann, Source, WavefrontSensor,
-    GMT, SOURCE,
+    cu::Single, shackhartmann::Geometric, Builder, Cu, Gmt, PistonSensor, Propagation,
+    ShackHartmann, Source, WavefrontSensor, GMT, SOURCE,
 };
 use log;
 use std::ops::Range;
@@ -97,7 +97,11 @@ impl Segment {
 ///
 /// `Calibration` creates its own GMT simulation with a `Gmt`, a `Source` and a `Builder`.
 /// The calibration is performed by estimating the geometric centroids associated with the calibrated functions.
-pub struct Calibration<T: Clone + Builder<Component = ShackHartmann<Geometric>>> {
+pub struct Calibration<T, W>
+where
+    T: Clone + Builder<Component = W>,
+    W: WavefrontSensor,
+{
     gmt_blueprint: GMT,
     src_blueprint: SOURCE,
     wfs_blueprint: T,
@@ -106,9 +110,13 @@ pub struct Calibration<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
     pub poke: Cu<Single>,
     poke_qr: Cu<Single>,
 }
-impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
+impl<T, W> Calibration<T, W>
+where
+    T: Clone + Builder<Component = W>,
+    W: WavefrontSensor + Propagation,
+{
     /// Creates a new `Calibration` with the blueprints of the `Gmt`, the `Source` and the `Builder`
-    pub fn new(gmt: &Gmt, src: &Source, wfs_blueprint: T) -> Calibration<T> {
+    pub fn new(gmt: &Gmt, src: &Source, wfs_blueprint: T) -> Calibration<T, W> {
         Calibration {
             gmt_blueprint: gmt.into(),
             src_blueprint: src.into(),
@@ -123,7 +131,7 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
     pub fn sample(
         gmt: &mut Gmt,
         src: &mut Source,
-        wfs: &mut ShackHartmann<Geometric>,
+        wfs: &mut W,
         sid: usize,
         mirror: &Mirror,
         k: usize,
@@ -159,22 +167,24 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
         wfs.reset();
         src.through(gmt).xpupil().through(wfs);
         wfs.process();
-        let c_push = if valids {
+        /*let c_push = if valids {
             wfs.get_data().from_dev()
         } else {
             wfs.centroids.from_dev()
-        };
+        };*/
+        let c_push = wfs.data();
         //println!("c push sum: {:?}", c_push.iter().sum::<f32>());
         // PULL
         update(-stroke, gmt);
         wfs.reset();
         src.through(gmt).xpupil().through(wfs);
         wfs.process();
-        let c_pull = if valids {
+        /*let c_pull = if valids {
             wfs.get_data().from_dev()
         } else {
             wfs.centroids.from_dev()
-        };
+        };*/
+        let c_pull = wfs.data();
         //println!("c pull sum: {:?}", c_pull.iter().sum::<f32>());
         // RESET
         update(0f64, gmt);
@@ -185,6 +195,10 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
             .map(|x| 0.5 * (x.0 - x.1) / stroke as f32)
             .collect()
     }
+}
+impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
+    Calibration<T, ShackHartmann<Geometric>>
+{
     /// Calibrates the given mirror and segment functions:
     ///
     /// * `mirror`: `Vec` of `Mirror` functions
@@ -219,7 +233,7 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
             if let Some(spec) = spec {
                 for (m, segment) in spec.iter() {
                     for rbm in segment.iter() {
-                        log::trace!("segment: {:?}", rbm);
+                        //log::trace!("segment: {:?}", rbm);
                         let (stroke, idx) = rbm.strip();
                         let mut gmt = self.gmt_blueprint.clone().build().unwrap();
                         let mut wfs = self.wfs_blueprint.clone().build().unwrap();
@@ -237,8 +251,11 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
                         nnz = wfs.n_valid_lenslet();
                         //println!("# valid lenslet: {}", wfs.n_valid_lenslet());
                         for l in idx {
-                            calibration.extend::<Vec<f32>>(Calibration::<T>::sample(
-                                &mut gmt, &mut src, &mut wfs, k, &m, l, stroke, true,
+                            calibration.extend::<Vec<f32>>(Calibration::<
+                                T,
+                                ShackHartmann<Geometric>,
+                            >::sample(
+                                &mut gmt, &mut src, &mut wfs, k, m, l, stroke, true,
                             ));
                         }
                     }
@@ -257,6 +274,60 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>> Calibration<T> {
     }
     pub fn solve(&mut self, data: &mut Cu<Single>) -> Cu<Single> {
         self.poke_qr.qr_solve(data)
+    }
+}
+impl<T: Clone + Builder<Component = PistonSensor>> Calibration<T, PistonSensor> {
+    /// Calibrates the given mirror and segment functions:
+    ///
+    /// * `mirror`: `Vec` of `Mirror` functions
+    /// * `segments`: a `Vec` the same size as the number of segment in the `mirror` with `Vec` elements of `Segment` functions
+    pub fn calibrate(
+        &mut self,
+        //mirror: Vec<Mirror>,
+        //segments: Vec<Vec<Segment>>,
+        specs: Vec<Option<Vec<(Mirror, Vec<Segment>)>>>,
+    ) {
+        self.n_mode = specs
+            .iter()
+            .filter_map(|spec| {
+                if let Some(spec) = spec {
+                    Some(
+                        spec.iter()
+                            .map(|(_, y)| y.iter().map(|z| z.n_mode()).sum::<usize>())
+                            .sum::<usize>(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .sum::<usize>();
+
+        let mut calibration: Vec<f32> = vec![];
+        for (k, spec) in specs.into_iter().enumerate() {
+            if let Some(spec) = spec {
+                for (m, segment) in spec.iter() {
+                    for rbm in segment.iter() {
+                        log::trace!("segment: {:?}", rbm);
+                        let (stroke, idx) = rbm.strip();
+                        let mut gmt = self.gmt_blueprint.clone().build().unwrap();
+                        let mut wfs = self.wfs_blueprint.clone().build().unwrap();
+                        let mut src = self.src_blueprint.clone().build().unwrap();
+                        src.through(&mut gmt).xpupil();
+                        wfs.calibrate(&mut src, 0f64);
+                        //println!("# valid lenslet: {}", wfs.n_valid_lenslet());
+                        for l in idx {
+                            calibration.extend::<Vec<f32>>(Calibration::<T, PistonSensor>::sample(
+                                &mut gmt, &mut src, &mut wfs, k, &m, l, stroke, true,
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+        self.n_data = 7;
+        log::info!("Calibration matrix: [{}x{}]", self.n_data, self.n_mode);
+        self.poke = Cu::array(self.n_data, self.n_mode);
+        self.poke.to_dev(&mut calibration);
     }
 }
 /*
