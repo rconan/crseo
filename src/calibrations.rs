@@ -1,16 +1,15 @@
-use crate::shackhartmann;
-
 use super::{
-    cu::Single, shackhartmann::Geometric, Builder, Cu, Gmt, PistonSensor, Propagation,
+    cu::Double, shackhartmann::Geometric, Builder, Cu, Gmt, PistonSensor, Propagation,
     ShackHartmann, Source, WavefrontSensor, GMT, SOURCE,
 };
+use crate::shackhartmann::Model;
 use log;
 use std::ops::Range;
 //use std::time::Instant;
 
-pub enum ValidLensletCriteria<'a> {
+pub enum ValidLensletCriteria<'a, M: Model> {
     Threshold(Option<f64>),
-    OtherSensor(&'a mut ShackHartmann<shackhartmann::Diffractive>),
+    OtherSensor(&'a mut ShackHartmann<M>),
 }
 
 #[derive(Clone, Debug)]
@@ -107,8 +106,8 @@ where
     wfs_blueprint: T,
     pub n_data: usize,
     pub n_mode: usize,
-    pub poke: Cu<Single>,
-    poke_qr: Cu<Single>,
+    pub poke: Cu<Double>,
+    poke_qr: Cu<Double>,
 }
 impl<T, W> Calibration<T, W>
 where
@@ -137,7 +136,7 @@ where
         k: usize,
         stroke: f64,
         valids: bool,
-    ) -> Vec<f32> {
+    ) -> Vec<f64> {
         let mut m1_rbm = vec![vec![0.; 6]; 7];
         let mut m1_mode = vec![vec![0.; gmt.m1_n_mode]; 7];
         let mut m2_rbm = vec![vec![0.; 6]; 7];
@@ -192,7 +191,7 @@ where
         c_push
             .iter()
             .zip(c_pull)
-            .map(|x| 0.5 * (x.0 - x.1) / stroke as f32)
+            .map(|x| 0.5 * (x.0 - x.1) / stroke)
             .collect()
     }
 }
@@ -203,12 +202,12 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
     ///
     /// * `mirror`: `Vec` of `Mirror` functions
     /// * `segments`: a `Vec` the same size as the number of segment in the `mirror` with `Vec` elements of `Segment` functions
-    pub fn calibrate<'a>(
+    pub fn calibrate<'a, M: Model>(
         &mut self,
         //mirror: Vec<Mirror>,
         //segments: Vec<Vec<Segment>>,
         specs: Vec<Option<Vec<(Mirror, Vec<Segment>)>>>,
-        mut valid_lenslet_criteria: ValidLensletCriteria<'a>,
+        mut valid_lenslet_criteria: ValidLensletCriteria<'a, M>,
     ) {
         use ValidLensletCriteria::*;
         self.n_mode = specs
@@ -226,7 +225,7 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
             })
             .sum::<usize>();
 
-        let mut calibration: Vec<f32> = vec![];
+        let mut calibration: Vec<f64> = vec![];
         let mut nnz = 0_usize;
         //for (k, segment) in segments.iter().enumerate() {
         for (k, spec) in specs.into_iter().enumerate() {
@@ -251,7 +250,7 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
                         nnz = wfs.n_valid_lenslet();
                         //println!("# valid lenslet: {}", wfs.n_valid_lenslet());
                         for l in idx {
-                            calibration.extend::<Vec<f32>>(Calibration::<
+                            calibration.extend::<Vec<f64>>(Calibration::<
                                 T,
                                 ShackHartmann<Geometric>,
                             >::sample(
@@ -267,14 +266,16 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
         self.poke = Cu::array(nnz * 2, self.n_mode);
         self.poke.to_dev(&mut calibration);
     }
-    pub fn qr(&mut self) -> &mut Self {
-        self.poke_qr = self.poke.clone();
-        self.poke_qr.qr();
-        self
-    }
-    pub fn solve(&mut self, data: &mut Cu<Single>) -> Cu<Single> {
-        self.poke_qr.qr_solve(data)
-    }
+    /*
+        pub fn qr(&mut self) -> &mut Self {
+            self.poke_qr = self.poke.clone();
+            self.poke_qr.qr();
+            self
+        }
+        pub fn solve(&mut self, data: &mut Cu<Single>) -> Cu<Single> {
+            self.poke_qr.qr_solve(data)
+        }
+    */
 }
 impl<T: Clone + Builder<Component = PistonSensor>> Calibration<T, PistonSensor> {
     /// Calibrates the given mirror and segment functions:
@@ -302,7 +303,7 @@ impl<T: Clone + Builder<Component = PistonSensor>> Calibration<T, PistonSensor> 
             })
             .sum::<usize>();
 
-        let mut calibration: Vec<f32> = vec![];
+        let mut calibration: Vec<f64> = vec![];
         for (k, spec) in specs.into_iter().enumerate() {
             if let Some(spec) = spec {
                 for (m, segment) in spec.iter() {
@@ -316,7 +317,7 @@ impl<T: Clone + Builder<Component = PistonSensor>> Calibration<T, PistonSensor> 
                         wfs.calibrate(&mut src, 0f64);
                         //println!("# valid lenslet: {}", wfs.n_valid_lenslet());
                         for l in idx {
-                            calibration.extend::<Vec<f32>>(Calibration::<T, PistonSensor>::sample(
+                            calibration.extend::<Vec<f64>>(Calibration::<T, PistonSensor>::sample(
                                 &mut gmt, &mut src, &mut wfs, k, &m, l, stroke, true,
                             ));
                         }

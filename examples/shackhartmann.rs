@@ -1,7 +1,7 @@
 use complot::{Plot, Scatter};
 use crseo::{
     ceo, imaging::NoiseDataSheet, shackhartmann::WavefrontSensor, Builder, Diffractive, Geometric,
-    ATMOSPHERE, SHACKHARTMANN,
+    ATMOSPHERE, ShackHartmannBuilder,
 };
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use skyangle::Conversion;
@@ -29,10 +29,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("... done in {}ms", eta.as_millis());
 
     let pitch = src.pupil_size / n_lenslet as f64;
-    let mut geom_wfs = SHACKHARTMANN::<Geometric>::new()
+    let mut geom_wfs = ShackHartmannBuilder::<Geometric>::new()
         .lenslet_array(n_lenslet, n_px_lenslet, pitch)
         .build()?;
-    let mut diff_wfs = SHACKHARTMANN::<Diffractive>::new()
+    let mut diff_wfs = ShackHartmannBuilder::<Diffractive>::new()
         .lenslet_array(n_lenslet, n_px_lenslet, pitch)
         .detector(
             n_px_framelet,

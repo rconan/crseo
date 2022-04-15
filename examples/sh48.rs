@@ -1,6 +1,6 @@
 use crseo::{
-    calibrations, ceo, shackhartmann::Diffractive, shackhartmann::Geometric, Builder, Calibration,
-    CrseoError, WavefrontSensor, WavefrontSensorBuilder, GMT, SH48,
+    calibrations, ceo, cu::Single, shackhartmann::Diffractive, shackhartmann::Geometric, Builder,
+    Calibration, CrseoError, Cu, WavefrontSensor, WavefrontSensorBuilder, GMT, SH48,
 };
 use serde_pickle as pickle;
 use skyangle::Conversion;
@@ -40,7 +40,7 @@ fn main() -> std::result::Result<(), CrseoError> {
         vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))],
     )];
     let now = Instant::now();
-    gmt2wfs.calibrate(
+    gmt2wfs.calibrate::<Geometric>(
         //mirror,
         //segments,
         vec![Some(spec); 7],
@@ -53,7 +53,7 @@ fn main() -> std::result::Result<(), CrseoError> {
         gmt2wfs.n_mode,
         now.elapsed().as_secs()
     );
-    let poke_sum = gmt2wfs.poke.from_dev().iter().sum::<f32>();
+    let poke_sum = gmt2wfs.poke.from_dev().iter().sum::<f64>();
     println!("Poke sum: {}", poke_sum);
     let mut file = File::create("poke.pkl").unwrap();
     pickle::to_writer(&mut file, &gmt2wfs.poke.from_dev(), true).unwrap();
@@ -67,15 +67,15 @@ fn main() -> std::result::Result<(), CrseoError> {
 
     println!(
         "WFS data: {}",
-        Vec::<f32>::from(wfs.get_data()).iter().sum::<f32>()
+        Vec::<f64>::from(wfs.data()).iter().sum::<f64>()
     );
 
-    let a = gmt2wfs.qr().solve(&mut wfs.get_data());
-    let s: Vec<f32> = (&gmt2wfs.poke * &a).into();
-
+    let mut poke = Into::<Cu<Single>>::into(Into::<Vec<f64>>::into(gmt2wfs.poke));
+    let a = poke.qr().qr_solve(&mut wfs.data().into());
+    /*let s: Vec<f32> = (&gmt2wfs.poke * &a).into();
     let mut file = File::create("slopes.pkl").unwrap();
     pickle::to_writer(&mut file, &(wfs.get_data().from_dev(), s), true).unwrap();
-
+    */
     Vec::<f32>::from(a)
         .into_iter()
         .map(|x| x * 1e6)

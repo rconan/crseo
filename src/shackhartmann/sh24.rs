@@ -1,7 +1,10 @@
-use super::{Model, ShackHartmann};
-use crate::{
-    imaging::NoiseDataSheet, Builder, Result, WavefrontSensorBuilder, SHACKHARTMANN, SOURCE,
+use std::{
+    mem::take,
+    ops::{Deref, DerefMut},
 };
+
+use super::{Model, ShackHartmann};
+use crate::{Builder, Result, ShackHartmannBuilder, WavefrontSensorBuilder, SOURCE};
 
 /// `ShackHartmann` "SH24" builder for GMT AGWS model
 ///
@@ -23,12 +26,25 @@ use crate::{
 /// let mut wfs = SH24::<Geometric>::new().build();
 /// ```
 #[derive(Debug, Clone)]
-pub struct SH24<T: Model>(SHACKHARTMANN<T>);
+pub struct SH24<T: Model>(ShackHartmannBuilder<T>);
+
+impl<T: Model> Deref for SH24<T> {
+    type Target = ShackHartmannBuilder<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl<T: Model> DerefMut for SH24<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl<T: Model> Default for SH24<T> {
     fn default() -> Self {
         SH24(
-            SHACKHARTMANN::new()
+            ShackHartmannBuilder::new()
                 .n_sensor(1)
                 .lenslet_array(24, 32, 25.5 / 24.0)
                 .detector(12, Some(60), Some(2), None),
@@ -36,18 +52,27 @@ impl<T: Model> Default for SH24<T> {
     }
 }
 impl<T: Model> SH24<T> {}
-impl<T: Model> WavefrontSensorBuilder for SH24<T> {
+impl<M, T> WavefrontSensorBuilder for T
+where
+    M: Model,
+    T: Deref<Target = ShackHartmannBuilder<M>>,
+{
     fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
-        self.0.guide_stars(template)
+        self.deref().guide_stars(template)
     }
-
-    fn detector_noise_specs(self, noise_specs: NoiseDataSheet) -> Self {
-        Self(self.0.detector_noise_specs(noise_specs))
-    }
+    /*
+        fn detector_noise_specs(self, noise_specs: NoiseDataSheet) -> Self {
+            Self(self.detector_noise_specs(noise_specs))
+        }
+    */
 }
-impl<T: Model> Builder for SH24<T> {
-    type Component = ShackHartmann<T>;
-    fn build(self) -> Result<ShackHartmann<T>> {
-        self.0.build()
+impl<M, T> Builder for T
+where
+    M: Model,
+    T: DerefMut<Target = ShackHartmannBuilder<M>> + Default,
+{
+    type Component = ShackHartmann<M>;
+    fn build(mut self) -> Result<ShackHartmann<M>> {
+        take(self.deref_mut()).build()
     }
 }

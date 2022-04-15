@@ -121,7 +121,7 @@ impl Builder for LMMSE {
 impl LinearMinimumMeanSquareError {
     pub fn get_wavefront_estimate(&mut self, wfs: &mut WFS) -> &mut Self {
         unsafe {
-            self._c_.estimation(&wfs.as_raw_mut_ptr().data_proc);
+            self._c_.estimation(&wfs.as_mut_ptr().data_proc);
         }
         self
     }

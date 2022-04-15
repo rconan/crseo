@@ -25,15 +25,15 @@ pub use sensor::ShackHartmann;
 /// let mut wfs = SHACKHARTMANN::<Geometric>::new().build();
 /// ```
 #[derive(Debug, Clone)]
-pub struct SHACKHARTMANN<T: Model> {
+pub struct ShackHartmannBuilder<T: Model> {
     pub n_sensor: usize,
     pub lenslet_array: LensletArray,
     pub detector: Detector,
     marker: std::marker::PhantomData<T>,
 }
-impl<T: Model> Default for SHACKHARTMANN<T> {
+impl<T: Model> Default for ShackHartmannBuilder<T> {
     fn default() -> Self {
-        SHACKHARTMANN {
+        ShackHartmannBuilder {
             n_sensor: 1,
             lenslet_array: LensletArray::default(),
             detector: Detector::default(),
@@ -41,7 +41,7 @@ impl<T: Model> Default for SHACKHARTMANN<T> {
         }
     }
 }
-impl<T: Model> SHACKHARTMANN<T> {
+impl<T: Model> ShackHartmannBuilder<T> {
     pub fn n_sensor(self, n_sensor: usize) -> Self {
         Self { n_sensor, ..self }
     }
@@ -64,7 +64,7 @@ impl<T: Model> SHACKHARTMANN<T> {
         }
     }
 }
-impl<T: Model> WavefrontSensorBuilder for SHACKHARTMANN<T> {
+impl<T: Model> WavefrontSensorBuilder for ShackHartmannBuilder<T> {
     fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         match template {
@@ -82,7 +82,7 @@ impl<T: Model> WavefrontSensorBuilder for SHACKHARTMANN<T> {
         Self { detector, ..self }
     }
 }
-impl<T: Model> Builder for SHACKHARTMANN<T> {
+impl<T: Model> Builder for ShackHartmannBuilder<T> {
     type Component = ShackHartmann<T>;
     fn build(self) -> Result<ShackHartmann<T>> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
@@ -113,7 +113,7 @@ impl<T: Model> Builder for SHACKHARTMANN<T> {
             n_px as i32,
             b as i32,
         );
-        wfs.centroids.from_ptr(wfs._c_.get_c_as_mut_ptr());
+        wfs.centroids.from_ptr(wfs._c_.as_mut_ptr());
         Ok(wfs)
     }
 }

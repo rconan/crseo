@@ -1,7 +1,7 @@
-use super::{Model, ShackHartmann};
-use crate::{
-    imaging::NoiseDataSheet, Builder, Result, WavefrontSensorBuilder, SHACKHARTMANN, SOURCE,
-};
+use std::ops::{Deref, DerefMut};
+
+use super::Model;
+use crate::{Builder, ShackHartmannBuilder};
 
 /// `ShackHartmann` "SH48" builder for GMT AGWS model
 ///
@@ -23,35 +23,34 @@ use crate::{
 /// let mut wfs = SH48::<Geometric>::new().build();
 /// ```
 #[derive(Debug, Clone)]
-pub struct SH48<T: Model>(SHACKHARTMANN<T>);
+pub struct SH48<T: Model>(ShackHartmannBuilder<T>);
+
+impl<T: Model> Deref for SH48<T> {
+    type Target = ShackHartmannBuilder<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl<T: Model> DerefMut for SH48<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl<T: Model> Default for SH48<T> {
     fn default() -> Self {
         SH48(
-            SHACKHARTMANN::new()
+            ShackHartmannBuilder::new()
                 .n_sensor(4)
                 .lenslet_array(48, 16, 25.5 / 48.0)
                 .detector(8, Some(24), Some(2), None),
         )
     }
 }
+
 impl<T: Model> SH48<T> {
     pub fn n_sensor(self, n_sensor: usize) -> Self {
         Self(self.0.n_sensor(n_sensor))
-    }
-}
-impl<T: Model> WavefrontSensorBuilder for SH48<T> {
-    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
-        self.0.guide_stars(template)
-    }
-
-    fn detector_noise_specs(self, noise_specs: NoiseDataSheet) -> Self {
-        Self(self.0.detector_noise_specs(noise_specs))
-    }
-}
-impl<T: Model> Builder for SH48<T> {
-    type Component = ShackHartmann<T>;
-    fn build(self) -> Result<ShackHartmann<T>> {
-        self.0.build()
     }
 }

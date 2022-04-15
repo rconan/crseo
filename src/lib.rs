@@ -38,37 +38,37 @@ pub mod shackhartmann;
 pub mod source;
 
 #[doc(inline)]
-pub use self::atmosphere::{Atmosphere, ATMOSPHERE};
+pub use atmosphere::{Atmosphere, ATMOSPHERE};
 #[doc(inline)]
-pub use self::calibrations::Calibration;
+pub use calibrations::Calibration;
 #[doc(inline)]
-pub use self::centroiding::Centroiding;
+pub use centroiding::Centroiding;
 #[doc(inline)]
-pub use self::cu::Cu;
+pub use cu::Cu;
 #[doc(inline)]
-pub use self::error::CrseoError;
+pub use error::CrseoError;
 #[doc(inline)]
-pub use self::fwhm::Fwhm;
+pub use fwhm::Fwhm;
 #[doc(inline)]
-use self::gmt::{Gmt, GMT};
+pub use gmt::{Gmt, GMT};
 #[doc(inline)]
-pub use self::imaging::Imaging;
+pub use imaging::Imaging;
 #[doc(inline)]
-pub use self::lmmse::{LinearMinimumMeanSquareError, LMMSE};
+pub use lmmse::{LinearMinimumMeanSquareError, LMMSE};
 #[doc(inline)]
-pub use self::pssn::{PSSn, PSSN};
+pub use pssn::{PSSn, PSSN};
 //#[doc(inline)]
-//pub use self::sensitivities::OpticalSensitivities;
-#[doc(inline)]
-pub use self::piston_sensor::{PistonSensor, PistonSensorBuilder};
-#[doc(inline)]
-pub use self::shackhartmann::{Diffractive, Geometric, ShackHartmann, SH24, SH48, SHACKHARTMANN};
-#[doc(inline)]
-pub use self::source::Propagation;
-#[doc(inline)]
-pub use self::source::{Source, SOURCE};
+//pub use sensitivities::OpticalSensitivities;
 #[doc(hidden)]
 pub use ceo_bindings::{geqrf, gpu_double, gpu_float, mask, ormqr, set_device, vector};
+#[doc(inline)]
+pub use piston_sensor::{PistonSensor, PistonSensorBuilder};
+#[doc(inline)]
+pub use shackhartmann::{Diffractive, Geometric, ShackHartmann, ShackHartmannBuilder, SH24, SH48};
+#[doc(inline)]
+pub use source::Propagation;
+#[doc(inline)]
+pub use source::{Source, SOURCE};
 
 pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 
@@ -167,6 +167,14 @@ pub trait WavefrontSensorBuilder {
     {
         self
     }
+    fn decouple(
+        &self,
+        _gmt_builder: GMT,
+        _src: &mut crate::Source,
+        _threshold: f64,
+    ) -> Result<Vec<i32>> {
+        Ok(Vec::new())
+    }
 }
 
 /// Interface for wavefront sensors
@@ -178,7 +186,7 @@ pub trait WavefrontSensor {
     fn process(&mut self) -> &mut Self {
         self
     }
-    fn data(&mut self) -> Vec<f32>;
+    fn data(&mut self) -> Vec<f64>;
 }
 
 pub fn set_gpu(id: i32) {

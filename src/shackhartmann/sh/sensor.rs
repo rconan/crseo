@@ -24,64 +24,44 @@ pub struct ShackHartmann<S: Model> {
         self._c_.calibrate(src, threshold);
     }
 }*/
-impl WavefrontSensor for ShackHartmann<Diffractive>
-where
-    Diffractive: Model,
-{
+impl<M: Model> WavefrontSensor for ShackHartmann<M> {
     fn calibrate(&mut self, src: &mut Source, threshold: f64) {
-        <Diffractive as Model>::calibrate(&mut self._c_, src, threshold);
+        <M as Model>::calibrate(&mut self._c_, src, threshold);
     }
     fn reset(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.camera.reset();
-        }
+        <M as Model>::reset(&mut self._c_);
         self
     }
     fn process(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.process();
-        }
+        <M as Model>::process(&mut self._c_);
         self
     }
 
-    fn data(&mut self) -> Vec<f32> {
-        self.get_data().from_dev()
+    fn data(&mut self) -> Vec<f64> {
+        <M as Model>::data(&mut self._c_).into()
     }
 }
-impl WavefrontSensor for ShackHartmann<Geometric>
-where
-    Geometric: Model,
-{
-    fn calibrate(&mut self, src: &mut Source, threshold: f64) {
-        <Geometric as Model>::calibrate(&mut self._c_, src, threshold);
+impl<M: Model> ShackHartmann<M> {
+    pub fn n_valid_lenslet(&mut self) -> usize {
+        <M as Model>::n_valid_lenslet(&mut self._c_)
     }
-    fn reset(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.reset();
-        }
-        self
+    pub fn lenslet_mask(&mut self) -> Cu<Single> {
+        <M as Model>::lenslet_mask(&mut self._c_)
     }
-    fn process(&mut self) -> &mut Self {
-        unsafe {
-            self._c_.process();
-        }
-        self
+    pub fn lenslet_flux(&mut self) -> Cu<Single> {
+        <M as Model>::lenslet_flux(&mut self._c_)
     }
-
-    fn data(&mut self) -> Vec<f32> {
-        self.get_data().from_dev()
+    pub fn set_valid_lenslet(&mut self, lenslet_mask: &[i32]) {
+        <M as Model>::set_valid_lenslet(&mut self._c_, lenslet_mask);
     }
-}
-impl ShackHartmann<Geometric> {
-    /// Initializes the `ShackHartmann` WFS
-    pub fn build(&mut self) -> &mut Self {
-        self.n_centroids = self.n_side_lenslet * self.n_side_lenslet * 2 * self.n_sensor;
-        unsafe {
-            self._c_
-                .setup(self.n_side_lenslet, self.d as f32, self.n_sensor);
-            self.centroids.from_ptr(self._c_.data_proc.d__c);
-        }
-        self
+    pub fn filter(&mut self, lenslet_mask: &mut Mask) -> Cu<Single> {
+        <M as Model>::filter(&mut self._c_, lenslet_mask)
+    }
+    pub fn set_reference_slopes(&mut self, src: &mut Source) {
+        <M as Model>::set_reference_slopes(&mut self._c_, src)
+    }
+    pub fn as_mut_ptr(&mut self) -> &mut M {
+        &mut self._c_
     }
     pub fn guide_star_args(&self) -> (i32, f64, i32) {
         (
@@ -97,62 +77,24 @@ impl ShackHartmann<Geometric> {
             self.n_px_lenslet * self.n_side_lenslet + 1,
         )
     }
-    pub fn get_data(&mut self) -> Cu<Single> {
-        let m = self._c_.valid_lenslet.nnz as usize * 2usize;
-        let mut data: Cu<Single> = Cu::vector(m);
-        data.malloc();
-        unsafe {
-            self._c_.get_valid_slopes(data.as_ptr());
-        }
-        data
-    }
-    pub fn filter(&mut self, lenslet_mask: &mut Mask) -> Cu<Single> {
-        let m = lenslet_mask.nnz() as usize * 2usize;
-        let mut data: Cu<Single> = Cu::vector(m);
-        data.malloc();
-        unsafe {
-            self._c_
-                .masked_slopes(data.as_ptr(), lenslet_mask.as_mut_prt());
-        }
-        data
-    }
+}
+impl ShackHartmann<Geometric> {
     pub fn fold_into(&mut self, data: &mut Cu<Single>, lenslet_mask: &mut Mask) {
         unsafe {
             self._c_
                 .folded_slopes(data.as_ptr(), lenslet_mask.as_mut_prt());
         }
     }
-    pub fn n_valid_lenslet(&mut self) -> usize {
-        self._c_.valid_lenslet.nnz as usize
-    }
-    pub fn lenset_mask(&mut self) -> Cu<Single> {
-        let mut mask: Cu<Single> =
-            Cu::vector((self.n_side_lenslet * self.n_side_lenslet * self.n_sensor) as usize);
-        mask.from_ptr(self._c_.valid_lenslet.f);
-        mask
-    }
-    pub fn valid_lenslet_from(&mut self, wfs: &mut ShackHartmann<Diffractive>) {
+    pub fn valid_lenslet_from<M: Model>(&mut self, wfs: &mut ShackHartmann<M>) {
         unsafe {
             self._c_.valid_lenslet.reset();
-            self._c_.valid_lenslet.add(&mut wfs._c_.valid_lenslet);
-            self._c_.valid_actuator.reset();
-            self._c_.valid_actuator.add(&mut wfs._c_.valid_actuator);
+            self._c_.valid_lenslet.add(wfs.as_mut_ptr().valid_lenslet());
+            //self._c_.valid_actuator.reset();
+            //self._c_.valid_actuator.add(&mut wfs._c_.valid_actuator);
             self._c_.valid_lenslet.set_filter();
             self._c_.valid_lenslet.set_index();
-            self._c_.valid_actuator.set_filter();
+            //self._c_.valid_actuator.set_filter();
         }
-    }
-    pub fn set_reference_slopes(&mut self, src: &mut Source) {
-        unsafe { self._c_.set_reference_slopes(src.as_raw_mut_ptr()) }
-    }
-    pub fn lenlet_flux(&mut self) -> Cu<Single> {
-        let mut flux: Cu<Single> =
-            Cu::vector((self.n_side_lenslet * self.n_side_lenslet * self.n_sensor) as usize);
-        flux.from_ptr(self._c_.data_proc.d__mass);
-        flux
-    }
-    pub fn as_raw_mut_ptr(&mut self) -> &mut Geometric {
-        &mut self._c_
     }
 }
 impl<S: Model> Drop for ShackHartmann<S> {
@@ -160,11 +102,9 @@ impl<S: Model> Drop for ShackHartmann<S> {
         self._c_.drop();
     }
 }
-impl Propagation for ShackHartmann<Geometric> {
+impl<M: Model> Propagation for ShackHartmann<M> {
     fn propagate(&mut self, src: &mut Source) -> &mut Self {
-        unsafe {
-            self._c_.propagate(src.as_raw_mut_ptr());
-        }
+        <M as Model>::propagate(&mut self._c_, src);
         self
     }
     fn time_propagate(&mut self, _secs: f64, src: &mut Source) -> &mut Self {
@@ -172,57 +112,6 @@ impl Propagation for ShackHartmann<Geometric> {
     }
 }
 impl ShackHartmann<Diffractive> {
-    pub fn build(
-        &mut self,
-        n_px_framelet: i32,
-        n_px_imagelet: Option<i32>,
-        osf: Option<i32>,
-    ) -> &mut Self {
-        let n_px = match n_px_imagelet {
-            Some(n_px_imagelet) => n_px_imagelet,
-            None => n_px_framelet,
-        };
-        let b = n_px / n_px_framelet;
-        let o = osf.unwrap_or(2);
-        self.n_centroids = self.n_side_lenslet * self.n_side_lenslet * 2 * self.n_sensor;
-        unsafe {
-            self._c_.setup(
-                self.n_side_lenslet,
-                self.n_px_lenslet,
-                self.d as f32,
-                o,
-                n_px,
-                b,
-                self.n_sensor,
-            );
-            self.centroids.from_ptr(self._c_.data_proc.d__c);
-        }
-        self
-    }
-    pub fn new_guide_stars(&self) -> Source {
-        Source::new(
-            self.n_sensor,
-            self.d * self.n_side_lenslet as f64,
-            self.n_px_lenslet * self.n_side_lenslet + 1,
-        )
-    }
-    /// Returns the centroids corresponding to the valid lenslets
-    ///
-    /// The first half of the valid lenslet centroids contains all the valid centroids
-    /// of all the guide stars along the X–axis direction and the second half contains
-    /// all the valid slopes of  all the guide stars along the Y–axis direction
-    pub fn get_data(&mut self) -> Cu<Single> {
-        let m = self._c_.valid_lenslet.nnz as usize * 2usize;
-        let mut data: Cu<Single> = Cu::vector(m);
-        data.malloc();
-        unsafe {
-            self._c_.get_valid_slopes(data.as_ptr());
-        }
-        data
-    }
-    pub fn n_valid_lenslet(&mut self) -> usize {
-        self._c_.valid_lenslet.nnz as usize
-    }
     pub fn readout(&mut self) -> &mut Self {
         if let Some(noise_model) = self.detector_noise_model {
             unsafe {
@@ -249,17 +138,6 @@ impl ShackHartmann<Diffractive> {
         data.into()
     }
 }
-impl Propagation for ShackHartmann<Diffractive> {
-    fn propagate(&mut self, src: &mut Source) -> &mut Self {
-        unsafe {
-            self._c_.propagate(src.as_raw_mut_ptr());
-        }
-        self
-    }
-    fn time_propagate(&mut self, _secs: f64, src: &mut Source) -> &mut Self {
-        self.propagate(src)
-    }
-}
 
 impl From<ShackHartmann<Geometric>> for Source {
     fn from(item: ShackHartmann<Geometric>) -> Self {
@@ -275,12 +153,12 @@ impl From<ShackHartmann<Diffractive>> for Source {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Builder, SHACKHARTMANN, SOURCE};
+    use crate::{Builder, ShackHartmannBuilder, SOURCE};
 
     #[test]
     fn shack_hartmann_geometric_new() {
         use crate::GMT;
-        let mut wfs = SHACKHARTMANN::<Geometric>::new()
+        let mut wfs = ShackHartmannBuilder::<Geometric>::new()
             .n_sensor(1)
             .lenslet_array(48, 16, 25.5 / 48f64)
             .build()
@@ -294,7 +172,7 @@ mod tests {
     #[test]
     fn shack_hartmann_geometric_new_with_macro() {
         let mut wfs = crate::ceo!(
-            SHACKHARTMANN: Geometric,
+            ShackHartmannBuilder: Geometric,
             n_sensor = [1],
             lenslet_array = [48, 16, 25.5 / 48f64]
         );
