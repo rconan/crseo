@@ -294,21 +294,24 @@ impl Gmt {
     /// Sets M1 modal coefficients
     ///
     /// The coefficients are given segment wise
-    pub fn m1_modes(&mut self, a: &mut [f64]) {
+    /// with the same number ofd modes per segment
+    pub fn m1_modes(&mut self, a: &[f64]) {
         let a_n_mode = a.len() / 7;
-        if self.m1_n_mode > a_n_mode {
-            let buf: Vec<_> = a
-                .chunks(a_n_mode)
-                .zip(self.a1.chunks(self.m1_n_mode))
-                .flat_map(|(a, a1)| vec![a, &a1[a_n_mode..]])
-                .collect();
-            unsafe {
-                self._c_m1.BS.update(buf.concat().as_mut_ptr());
-            }
-        } else {
-            unsafe {
-                self._c_m1.BS.update(a.as_mut_ptr());
-            }
+        self.a1
+            .chunks_mut(self.m1_n_mode)
+            .zip(a.chunks(a_n_mode))
+            .for_each(|(a1, a)| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
+        unsafe {
+            self._c_m1.BS.update(self.a1.as_mut_ptr());
+        }
+    }
+    pub fn m1_segment_modes(&mut self, a: &[Vec<f64>]) {
+        self.a1
+            .chunks_mut(self.m1_n_mode)
+            .zip(a)
+            .for_each(|(a1, a)| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
+        unsafe {
+            self._c_m1.BS.update(self.a1.as_mut_ptr());
         }
     }
     pub fn m1_modes_ij(&mut self, i: usize, j: usize, value: f64) {
