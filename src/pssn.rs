@@ -259,13 +259,11 @@ impl<S> fmt::Display for PSSn<S> {
 }
 
 impl<S> Propagation for PSSn<S> {
-    fn propagate(&mut self, src: &mut Source) -> &mut Self {
+    fn propagate(&mut self, src: &mut Source) {
         self.integrate(src);
-        self
     }
-    fn time_propagate(&mut self, _secs: f64, src: &mut Source) -> &mut Self {
+    fn time_propagate(&mut self, _secs: f64, src: &mut Source) {
         self.integrate(src);
-        self
     }
 }
 

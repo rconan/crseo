@@ -2,14 +2,13 @@ use super::{
     cu::Double, shackhartmann::Geometric, Builder, Cu, Gmt, PistonSensor, Propagation,
     ShackHartmann, Source, WavefrontSensor, GMT, SOURCE,
 };
-use crate::shackhartmann::Model;
 use log;
 use std::ops::Range;
 //use std::time::Instant;
 
-pub enum ValidLensletCriteria<'a, M: Model> {
+pub enum ValidLensletCriteria<'a> {
     Threshold(Option<f64>),
-    OtherSensor(&'a mut ShackHartmann<M>),
+    OtherSensor(&'a mut dyn WavefrontSensor),
 }
 
 #[derive(Clone, Debug)]
@@ -107,7 +106,7 @@ where
     pub n_data: usize,
     pub n_mode: usize,
     pub poke: Cu<Double>,
-    poke_qr: Cu<Double>,
+    //poke_qr: Cu<Double>,
 }
 impl<T, W> Calibration<T, W>
 where
@@ -123,7 +122,7 @@ where
             n_data: 0,
             n_mode: 0,
             poke: Cu::new(),
-            poke_qr: Cu::new(),
+            //poke_qr: Cu::new(),
         }
     }
     /// Performs the calibration of a single `Segment` function for a single `Mirror`
@@ -135,7 +134,7 @@ where
         mirror: &Mirror,
         k: usize,
         stroke: f64,
-        valids: bool,
+        _valids: bool,
     ) -> Vec<f64> {
         let mut m1_rbm = vec![vec![0.; 6]; 7];
         let mut m1_mode = vec![vec![0.; gmt.m1_n_mode]; 7];
@@ -202,12 +201,12 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
     ///
     /// * `mirror`: `Vec` of `Mirror` functions
     /// * `segments`: a `Vec` the same size as the number of segment in the `mirror` with `Vec` elements of `Segment` functions
-    pub fn calibrate<'a, M: Model>(
+    pub fn calibrate<'a>(
         &mut self,
         //mirror: Vec<Mirror>,
         //segments: Vec<Vec<Segment>>,
         specs: Vec<Option<Vec<(Mirror, Vec<Segment>)>>>,
-        mut valid_lenslet_criteria: ValidLensletCriteria<'a, M>,
+        mut valid_lenslet_criteria: ValidLensletCriteria<'a>,
     ) {
         use ValidLensletCriteria::*;
         self.n_mode = specs

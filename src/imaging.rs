@@ -196,13 +196,12 @@ impl Drop for Imaging {
 }
 impl Propagation for Imaging {
     /// Fourier propagates the wavefront to the focal plane onto the detector
-    fn propagate(&mut self, src: &mut Source) -> &mut Self {
+    fn propagate(&mut self, src: &mut Source) {
         unsafe {
             self._c_.propagate(src.as_raw_mut_ptr());
         }
-        self
     }
-    fn time_propagate(&mut self, _secs: f64, src: &mut Source) -> &mut Self {
+    fn time_propagate(&mut self, _secs: f64, src: &mut Source) {
         self.propagate(src)
     }
 }

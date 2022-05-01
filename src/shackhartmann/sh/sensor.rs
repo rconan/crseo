@@ -24,21 +24,59 @@ pub struct ShackHartmann<S: Model> {
         self._c_.calibrate(src, threshold);
     }
 }*/
+/*
+impl<T: ?Sized + WavefrontSensor + DerefMut> WavefrontSensor for &mut T {
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) {
+        WavefrontSensor::calibrate(*self, src, threshold);
+    }
+    fn reset(&mut self) {
+        WavefrontSensor::reset(*self);
+    }
+    fn process(&mut self) {
+        WavefrontSensor::process(*self);
+    }
+
+    fn data(&mut self) -> Vec<f64> {
+        WavefrontSensor::data(*self)
+    }
+}
+*/
 impl<M: Model> WavefrontSensor for ShackHartmann<M> {
     fn calibrate(&mut self, src: &mut Source, threshold: f64) {
         <M as Model>::calibrate(&mut self._c_, src, threshold);
     }
-    fn reset(&mut self) -> &mut Self {
+    fn reset(&mut self) {
         <M as Model>::reset(&mut self._c_);
-        self
     }
-    fn process(&mut self) -> &mut Self {
+    fn process(&mut self) {
         <M as Model>::process(&mut self._c_);
-        self
     }
 
     fn data(&mut self) -> Vec<f64> {
         <M as Model>::data(&mut self._c_).into()
+    }
+    fn readout(&mut self) {
+        if let Some(noise_model) = self.detector_noise_model {
+            <M as Model>::readout(
+                &mut self._c_,
+                noise_model.exposure_time as f32,
+                noise_model.rms_read_out_noise as f32,
+                noise_model.n_background_photon as f32,
+                noise_model.noise_factor as f32,
+            );
+        }
+    }
+    fn frame(&self) -> Option<Vec<f32>> {
+        <M as Model>::frame(&self._c_)
+    }
+    fn n_frame(&self) -> usize {
+        <M as Model>::n_frame(&self._c_)
+    }
+    fn valid_lenslet_from(&mut self, wfs: &mut dyn WavefrontSensor) {
+        <M as Model>::valid_lenslet_from(&mut self._c_, wfs.valid_lenslet())
+    }
+    fn valid_lenslet(&mut self) -> &mut crate::mask {
+        <M as Model>::valid_lenslet(&mut self._c_)
     }
 }
 impl<M: Model> ShackHartmann<M> {
@@ -85,17 +123,6 @@ impl ShackHartmann<Geometric> {
                 .folded_slopes(data.as_ptr(), lenslet_mask.as_mut_prt());
         }
     }
-    pub fn valid_lenslet_from<M: Model>(&mut self, wfs: &mut ShackHartmann<M>) {
-        unsafe {
-            self._c_.valid_lenslet.reset();
-            self._c_.valid_lenslet.add(wfs.as_mut_ptr().valid_lenslet());
-            //self._c_.valid_actuator.reset();
-            //self._c_.valid_actuator.add(&mut wfs._c_.valid_actuator);
-            self._c_.valid_lenslet.set_filter();
-            self._c_.valid_lenslet.set_index();
-            //self._c_.valid_actuator.set_filter();
-        }
-    }
 }
 impl<S: Model> Drop for ShackHartmann<S> {
     fn drop(&mut self) {
@@ -103,39 +130,17 @@ impl<S: Model> Drop for ShackHartmann<S> {
     }
 }
 impl<M: Model> Propagation for ShackHartmann<M> {
-    fn propagate(&mut self, src: &mut Source) -> &mut Self {
+    fn propagate(&mut self, src: &mut Source) {
         <M as Model>::propagate(&mut self._c_, src);
-        self
     }
-    fn time_propagate(&mut self, _secs: f64, src: &mut Source) -> &mut Self {
+    fn time_propagate(&mut self, _secs: f64, src: &mut Source) {
         self.propagate(src)
     }
 }
 impl ShackHartmann<Diffractive> {
-    pub fn readout(&mut self) -> &mut Self {
-        if let Some(noise_model) = self.detector_noise_model {
-            unsafe {
-                self._c_.camera.readout1(
-                    noise_model.exposure_time as f32,
-                    noise_model.rms_read_out_noise as f32,
-                    noise_model.n_background_photon as f32,
-                    noise_model.noise_factor as f32,
-                );
-            }
-        }
-        self
-    }
     pub fn detector_resolution(&self) -> (usize, usize) {
         let res = (self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET) as usize;
         (res, res)
-    }
-    pub fn frame(&mut self) -> Vec<f32> {
-        let n =
-            self._c_.camera.N_PX_CAMERA * self._c_.camera.N_PX_CAMERA * self._c_.camera.N_LENSLET;
-        let m = self._c_.camera.N_SOURCE;
-        let mut data: Cu<Single> = Cu::array(n as usize, m as usize);
-        data.from_ptr(self._c_.camera.d__frame);
-        data.into()
     }
 }
 

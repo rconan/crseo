@@ -30,15 +30,42 @@ impl WavefrontSensor for PistonSensor {
             .map(|(x, x0)| (*x - *x0))
             .collect()
     }
+
+    fn reset(&mut self) {
+        todo!()
+    }
+
+    fn process(&mut self) {
+        todo!()
+    }
+
+    fn readout(&mut self) {
+        todo!()
+    }
+
+    fn frame(&self) -> Option<Vec<f32>> {
+        todo!()
+    }
+
+    fn n_frame(&self) -> usize {
+        todo!()
+    }
+
+    fn valid_lenslet_from(&mut self, _wfs: &mut dyn WavefrontSensor) {
+        todo!()
+    }
+
+    fn valid_lenslet(&mut self) -> &mut crate::mask {
+        todo!()
+    }
 }
 
 impl Propagation for PistonSensor {
-    fn propagate(&mut self, src: &mut crate::Source) -> &mut Self {
+    fn propagate(&mut self, src: &mut crate::Source) {
         self.pistons = src.segment_piston();
-        self
     }
 
-    fn time_propagate(&mut self, _secs: f64, src: &mut crate::Source) -> &mut Self {
+    fn time_propagate(&mut self, _secs: f64, src: &mut crate::Source) {
         self.propagate(src)
     }
 }

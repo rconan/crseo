@@ -178,15 +178,63 @@ pub trait WavefrontSensorBuilder {
 }
 
 /// Interface for wavefront sensors
-pub trait WavefrontSensor {
+pub trait WavefrontSensor: Propagation + Send {
     fn calibrate(&mut self, src: &mut Source, threshold: f64);
-    fn reset(&mut self) -> &mut Self {
-        self
-    }
-    fn process(&mut self) -> &mut Self {
-        self
-    }
+    fn reset(&mut self);
+    fn process(&mut self);
+    fn readout(&mut self);
     fn data(&mut self) -> Vec<f64>;
+    fn frame(&self) -> Option<Vec<f32>>;
+    fn n_frame(&self) -> usize;
+    fn valid_lenslet_from(&mut self, wfs: &mut dyn WavefrontSensor);
+    fn valid_lenslet(&mut self) -> &mut mask;
+}
+
+impl<'a, T: WavefrontSensor + ?Sized> WavefrontSensor for &'a mut Box<T> {
+    fn calibrate(&mut self, src: &mut Source, threshold: f64) {
+        (**self).calibrate(src, threshold);
+    }
+
+    fn reset(&mut self) {
+        (**self).reset();
+    }
+
+    fn process(&mut self) {
+        (**self).process();
+    }
+
+    fn readout(&mut self) {
+        (**self).readout();
+    }
+
+    fn data(&mut self) -> Vec<f64> {
+        (**self).data()
+    }
+
+    fn frame(&self) -> Option<Vec<f32>> {
+        (**self).frame()
+    }
+
+    fn n_frame(&self) -> usize {
+        (**self).n_frame()
+    }
+
+    fn valid_lenslet_from(&mut self, wfs: &mut dyn WavefrontSensor) {
+        (**self).valid_lenslet_from(wfs)
+    }
+
+    fn valid_lenslet(&mut self) -> &mut mask {
+        (**self).valid_lenslet()
+    }
+}
+impl<'a, T: WavefrontSensor + ?Sized> Propagation for &'a mut Box<T> {
+    fn propagate(&mut self, src: &mut Source) {
+        (**self).propagate(src);
+    }
+
+    fn time_propagate(&mut self, secs: f64, src: &mut Source) {
+        (**self).time_propagate(secs, src);
+    }
 }
 
 pub fn set_gpu(id: i32) {
@@ -241,6 +289,9 @@ impl Mask {
         &mut self._c_
     }
     pub fn as_raw_mut_ptr(&mut self) -> &mut mask {
+        &mut self._c_
+    }
+    pub fn as_mut(&mut self) -> &mut mask {
         &mut self._c_
     }
 }

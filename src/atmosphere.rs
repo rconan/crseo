@@ -407,11 +407,10 @@ impl Drop for Atmosphere {
     }
 }
 impl Propagation for Atmosphere {
-    fn time_propagate(&mut self, secs: f64, src: &mut Source) -> &mut Self {
+    fn time_propagate(&mut self, secs: f64, src: &mut Source) {
         (self.propagate_ptr)(self, src, secs as f32);
-        self
     }
-    fn propagate(&mut self, src: &mut Source) -> &mut Self {
+    fn propagate(&mut self, src: &mut Source) {
         self.time_propagate(self.secs, src)
     }
 }

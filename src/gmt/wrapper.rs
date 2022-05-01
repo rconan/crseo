@@ -294,7 +294,7 @@ impl Gmt {
     /// Sets M1 modal coefficients
     ///
     /// The coefficients are given segment wise
-    /// with the same number ofd modes per segment
+    /// with the same number of modes per segment
     pub fn m1_modes(&mut self, a: &[f64]) {
         let a_n_mode = a.len() / 7;
         self.a1
@@ -454,7 +454,7 @@ impl Drop for Gmt {
 }
 impl Propagation for Gmt {
     /// Ray traces a `Source` through `Gmt`, ray tracing stops at the exit pupil
-    fn propagate(&mut self, src: &mut Source) -> &mut Self {
+    fn propagate(&mut self, src: &mut Source) {
         unsafe {
             src.as_raw_mut_ptr().reset_rays();
             let rays = &mut src.as_raw_mut_ptr().rays;
@@ -465,9 +465,8 @@ impl Propagation for Gmt {
             self._c_m2.trace(rays);
             rays.to_sphere1(-5.830, 2.197173);
         }
-        self
     }
-    fn time_propagate(&mut self, _secs: f64, src: &mut Source) -> &mut Self {
+    fn time_propagate(&mut self, _secs: f64, src: &mut Source) {
         self.propagate(src)
     }
 }

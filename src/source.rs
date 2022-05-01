@@ -32,8 +32,8 @@ use std::{
 
 /// A system that mutates `Source` arguments should implement the `Propagation` trait
 pub trait Propagation {
-    fn propagate(&mut self, src: &mut Source) -> &mut Self;
-    fn time_propagate(&mut self, secs: f64, src: &mut Source) -> &mut Self;
+    fn propagate(&mut self, src: &mut Source);
+    fn time_propagate(&mut self, secs: f64, src: &mut Source);
 }
 
 #[derive(Clone, Debug)]
@@ -466,7 +466,7 @@ impl Source {
             .map(|x| *x as f64 * 10_f64.powi(-exp))
             .collect()
     }
-    pub fn gradients(&mut self) -> Vec<f32> {
+    pub fn gradients(&mut self) -> Vec<f64> {
         let mut sxy: Vec<Vec<f32>> = vec![vec![0.; self.size as usize]; 2];
         unsafe {
             self._c_.wavefront.gradient_average1(
@@ -475,7 +475,7 @@ impl Source {
                 self._c_.rays.L as f32,
             )
         }
-        sxy.into_iter().flatten().collect()
+        sxy.into_iter().flatten().map(|x| x as f64).collect()
     }
     pub fn segment_wfe_rms(&mut self) -> Vec<f64> {
         let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];

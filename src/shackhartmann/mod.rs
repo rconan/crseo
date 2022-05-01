@@ -30,7 +30,7 @@ pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
 
 /// Shack-Hartmann model type: Geometric or Diffractive
-pub trait Model: Clone {
+pub trait Model: Clone + Send {
     fn new() -> Self;
     fn build(
         &mut self,
@@ -62,6 +62,16 @@ pub trait Model: Clone {
     fn filter(&mut self, lenslet_mask: &mut Mask) -> Cu<Single>;
     fn drop(&mut self);
     fn propagate(&mut self, src: &mut Source) -> &mut Self;
+    fn readout(
+        &mut self,
+        exposure_time: f32,
+        rms_read_out_noise: f32,
+        n_background_photon: f32,
+        noise_factor: f32,
+    ) -> &mut Self;
+    fn frame(&self) -> Option<Vec<f32>>;
+    fn n_frame(&self) -> usize;
+    fn valid_lenslet_from(&mut self, wfs: &mut mask);
 }
 impl Model for Geometric {
     fn new() -> Self {
@@ -171,6 +181,29 @@ impl Model for Geometric {
             self.propagate(src.as_raw_mut_ptr());
         }
         self
+    }
+    fn readout(
+        &mut self,
+        _exposure_time: f32,
+        _rms_read_out_noise: f32,
+        _n_background_photon: f32,
+        _noise_factor: f32,
+    ) -> &mut Self {
+        self
+    }
+    fn frame(&self) -> Option<Vec<f32>> {
+        None
+    }
+    fn n_frame(&self) -> usize {
+        0
+    }
+    fn valid_lenslet_from(&mut self, wfs: &mut mask) {
+        unsafe {
+            self.valid_lenslet.reset();
+            self.valid_lenslet.add(wfs);
+            self.valid_lenslet.set_filter();
+            self.valid_lenslet.set_index();
+        }
     }
 }
 impl Model for Diffractive {
@@ -283,6 +316,41 @@ impl Model for Diffractive {
             self.propagate(src.as_raw_mut_ptr());
         }
         self
+    }
+    fn readout(
+        &mut self,
+        exposure_time: f32,
+        rms_read_out_noise: f32,
+        n_background_photon: f32,
+        noise_factor: f32,
+    ) -> &mut Self {
+        unsafe {
+            self.camera.readout1(
+                exposure_time,
+                rms_read_out_noise,
+                n_background_photon,
+                noise_factor,
+            );
+        }
+        self
+    }
+    fn frame(&self) -> Option<Vec<f32>> {
+        let n = self.camera.N_PX_CAMERA * self.camera.N_PX_CAMERA * self.camera.N_LENSLET;
+        let m = self.camera.N_SOURCE;
+        let mut data: Cu<Single> = Cu::array(n as usize, m as usize);
+        data.from_ptr(self.camera.d__frame);
+        Some(data.into())
+    }
+    fn n_frame(&self) -> usize {
+        self.camera.N_FRAME as usize
+    }
+    fn valid_lenslet_from(&mut self, wfs: &mut mask) {
+        unsafe {
+            self.valid_lenslet.reset();
+            self.valid_lenslet.add(wfs);
+            self.valid_lenslet.set_filter();
+            self.valid_lenslet.set_index();
+        }
     }
 }
 

@@ -41,8 +41,9 @@ fn main() {
     bindings
         .write_to_file("src/bindings.rs")
         .expect("Couldn't write bindings!");
-    println!("cargo:rustc-link-search=native=CEO/lib/");
-    println!("cargo:rustc-link-search=native=CEO/jsmn");
+    let dir = env!("CARGO_MANIFEST_DIR");
+    println!("cargo:rustc-link-search=native={}/CEO/lib/", dir);
+    println!("cargo:rustc-link-search=native={}/CEO/jsmn", dir);
     println!("cargo:rustc-link-lib=static=ceo");
     println!("cargo:rustc-link-lib=static=jsmn");
     println!("cargo:rustc-link-lib=curl");
@@ -54,8 +55,5 @@ fn main() {
     println!("cargo:rustc-link-lib=cusparse");
     println!("cargo:rustc-link-lib=curand");
     println!("cargo:rustc-link-lib=cusolver");
-    println!("cargo:include=CEO/include");
-    println!("cargo:include=/usr/local/cuda/include");
-    println!("cargo:lib=CEO/lib");
     println!("cargo:rerun-if-changed=wrapper.hpp");
 }
