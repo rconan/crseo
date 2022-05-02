@@ -36,7 +36,7 @@ pub trait Propagation {
     fn time_propagate(&mut self, secs: f64, src: &mut Source);
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PupilSampling {
     SquareGrid {
         size: Option<f64>,
@@ -91,7 +91,7 @@ impl PupilSampling {
 /// use ceo::{Builder, SOURCE, Conversion};
 /// let mut src = SOURCE::new().size(3).on_ring(8f32.from_arcmin()).build();
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SOURCE {
     pub size: usize,
     pub pupil_size: f64,
@@ -332,6 +332,11 @@ pub struct Source {
     pub zenith: Vec<f32>,
     pub azimuth: Vec<f32>,
     pub magnitude: Vec<f32>,
+}
+impl PartialEq for Source {
+    fn eq(&self, other: &Self) -> bool {
+        Into::<SOURCE>::into(self) == Into::<SOURCE>::into(other)
+    }
 }
 impl Source {
     /// Creates and empty `Source`

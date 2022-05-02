@@ -11,7 +11,7 @@ pub struct LensletArray {
     /// Dimension [m] of one lenslet
     pub lenslet_size: f64,
 }
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 /// Detector noise specifications
 pub struct NoiseDataSheet {
     /// Exposure time [s]

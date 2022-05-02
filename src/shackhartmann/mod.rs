@@ -357,7 +357,7 @@ impl Model for Diffractive {
 /// Lenslet array specifications
 /// n_side_lenslet, n_px_lenslet, d
 #[doc(hidden)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub struct LensletArray(pub usize, pub usize, pub f64);
 impl Default for LensletArray {
     fn default() -> Self {
@@ -367,7 +367,7 @@ impl Default for LensletArray {
 /// Detector noise model specifications
 /// n_px_framelet, n_px_imagelet, osf, detector_noise_specs
 #[doc(hidden)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Detector(
     pub usize,
     pub Option<usize>,

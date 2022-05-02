@@ -56,7 +56,7 @@ pub use imaging::Imaging;
 #[doc(inline)]
 pub use lmmse::{LinearMinimumMeanSquareError, LMMSE};
 #[doc(inline)]
-pub use pssn::{PSSn, PSSN};
+pub use pssn::{PSSn, PSSnEstimates, PSSN};
 //#[doc(inline)]
 //pub use sensitivities::OpticalSensitivities;
 #[doc(hidden)]

@@ -25,7 +25,7 @@ struct GmtAtmosphere {
     seed: i32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[doc(hidden)]
 pub struct TurbulenceProfile {
     pub n_layer: usize,
@@ -45,7 +45,7 @@ impl Default for TurbulenceProfile {
         }
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[doc(hidden)]
 pub struct RayTracing {
     pub width: f32,
@@ -56,7 +56,7 @@ pub struct RayTracing {
     pub n_duration: Option<i32>,
 }
 /// [`CEO`](../struct.CEO.html#impl-6) [`Atmosphere`](../struct.Atmosphere.html) builder type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ATMOSPHERE {
     pub r0_at_zenith: f64,
     pub oscale: f64,

@@ -9,6 +9,9 @@ use std::fmt;
 pub struct TelescopeError;
 #[derive(Debug, Clone)]
 pub struct AtmosphereTelescopeError;
+pub trait PSSnErrors {}
+impl PSSnErrors for TelescopeError {}
+impl PSSnErrors for AtmosphereTelescopeError {}
 pub struct PSSn<S> {
     pub _c_: pssn,
     pub r0_at_zenith: f32,
@@ -29,11 +32,19 @@ pub struct PSSN<T> {
     src: Source,
     marker: std::marker::PhantomData<T>,
 }
+impl<T: PSSnErrors> PartialEq for PSSN<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.r0_at_zenith == other.r0_at_zenith
+            && self.oscale == other.oscale
+            && self.zenith_angle == other.zenith_angle
+            && self.src == other.src
+    }
+}
 /// Default properties:
 ///  * r0           : 16cm
 ///  * L0           : 25m
 ///  * zenith angle : 30 degrees
-impl<T> Default for PSSN<T> {
+impl<T: PSSnErrors> Default for PSSN<T> {
     fn default() -> Self {
         PSSN {
             r0_at_zenith: 0.16,
@@ -44,7 +55,7 @@ impl<T> Default for PSSN<T> {
         }
     }
 }
-impl<T> PSSN<T> {
+impl<T: PSSnErrors> PSSN<T> {
     pub fn r0_at_zenith(self, r0_at_zenith: f64) -> Self {
         Self {
             r0_at_zenith,
@@ -67,7 +78,7 @@ impl<T> PSSN<T> {
         }
     }
 }
-impl<T: std::clone::Clone> Builder for PSSN<T> {
+impl<T: Clone + PSSnErrors> Builder for PSSN<T> {
     type Component = PSSn<T>;
     fn build(self) -> Result<PSSn<T>> {
         let mut src = self.src;
@@ -90,7 +101,7 @@ impl<T: std::clone::Clone> Builder for PSSN<T> {
         Ok(pssn)
     }
 }
-impl<S> PSSn<S> {
+impl<S: PSSnErrors> PSSn<S> {
     /// Creates a new `PSSn` with r0=16cm at zenith, L0=25m a zenith distance of 30 degrees
     pub fn new() -> PSSn<S> {
         PSSn {
@@ -208,7 +219,7 @@ impl<S> PSSn<S> {
         d_otf.from_dev()
     }
 }
-impl<T> Serialize for PSSn<T> {
+impl<T: PSSnErrors> Serialize for PSSn<T> {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -235,6 +246,38 @@ impl PSSn<AtmosphereTelescopeError> {
         self
     }
 }
+
+pub trait PSSnEstimates: Propagation + Send {
+    fn estimates(&mut self) -> Vec<f64>;
+}
+impl PSSnEstimates for PSSn<TelescopeError> {
+    fn estimates(&mut self) -> Vec<f64> {
+        self.peek().estimates.iter().map(|x| *x as f64).collect()
+    }
+}
+impl PSSnEstimates for PSSn<AtmosphereTelescopeError> {
+    fn estimates(&mut self) -> Vec<f64> {
+        self.peek().estimates.iter().map(|x| *x as f64).collect()
+    }
+}
+impl Propagation for Box<dyn PSSnEstimates> {
+    fn propagate(&mut self, src: &mut Source) {
+        (**self).propagate(src);
+    }
+
+    fn time_propagate(&mut self, secs: f64, src: &mut Source) {
+        (**self).time_propagate(secs, src);
+    }
+}
+impl<T> PSSnEstimates for Box<T>
+where
+    Box<T>: Propagation,
+    T: PSSnEstimates + ?Sized,
+{
+    fn estimates(&mut self) -> Vec<f64> {
+        (**self).estimates()
+    }
+}
 impl<S> Drop for PSSn<S> {
     /// Frees CEO memory before dropping `PSSn`
     fn drop(&mut self) {
@@ -258,7 +301,7 @@ impl<S> fmt::Display for PSSn<S> {
     }
 }
 
-impl<S> Propagation for PSSn<S> {
+impl<S: PSSnErrors> Propagation for PSSn<S> {
     fn propagate(&mut self, src: &mut Source) {
         self.integrate(src);
     }

@@ -24,12 +24,19 @@ pub use sensor::ShackHartmann;
 /// use ceo::{Builder,  SHACKHARTMANN, Geometric};
 /// let mut wfs = SHACKHARTMANN::<Geometric>::new().build();
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ShackHartmannBuilder<T: Model> {
     pub n_sensor: usize,
     pub lenslet_array: LensletArray,
     pub detector: Detector,
     marker: std::marker::PhantomData<T>,
+}
+impl<T: Model> PartialEq for ShackHartmannBuilder<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.n_sensor == other.n_sensor
+            && self.lenslet_array == other.lenslet_array
+            && self.detector == other.detector
+    }
 }
 impl<T: Model> Default for ShackHartmannBuilder<T> {
     fn default() -> Self {
