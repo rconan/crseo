@@ -1,6 +1,7 @@
 use super::{Detector, Diffractive, Geometric, LensletArray, Model};
 use crate::{
-    imaging::NoiseDataSheet, Builder, Cu, Result, WavefrontSensor, WavefrontSensorBuilder, SOURCE,
+    imaging::NoiseDataSheet, Builder, Cu, Result, SourceBuilder, WavefrontSensor,
+    WavefrontSensorBuilder,
 };
 pub mod sensor;
 pub use sensor::ShackHartmann;
@@ -72,11 +73,11 @@ impl<T: Model> ShackHartmannBuilder<T> {
     }
 }
 impl<T: Model> WavefrontSensorBuilder for ShackHartmannBuilder<T> {
-    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
+    fn guide_stars(&self, template: Option<SourceBuilder>) -> SourceBuilder {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         match template {
             Some(src) => src,
-            None => SOURCE::new(),
+            None => SourceBuilder::builder(),
         }
         .size(self.n_sensor)
         .pupil_size(d * n_side_lenslet as f64)

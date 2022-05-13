@@ -92,7 +92,7 @@ impl PupilSampling {
 /// let mut src = SOURCE::new().size(3).on_ring(8f32.from_arcmin()).build();
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct SOURCE {
+pub struct SourceBuilder {
     pub size: usize,
     pub pupil_size: f64,
     pub pupil_sampling: PupilSampling,
@@ -103,9 +103,9 @@ pub struct SOURCE {
     pub rays_coordinates: Option<(Vec<f64>, Vec<f64>)>,
     pub fwhm: Option<f64>,
 }
-impl Default for SOURCE {
+impl Default for SourceBuilder {
     fn default() -> Self {
-        SOURCE {
+        SourceBuilder {
             size: 1,
             pupil_size: 25.5,
             pupil_sampling: PupilSampling::SquareGrid {
@@ -121,7 +121,7 @@ impl Default for SOURCE {
         }
     }
 }
-impl SOURCE {
+impl SourceBuilder {
     /// Set the number of sources
     pub fn size(self, size: usize) -> Self {
         Self { size, ..self }
@@ -238,7 +238,7 @@ impl SOURCE {
         }
     }
 }
-impl Builder for SOURCE {
+impl Builder for SourceBuilder {
     type Component = Source;
     /// Build the `Source`
     fn build(self) -> Result<Source> {
@@ -299,7 +299,7 @@ impl Builder for SOURCE {
     }
 }
 
-impl From<&Source> for SOURCE {
+impl From<&Source> for SourceBuilder {
     fn from(src: &Source) -> Self {
         Self {
             size: src.size as usize,
@@ -335,7 +335,7 @@ pub struct Source {
 }
 impl PartialEq for Source {
     fn eq(&self, other: &Self) -> bool {
-        Into::<SOURCE>::into(self) == Into::<SOURCE>::into(other)
+        Into::<SourceBuilder>::into(self) == Into::<SourceBuilder>::into(other)
     }
 }
 impl Source {
@@ -852,7 +852,7 @@ mod tests {
     #[test]
     fn source_field_delaunay21() {
         use crate::{ceo, Conversion};
-        let src = ceo!(SOURCE, field_delaunay21 = []);
+        let src = ceo!(SourceBuilder, field_delaunay21 = []);
         src.zenith
             .iter()
             .zip(src.azimuth.iter())

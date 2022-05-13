@@ -1,6 +1,6 @@
 //use complot::{Plot, Scatter};
 use crseo::{
-    ceo, imaging::NoiseDataSheet, shackhartmann::WavefrontSensor, Builder, Diffractive, ATMOSPHERE,
+    ceo, imaging::NoiseDataSheet, shackhartmann::WavefrontSensor, Builder, Diffractive, AtmosphereBuilder,
     ShackHartmannBuilder,
 };
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
@@ -13,23 +13,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pupil_sampling = n_lenslet * n_px_lenslet + 1;
     let n_px_framelet = 8;
 
-    let mut gmt = ceo!(GMT);
+    let mut gmt = ceo!(GmtBuilder);
     let mut src = ceo!(
-        SOURCE,
+        SourceBuilder,
         pupil_sampling = [pupil_sampling],
         magnitude = [vec![0f32]]
     );
     src.fwhm(6.);
     let now = Instant::now();
     println!("Precomputing atmospheric phase screens ...");
-    let mut atm = ATMOSPHERE::new()
+    let mut atm = AtmosphereBuilder::builder()
         .ray_tracing(26., 520, 0., 30., None, None)
         .build()?;
     let eta = now.elapsed();
     println!("... done in {}ms", eta.as_millis());
 
     let pitch = src.pupil_size / n_lenslet as f64;
-    let mut diff_wfs = ShackHartmannBuilder::<Diffractive>::new()
+    let mut diff_wfs = ShackHartmannBuilder::<Diffractive>::builder()
         .lenslet_array(n_lenslet, n_px_lenslet, pitch)
         .detector(
             n_px_framelet,

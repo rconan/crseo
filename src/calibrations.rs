@@ -1,6 +1,6 @@
 use super::{
-    cu::Double, shackhartmann::Geometric, Builder, Cu, Gmt, PistonSensor, Propagation,
-    ShackHartmann, Source, WavefrontSensor, GMT, SOURCE,
+    cu::Double, shackhartmann::Geometric, Builder, Cu, Gmt, GmtBuilder, PistonSensor, Propagation,
+    ShackHartmann, Source, SourceBuilder, WavefrontSensor,
 };
 use log;
 use std::ops::Range;
@@ -100,8 +100,8 @@ where
     T: Clone + Builder<Component = W>,
     W: WavefrontSensor,
 {
-    gmt_blueprint: GMT,
-    src_blueprint: SOURCE,
+    gmt_blueprint: GmtBuilder,
+    src_blueprint: SourceBuilder,
     wfs_blueprint: T,
     pub n_data: usize,
     pub n_mode: usize,

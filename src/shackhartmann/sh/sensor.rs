@@ -158,18 +158,21 @@ impl From<ShackHartmann<Diffractive>> for Source {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Builder, ShackHartmannBuilder, SOURCE};
+    use crate::{Builder, ShackHartmannBuilder, SourceBuilder};
 
     #[test]
     fn shack_hartmann_geometric_new() {
-        use crate::GMT;
-        let mut wfs = ShackHartmannBuilder::<Geometric>::new()
+        use crate::GmtBuilder;
+        let mut wfs = ShackHartmannBuilder::<Geometric>::builder()
             .n_sensor(1)
             .lenslet_array(48, 16, 25.5 / 48f64)
             .build()
             .unwrap();
-        let mut src = SOURCE::new().pupil_sampling(48 * 16 + 1).build().unwrap();
-        let mut gmt = GMT::new().build().unwrap();
+        let mut src = SourceBuilder::builder()
+            .pupil_sampling(48 * 16 + 1)
+            .build()
+            .unwrap();
+        let mut gmt = GmtBuilder::builder().build().unwrap();
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
     }
@@ -181,8 +184,8 @@ mod tests {
             n_sensor = [1],
             lenslet_array = [48, 16, 25.5 / 48f64]
         );
-        let mut src = crate::ceo!(SOURCE, pupil_sampling = [48 * 16 + 1]);
-        let mut gmt = crate::ceo!(GMT);
+        let mut src = crate::ceo!(SourceBuilder, pupil_sampling = [48 * 16 + 1]);
+        let mut gmt = crate::ceo!(GmtBuilder);
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
     }

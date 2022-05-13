@@ -2,7 +2,7 @@ use crseo::{
     ceo,
     cu::Single,
     shackhartmann::{Geometric, WavefrontSensor, WavefrontSensorBuilder},
-    Builder, ATMOSPHERE, LMMSE, SH48, SOURCE,
+    Builder, AtmosphereBuilder, LinearMinimumMeanSquareErrorBuilder, SH48, SourceBuilder,
 };
 use serde_pickle as pickle;
 use std::fs::File;
@@ -11,17 +11,17 @@ fn main() {
     let n_actuator = 49;
     let n_kl = 70;
 
-    let atm_blueprint = ATMOSPHERE::new();
-    let wfs_blueprint = SH48::<Geometric>::new().n_sensor(1);
+    let atm_blueprint = AtmosphereBuilder::builder();
+    let wfs_blueprint = SH48::<Geometric>::builder().n_sensor(1);
     let gs_blueprint = wfs_blueprint.guide_stars(None);
-    let src_blueprint = SOURCE::new().pupil_sampling(n_actuator);
+    let src_blueprint = SourceBuilder::builder().pupil_sampling(n_actuator);
 
-    let mut gmt = ceo!(GMT, m2_n_mode = [n_kl]);
+    let mut gmt = ceo!(GmtBuilder, m2_n_mode = [n_kl]);
     let mut mmse_src = src_blueprint.clone().build().unwrap();
 
     let mut gs = gs_blueprint.build().unwrap();
 
-    let mut lmmse = LMMSE::new()
+    let mut lmmse = LinearMinimumMeanSquareErrorBuilder::builder()
         .atmosphere(atm_blueprint.clone())
         .guide_star(&gs)
         .mmse_star(&mmse_src)
@@ -59,7 +59,7 @@ fn main() {
     let mut file = File::create("tomography.pkl").unwrap();
     pickle::to_writer(&mut file, &(src_phase, phase), true).unwrap();
 
-    let mut src = ceo!(SOURCE);
+    let mut src = ceo!(SourceBuilder);
 
     src.through(&mut gmt).xpupil().through(&mut atm);
     println!("WFE RMS: {}nm", src.wfe_rms_10e(-9)[0]);

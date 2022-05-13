@@ -5,7 +5,7 @@ use dosio::{io::jar, Dos};
 use std::time::Instant;
 
 fn main() {
-    let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(3);
+    let wfs_blueprint = SH48::<WFS_TYPE>::builder().n_sensor(3);
     let mut gosm = GmtOpticalSensorModel::<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>>::new(None)
         .build()
         .unwrap();

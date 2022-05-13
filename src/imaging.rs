@@ -210,7 +210,7 @@ impl Propagation for Imaging {
 /// Imaging tests
 mod tests {
     use super::{Imaging, NoiseDataSheet};
-    use crate::{ceo, Builder, Centroiding, Conversion, Source, GMT};
+    use crate::{ceo, Builder, Centroiding, Conversion, GmtBuilder, Source};
 
     #[test]
     /// Test the intensity per lenslet
@@ -220,7 +220,7 @@ mod tests {
         let n_px_lenslet = 32;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = ceo!(GMT);
+        let mut gmt = ceo!(GmtBuilder);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
         let mut sensor = Imaging::new();
@@ -249,7 +249,7 @@ mod tests {
         let n_px_lenslet = 16;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = ceo!(GMT);
+        let mut gmt = ceo!(GmtBuilder);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![16f32]);
         let fwhm_px = 8f64;
@@ -352,7 +352,7 @@ mod tests {
         let n_px_lenslet = 511;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         //        let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = ceo!(GMT);
+        let mut gmt = ceo!(GmtBuilder);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
         let mut sensor = Imaging::new();
@@ -393,7 +393,7 @@ mod tests {
         let n_px_lenslet = 511;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         //        let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = ceo!(GMT);
+        let mut gmt = ceo!(GmtBuilder);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
         let mut sensor = Imaging::new();

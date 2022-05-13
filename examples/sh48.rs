@@ -1,6 +1,6 @@
 use crseo::{
     calibrations, ceo, cu::Single, shackhartmann::Diffractive, shackhartmann::Geometric, Builder,
-    Calibration, CrseoError, Cu, WavefrontSensor, WavefrontSensorBuilder, GMT, SH48,
+    Calibration, CrseoError, Cu, WavefrontSensor, WavefrontSensorBuilder, GmtBuilder, SH48,
 };
 use serde_pickle as pickle;
 use skyangle::Conversion;
@@ -9,10 +9,10 @@ use std::time::Instant;
 
 fn main() -> std::result::Result<(), CrseoError> {
     let n_sensor = 3;
-    let mut gmt = ceo!(GMT);
+    let mut gmt = ceo!(GmtBuilder);
     println!("M1 mode: {}", gmt.get_m1_mode_type());
     println!("M2 mode: {}", gmt.get_m2_mode_type());
-    let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(n_sensor);
+    let wfs_blueprint = SH48::<WFS_TYPE>::builder().n_sensor(n_sensor);
     let mut gs = wfs_blueprint
         .guide_stars(None)
         .on_ring(6f32.from_arcmin())
@@ -24,15 +24,15 @@ fn main() -> std::result::Result<(), CrseoError> {
     type WFS_TYPE = Geometric;
 
     let mut wfs = wfs_blueprint.build().unwrap();
-    let mut src = ceo!(SOURCE);
-    let mut atm = ceo!(ATMOSPHERE);
+    let mut src = ceo!(SourceBuilder);
+    let mut atm = ceo!(AtmosphereBuilder);
 
     gs.through(&mut gmt).xpupil();
     println!("GS WFE RMS: {}nm", gs.wfe_rms_10e(-9)[0]);
     wfs.calibrate(&mut gs, 0.8);
     //    println!("# valid lenslet: {}", wfs.n_valid_lenslet());
 
-    let mut gmt2wfs = Calibration::new(&gmt, &gs, SH48::<Geometric>::new().n_sensor(n_sensor));
+    let mut gmt2wfs = Calibration::new(&gmt, &gs, SH48::<Geometric>::builder().n_sensor(n_sensor));
     let mirror = vec![calibrations::Mirror::M2];
     let segments = vec![vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))]; 7];
     let spec = vec![(

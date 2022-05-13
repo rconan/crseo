@@ -3,7 +3,7 @@ use crseo::ceo;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let m1_n_mode = 331;
     let mut gmt = ceo!(
-        GMT,
+        GmtBuilder,
         m1 = ["m1_eigen-modes_raw-polishing_print-through", m1_n_mode],
         m1_default_state = [(0..7)
             .flat_map(|_| {
@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             })
             .collect()]
     );
-    let mut src = ceo!(SOURCE);
+    let mut src = ceo!(SourceBuilder);
 
     /*
         let mut a1: Vec<_> = (0..7)

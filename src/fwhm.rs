@@ -76,14 +76,14 @@ impl Fwhm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ceo, pssn::TelescopeError as TE, Builder, Conversion, PSSn, ATMOSPHERE};
+    use crate::{ceo, pssn::TelescopeError as TE, AtmosphereBuilder, Builder, Conversion, PSSn};
     use std::time::Instant;
 
     #[test]
     fn fwhm_atmosphere_x() {
         let mut src = Source::new(1, 25.5, 1024);
         src.build("Vs", vec![0.0], vec![0.0], vec![0.0]);
-        let mut gmt = ceo!(GMT);
+        let mut gmt = ceo!(GmtBuilder);
         let mut pssn: PSSn<TE> = PSSn::new();
         src.through(&mut gmt);
         pssn.build(&mut src);
@@ -102,13 +102,13 @@ mod tests {
     fn fwhm_atmosphere_n() {
         let mut src = Source::new(1, 25.5, 1024);
         src.build("Vs", vec![0.0], vec![0.0], vec![0.0]);
-        let mut gmt = ceo!(GMT);
+        let mut gmt = ceo!(GmtBuilder);
         let mut pssn: PSSn<TE> = PSSn::new();
         src.through(&mut gmt);
         pssn.build(&mut src);
         let mut fwhm = Fwhm::new();
         fwhm.build(&mut src);
-        let mut atm = ATMOSPHERE::new()
+        let mut atm = AtmosphereBuilder::builder()
             .r0_at_zenith(pssn.r0_at_zenith as f64)
             .oscale(pssn.oscale as f64)
             .single_turbulence_layer(0., None, None)

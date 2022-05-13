@@ -1,4 +1,4 @@
-use super::{cu, Builder, Cu, Propagation, Result, Source, SOURCE};
+use super::{cu, Builder, Cu, Propagation, Result, Source, SourceBuilder};
 use crate::ceo_bindings::pssn;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::fmt;
@@ -25,14 +25,14 @@ pub struct PSSn<S> {
 }
 
 /// [`CEO`](../struct.CEO.html#impl-1) [`PSSn`](../struct.PSSn.html) builder type
-pub struct PSSN<T> {
+pub struct PSSnBuilder<T> {
     pub r0_at_zenith: f64,
     pub oscale: f64,
     pub zenith_angle: f64,
     src: Source,
     marker: std::marker::PhantomData<T>,
 }
-impl<T: PSSnErrors> PartialEq for PSSN<T> {
+impl<T: PSSnErrors> PartialEq for PSSnBuilder<T> {
     fn eq(&self, other: &Self) -> bool {
         self.r0_at_zenith == other.r0_at_zenith
             && self.oscale == other.oscale
@@ -44,18 +44,18 @@ impl<T: PSSnErrors> PartialEq for PSSN<T> {
 ///  * r0           : 16cm
 ///  * L0           : 25m
 ///  * zenith angle : 30 degrees
-impl<T: PSSnErrors> Default for PSSN<T> {
+impl<T: PSSnErrors> Default for PSSnBuilder<T> {
     fn default() -> Self {
-        PSSN {
+        PSSnBuilder {
             r0_at_zenith: 0.16,
             oscale: 25.0,
             zenith_angle: 30_f64.to_radians(),
-            src: SOURCE::default().build().unwrap(),
+            src: SourceBuilder::default().build().unwrap(),
             marker: std::marker::PhantomData,
         }
     }
 }
-impl<T: PSSnErrors> PSSN<T> {
+impl<T: PSSnErrors> PSSnBuilder<T> {
     pub fn r0_at_zenith(self, r0_at_zenith: f64) -> Self {
         Self {
             r0_at_zenith,
@@ -73,12 +73,12 @@ impl<T: PSSnErrors> PSSN<T> {
     }
     pub fn source(self, src: &Source) -> Self {
         Self {
-            src: SOURCE::from(src).build().unwrap(),
+            src: SourceBuilder::from(src).build().unwrap(),
             ..self
         }
     }
 }
-impl<T: Clone + PSSnErrors> Builder for PSSN<T> {
+impl<T: Clone + PSSnErrors> Builder for PSSnBuilder<T> {
     type Component = PSSn<T>;
     fn build(self) -> Result<PSSn<T>> {
         let mut src = self.src;
@@ -92,7 +92,7 @@ impl<T: Clone + PSSnErrors> Builder for PSSN<T> {
             mode: std::marker::PhantomData,
             otf: Vec::new(),
         };
-        let mut gmt = super::ceo!(GMT);
+        let mut gmt = super::ceo!(GmtBuilder);
         src.through(&mut gmt).xpupil();
         unsafe {
             pssn._c_.setup(src.as_raw_mut_ptr(), pssn.r0(), pssn.oscale);
@@ -316,11 +316,11 @@ mod tests {
 
     #[test]
     fn pssn_new() {
-        use crate::{GMT, SOURCE};
-        let mut src = SOURCE::new().build().unwrap();
-        let mut gmt = GMT::new().build().unwrap();
+        use crate::{GmtBuilder, SourceBuilder};
+        let mut src = SourceBuilder::builder().build().unwrap();
+        let mut gmt = GmtBuilder::builder().build().unwrap();
         src.through(&mut gmt).xpupil();
-        let mut pssn = PSSN::<TelescopeError>::new().build().unwrap();
+        let mut pssn = PSSnBuilder::<TelescopeError>::builder().build().unwrap();
         src.through(&mut pssn);
         println!("PSSN: {}", pssn.peek());
     }

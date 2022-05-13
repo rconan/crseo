@@ -57,7 +57,7 @@ pub struct RayTracing {
 }
 /// [`CEO`](../struct.CEO.html#impl-6) [`Atmosphere`](../struct.Atmosphere.html) builder type
 #[derive(Debug, Clone, PartialEq)]
-pub struct ATMOSPHERE {
+pub struct AtmosphereBuilder {
     pub r0_at_zenith: f64,
     pub oscale: f64,
     pub zenith_angle: f64,
@@ -75,9 +75,9 @@ pub struct ATMOSPHERE {
 ///    * wind speed     : [5.6540, 5.7964, 5.8942, 6.6370, 13.2925, 34.8250, 29.4187] m/s
 ///    * wind direction : [0.0136, 0.1441, 0.2177, 0.5672, 1.2584, 1.6266, 1.7462] rd
 /// * ray tracing : none
-impl Default for ATMOSPHERE {
+impl Default for AtmosphereBuilder {
     fn default() -> Self {
-        ATMOSPHERE {
+        AtmosphereBuilder {
             r0_at_zenith: 0.16,
             oscale: 25.,
             zenith_angle: 30_f64.to_radians(),
@@ -87,7 +87,7 @@ impl Default for ATMOSPHERE {
     }
 }
 /// ## `Atmosphere` builder
-impl ATMOSPHERE {
+impl AtmosphereBuilder {
     /// Set r0 value taken at pointing the zenith in meters
     pub fn r0_at_zenith(self, r0_at_zenith: f64) -> Self {
         Self {
@@ -161,7 +161,7 @@ impl ATMOSPHERE {
         }
     }
 }
-impl Builder for ATMOSPHERE {
+impl Builder for AtmosphereBuilder {
     type Component = Atmosphere;
     /// Build the `Atmosphere`
     fn build(self) -> Result<Atmosphere> {
@@ -419,6 +419,6 @@ impl Propagation for Atmosphere {
 mod tests {
     #[test]
     fn atmosphere_new() {
-        crate::ceo!(ATMOSPHERE);
+        crate::ceo!(AtmosphereBuilder);
     }
 }

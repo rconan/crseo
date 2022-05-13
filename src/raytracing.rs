@@ -216,18 +216,18 @@ mod tests {
 
     #[test]
     fn single_ray() {
-        let mut m1 = CONIC::new()
+        let mut m1 = CONIC::builder()
             .curvature_radius(36.)
             .conic_cst(1. - 0.9982857)
             .build()
             .unwrap();
-        let mut m2 = CONIC::new()
+        let mut m2 = CONIC::builder()
             .curvature_radius(-4.1639009)
             .conic_cst(1. - 0.71692784)
             .conic_origin([0., 0., 20.26247614])
             .build()
             .unwrap();
-        let mut rays = RAYS::new()
+        let mut rays = RAYS::builder()
             .xy(vec![0., 0.])
             .origin([0., 0., 25.])
             .build()
@@ -248,18 +248,18 @@ mod tests {
     }
     #[test]
     fn multiple_ray() {
-        let mut m1 = CONIC::new()
+        let mut m1 = CONIC::builder()
             .curvature_radius(36.)
             .conic_cst(1. - 0.9982857)
             .build()
             .unwrap();
-        let mut m2 = CONIC::new()
+        let mut m2 = CONIC::builder()
             .curvature_radius(-4.1639009)
             .conic_cst(1. - 0.71692784)
             .conic_origin([0., 0., 20.26247614])
             .build()
             .unwrap();
-        let mut rays = RAYS::new()
+        let mut rays = RAYS::builder()
             .xy([0., 0.].repeat(1_000_000))
             .origin([0., 0., 25.])
             .build()

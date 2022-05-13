@@ -38,7 +38,7 @@ pub mod shackhartmann;
 pub mod source;
 
 #[doc(inline)]
-pub use atmosphere::{Atmosphere, ATMOSPHERE};
+pub use atmosphere::{Atmosphere, AtmosphereBuilder};
 #[doc(inline)]
 pub use calibrations::Calibration;
 #[doc(inline)]
@@ -50,13 +50,13 @@ pub use error::CrseoError;
 #[doc(inline)]
 pub use fwhm::Fwhm;
 #[doc(inline)]
-pub use gmt::{Gmt, GMT};
+pub use gmt::{Gmt, GmtBuilder};
 #[doc(inline)]
 pub use imaging::Imaging;
 #[doc(inline)]
-pub use lmmse::{LinearMinimumMeanSquareError, LMMSE};
+pub use lmmse::{LinearMinimumMeanSquareError, LinearMinimumMeanSquareErrorBuilder};
 #[doc(inline)]
-pub use pssn::{PSSn, PSSnEstimates, PSSN};
+pub use pssn::{PSSn, PSSnBuilder, PSSnEstimates};
 //#[doc(inline)]
 //pub use sensitivities::OpticalSensitivities;
 #[doc(hidden)]
@@ -68,7 +68,7 @@ pub use shackhartmann::{Diffractive, Geometric, ShackHartmann, ShackHartmannBuil
 #[doc(inline)]
 pub use source::Propagation;
 #[doc(inline)]
-pub use source::{Source, SOURCE};
+pub use source::{Source, SourceBuilder};
 
 pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 
@@ -118,16 +118,16 @@ pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
 #[macro_export]
 macro_rules! ceo {
     ($element:ident) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()).unwrap()
+        $crate::Builder::build(<$crate::$element as $crate::Builder>::builder()).unwrap()
     };
     ($element:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
+        $crate::Builder::build(<$crate::$element as $crate::Builder>::builder()$(.$arg($($val),*))*).unwrap()
     };
     ($element:ident:$model:ident) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()).unwrap()
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::builder()).unwrap()
     };
     ($element:ident:$model:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::builder()$(.$arg($($val),*))*).unwrap()
     };
 }
 /*
@@ -150,7 +150,11 @@ pub type Result<T> = std::result::Result<T, CrseoError>;
 /// CEO builder type trait
 pub trait Builder: Default {
     type Component;
+    #[deprecated(note = "use `builder` instead")]
     fn new() -> Self {
+        Default::default()
+    }
+    fn builder() -> Self {
         Default::default()
     }
     fn build(self) -> Result<Self::Component>;
@@ -158,7 +162,7 @@ pub trait Builder: Default {
 
 /// Interface for wavefront sensor builders
 pub trait WavefrontSensorBuilder {
-    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
+    fn guide_stars(&self, template: Option<SourceBuilder>) -> SourceBuilder {
         template.unwrap_or_default()
     }
     fn detector_noise_specs(self, _noise_specs: imaging::NoiseDataSheet) -> Self
@@ -169,7 +173,7 @@ pub trait WavefrontSensorBuilder {
     }
     fn decouple(
         &self,
-        _gmt_builder: GMT,
+        _gmt_builder: GmtBuilder,
         _src: &mut crate::Source,
         _threshold: f64,
     ) -> Result<Vec<i32>> {

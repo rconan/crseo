@@ -4,7 +4,7 @@ use std::{
 };
 
 use super::{Model, ShackHartmann};
-use crate::{Builder, Result, ShackHartmannBuilder, WavefrontSensorBuilder, SOURCE};
+use crate::{Builder, Result, ShackHartmannBuilder, SourceBuilder, WavefrontSensorBuilder};
 
 /// `ShackHartmann` "SH24" builder for GMT AGWS model
 ///
@@ -44,7 +44,7 @@ impl<T: Model> DerefMut for SH24<T> {
 impl<T: Model> Default for SH24<T> {
     fn default() -> Self {
         SH24(
-            ShackHartmannBuilder::new()
+            ShackHartmannBuilder::builder()
                 .n_sensor(1)
                 .lenslet_array(24, 32, 25.5 / 24.0)
                 .detector(12, Some(60), Some(2), None),
@@ -57,7 +57,7 @@ where
     M: Model,
     T: Deref<Target = ShackHartmannBuilder<M>>,
 {
-    fn guide_stars(&self, template: Option<SOURCE>) -> SOURCE {
+    fn guide_stars(&self, template: Option<SourceBuilder>) -> SourceBuilder {
         self.deref().guide_stars(template)
     }
     /*

@@ -6,13 +6,13 @@ use indicatif::{ProgressBar, ProgressStyle};
 use skyangle::SkyAngle;
 
 fn main() {
-    let mut gmt = ceo!(GMT);
+    let mut gmt = ceo!(GmtBuilder);
     //let mut src = ceo!(SOURCE);
     //    let mut wfs = ceo!(SHACKHARTMANN: Diffractive);
     //    let mut wfs = ceo!(SH48: Diffractive, n_sensor = [1]);
     //    let mut src = wfs.new_guide_stars();
     let (mut wfs, mut src) = {
-        let wfs_blueprint = SH48::<Diffractive>::new()
+        let wfs_blueprint = SH48::<Diffractive>::builder()
             .n_sensor(3)
             .detector_noise_specs(NoiseDataSheet::new(1e-3).read_out(1.));
         let src_blueprint = wfs_blueprint
@@ -25,7 +25,7 @@ fn main() {
         )
     };
     let mut atm = ceo!(
-        ATMOSPHERE,
+        AtmosphereBuilder,
         ray_tracing = [
             26.,
             401,

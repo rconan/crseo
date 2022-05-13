@@ -4,7 +4,7 @@ use crseo::{
     dos::{GmtOpticalModel, GmtOpticalSensorModel},
     shackhartmann::Diffractive as WFS_TYPE,
     shackhartmann::Geometric,
-    Builder, CrseoError, ShackHartmann, SH48, SOURCE,
+    Builder, CrseoError, ShackHartmann, SH48, SourceBuilder,
 };
 use dosio::{ios, Dos};
 use skyangle::Conversion;
@@ -12,9 +12,9 @@ use std::time::Instant;
 
 fn main() -> std::result::Result<(), CrseoError> {
     let n_sensor = 3;
-    let wfs_blueprint = SH48::<WFS_TYPE>::new().n_sensor(n_sensor);
+    let wfs_blueprint = SH48::<WFS_TYPE>::builder().n_sensor(n_sensor);
     let mut gosm = GmtOpticalSensorModel::<ShackHartmann<WFS_TYPE>, SH48<WFS_TYPE>>::new(Some(
-        SOURCE::new()
+        SourceBuilder::builder()
             .size(n_sensor)
             .on_ring(6f32.from_arcmin())
             .fwhm(6f64),
@@ -28,7 +28,7 @@ fn main() -> std::result::Result<(), CrseoError> {
     let mut gmt2wfs = Calibration::new(
         &gosm.gmt,
         &gosm.src,
-        SH48::<Geometric>::new().n_sensor(n_sensor),
+        SH48::<Geometric>::builder().n_sensor(n_sensor),
     );
     let mirror = vec![calibrations::Mirror::M2];
     let segments = vec![vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))]; 7];

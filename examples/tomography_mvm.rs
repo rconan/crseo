@@ -2,7 +2,7 @@ use crseo::{
     ceo,
     cu::Single,
     shackhartmann::{Geometric, WavefrontSensor, WavefrontSensorBuilder},
-    Builder, Cu, ATMOSPHERE, LMMSE, SH48, SOURCE,
+    Builder, Cu, AtmosphereBuilder, LinearMinimumMeanSquareErrorBuilder, SH48, SourceBuilder,
 };
 use nalgebra as na;
 use serde_pickle as pickle;
@@ -14,19 +14,19 @@ fn main() {
     let n_actuator = 49;
     let n_kl = 70;
 
-    let atm_blueprint = ATMOSPHERE::new();
-    let wfs_blueprint = SH48::<Geometric>::new(); //.n_sensor(1);
+    let atm_blueprint = AtmosphereBuilder::builder();
+    let wfs_blueprint = SH48::<Geometric>::builder(); //.n_sensor(1);
     let gs_blueprint = wfs_blueprint
         .guide_stars(None)
         .on_ring(SkyAngle::Arcminute(6f32).to_radians());
-    let src_blueprint = SOURCE::new().pupil_sampling(n_actuator);
+    let src_blueprint = SourceBuilder::builder().pupil_sampling(n_actuator);
 
-    let mut gmt = ceo!(GMT, m2_n_mode = [n_kl]);
+    let mut gmt = ceo!(GmtBuilder, m2_n_mode = [n_kl]);
     let mut mmse_src = src_blueprint.clone().build().unwrap();
 
     let mut gs = gs_blueprint.build().unwrap();
 
-    let mut lmmse = LMMSE::new()
+    let mut lmmse = LinearMinimumMeanSquareErrorBuilder::builder()
         .atmosphere(atm_blueprint.clone())
         .guide_star(&gs)
         .mmse_star(&mmse_src)

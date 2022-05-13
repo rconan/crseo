@@ -1,4 +1,4 @@
-use crseo::{Builder, ATMOSPHERE};
+use crseo::{Builder, AtmosphereBuilder};
 use log;
 use skyangle::Conversion;
 fn main() {
@@ -17,7 +17,7 @@ fn main() {
         )
     });
 
-    let _ = ATMOSPHERE::new()
+    let _ = AtmosphereBuilder::builder()
         .remove_turbulence_layer(0)
         .ray_tracing(
             25.5,

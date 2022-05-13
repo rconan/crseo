@@ -14,8 +14,8 @@ enum OpticalSensitivities {
 }
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let mut gmt = ceo!(GMT);
-    let mut src = ceo!(SOURCE);
+    let mut gmt = ceo!(GmtBuilder);
+    let mut src = ceo!(SourceBuilder);
     let stroke_fn = |dof| if dof < 3 { 1e-6 } else { 1f64.from_arcsec() };
 
     let mut tip_tilt = vec![];

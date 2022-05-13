@@ -1,5 +1,5 @@
 use crseo::ceo;
-use crseo::{pssn::TelescopeError, Builder, Fwhm, PSSn, SOURCE};
+use crseo::{pssn::TelescopeError, Builder, Fwhm, PSSn, SourceBuilder};
 use serde::Deserialize;
 use serde_pickle as pickle;
 use skyangle::{Conversion, SkyAngle};
@@ -95,11 +95,11 @@ fn telescope_aberration_free(filename: &str, e_fwhm: &[f64]) {
     pickle::to_writer(&mut file, &field_free_fwhm, true).unwrap();
 }
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let mut gmt = ceo!(GMT);
+    let mut gmt = ceo!(GmtBuilder);
     match Field::Delaunay {
         Field::Radial => {
             for z_arcmin in 0..11 {
-                let mut src = SOURCE::new()
+                let mut src = SourceBuilder::builder()
                     .zenith_azimuth(
                         vec![SkyAngle::Arcminute(z_arcmin as f32).to_radians()],
                         vec![0.],
@@ -121,7 +121,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
             }
         }
         Field::Delaunay => {
-            let mut src = SOURCE::new().field_delaunay21().build()?;
+            let mut src = SourceBuilder::builder().field_delaunay21().build()?;
             let wfe_rms = src.through(&mut gmt).xpupil().wfe_rms_10e(-9);
             let mut pssn: PSSn<TelescopeError> = PSSn::new();
             pssn.build(&mut src);

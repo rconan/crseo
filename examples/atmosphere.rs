@@ -1,4 +1,4 @@
-use crseo::{ceo, Builder, ATMOSPHERE};
+use crseo::{ceo, Builder, AtmosphereBuilder};
 use serde_pickle as pkl;
 use skyangle::Conversion;
 use std::fs::File;
@@ -6,8 +6,8 @@ use std::fs::File;
 fn main() {
     env_logger::init();
 
-    let mut gmt = ceo!(GMT);
-    let mut src = ceo!(SOURCE);
+    let mut gmt = ceo!(GmtBuilder);
+    let mut src = ceo!(SourceBuilder);
 
     let sim_sampling_frequency = 1000_usize;
 
@@ -31,7 +31,7 @@ fn main() {
     let atm_duration = 20f32;
     let atm_n_duration = Some((sim_duration / atm_duration as f64).ceil() as i32);
     let atm_sampling = 48 * 16 + 1;
-    let atm_builder = ATMOSPHERE::new().ray_tracing(
+    let atm_builder = AtmosphereBuilder::builder().ray_tracing(
         25.5,
         atm_sampling,
         20f32.from_arcmin(),

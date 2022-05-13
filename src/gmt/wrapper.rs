@@ -62,13 +62,13 @@ impl Mirror {
 /// let mut gmt = GMT::new().m1_n_mode(27).build();
 /// ```
 #[derive(Debug, Clone)]
-pub struct GMT {
+pub struct GmtBuilder {
     m1: Mirror,
     m2: Mirror,
 }
-impl Default for GMT {
+impl Default for GmtBuilder {
     fn default() -> Self {
-        GMT {
+        GmtBuilder {
             m1: Mirror {
                 mode_type: "bending modes".into(),
                 ..Default::default()
@@ -80,7 +80,7 @@ impl Default for GMT {
         }
     }
 }
-impl GMT {
+impl GmtBuilder {
     /// Set the type and number of modes of M1
     pub fn m1(self, mode_type: &str, n_mode: usize) -> Self {
         Self {
@@ -141,7 +141,7 @@ impl Mirror {
         }
     }
 }
-impl Builder for GMT {
+impl Builder for GmtBuilder {
     type Component = Gmt;
     fn build(self) -> std::result::Result<Gmt, CrseoError> {
         let mut gmt = Gmt {
@@ -169,7 +169,7 @@ impl Builder for GMT {
         Ok(gmt)
     }
 }
-impl From<&Gmt> for GMT {
+impl From<&Gmt> for GmtBuilder {
     fn from(gmt: &Gmt) -> Self {
         Self {
             m1: gmt.get_m1(),

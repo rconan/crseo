@@ -1,7 +1,7 @@
 use super::ceo_bindings::LMMSE as ceo_LMMSE;
 use super::{
-    cu::Single, Atmosphere, Builder, Conversion, Cu, GeometricShackHartmann as WFS, Mask, Result,
-    Source, ATMOSPHERE, GMT, SOURCE,
+    cu::Single, Atmosphere, AtmosphereBuilder, Builder, Conversion, Cu,
+    GeometricShackHartmann as WFS, GmtBuilder, Mask, Result, Source, SourceBuilder,
 };
 use std::ffi::CString;
 
@@ -14,21 +14,21 @@ pub struct LinearMinimumMeanSquareError {
     pupil_mask: Mask,
 }
 #[derive(Debug, Clone)]
-pub struct LMMSE {
-    pub atm: super::ATMOSPHERE,
-    pub guide_star: super::SOURCE,
-    pub mmse_star: super::SOURCE,
+pub struct LinearMinimumMeanSquareErrorBuilder {
+    pub atm: super::AtmosphereBuilder,
+    pub guide_star: super::SourceBuilder,
+    pub mmse_star: super::SourceBuilder,
     pub fov_diameter: Option<f64>,
     pub n_side_lenslet: usize,
     pub solver_id: String,
     pub wavefront_osf: usize,
 }
-impl Default for LMMSE {
+impl Default for LinearMinimumMeanSquareErrorBuilder {
     fn default() -> Self {
-        LMMSE {
-            atm: super::ATMOSPHERE::new(),
-            guide_star: super::SOURCE::new(),
-            mmse_star: super::SOURCE::new(),
+        LinearMinimumMeanSquareErrorBuilder {
+            atm: super::AtmosphereBuilder::builder(),
+            guide_star: super::SourceBuilder::builder(),
+            mmse_star: super::SourceBuilder::builder(),
             fov_diameter: None,
             n_side_lenslet: 0,
             solver_id: "MINRES".to_owned(),
@@ -36,19 +36,19 @@ impl Default for LMMSE {
         }
     }
 }
-impl LMMSE {
-    pub fn atmosphere(self, atm: ATMOSPHERE) -> Self {
+impl LinearMinimumMeanSquareErrorBuilder {
+    pub fn atmosphere(self, atm: AtmosphereBuilder) -> Self {
         Self { atm, ..self }
     }
     pub fn guide_star(self, guide_star: &Source) -> Self {
         Self {
-            guide_star: SOURCE::from(guide_star),
+            guide_star: SourceBuilder::from(guide_star),
             ..self
         }
     }
     pub fn mmse_star(self, mmse_star: &Source) -> Self {
         Self {
-            mmse_star: SOURCE::from(mmse_star),
+            mmse_star: SourceBuilder::from(mmse_star),
             fov_diameter: None,
             ..self
         }
@@ -66,10 +66,10 @@ impl LMMSE {
         }
     }
 }
-impl Builder for LMMSE {
+impl Builder for LinearMinimumMeanSquareErrorBuilder {
     type Component = LinearMinimumMeanSquareError;
     fn build(self) -> Result<LinearMinimumMeanSquareError> {
-        let mut gmt = GMT::new().build().unwrap();
+        let mut gmt = GmtBuilder::builder().build().unwrap();
         let mut mmse_star = self.mmse_star.build().unwrap();
         mmse_star.through(&mut gmt).xpupil();
         let mut pupil_mask = Mask::new();
@@ -143,7 +143,7 @@ impl LinearMinimumMeanSquareError {
         first_kl: Option<usize>,
         stroke: Option<f64>,
     ) -> Vec<Vec<f64>> {
-        let mut gmt = GMT::new().m2_n_mode(n_kl).build().unwrap();
+        let mut gmt = GmtBuilder::builder().m2_n_mode(n_kl).build().unwrap();
         let mut kl: Vec<Vec<f32>> = vec![];
         let first_kl = first_kl.unwrap_or(0);
         let stroke = stroke.unwrap_or(1e-6);

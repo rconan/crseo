@@ -211,7 +211,7 @@ mod tests {
         let n_px_lenslet = 16;
         let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
         let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = ceo!(GMT);
+        let mut gmt = ceo!(GmtBuilder);
         let mut src = Source::new(1, pupil_size, pupil_sampling);
         src.build("V", vec![0f32], vec![0f32], vec![18f32]);
         src.fwhm(3f64);
