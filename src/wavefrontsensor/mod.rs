@@ -19,8 +19,8 @@ use super::{
 };
 use std::f32;
 
-pub mod sh;
-pub use sh::{ShackHartmann, ShackHartmannBuilder};
+pub mod shackhartmann;
+pub use shackhartmann::{ShackHartmann, ShackHartmannBuilder};
 mod sh48;
 pub use sh48::SH48;
 mod sh24;

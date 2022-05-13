@@ -1,6 +1,6 @@
 use super::{
-    cu::Double, shackhartmann::Geometric, Builder, Cu, Gmt, GmtBuilder, PistonSensor, Propagation,
-    ShackHartmann, Source, SourceBuilder, WavefrontSensor,
+    cu::Double, wavefrontsensor::Geometric, Builder, Cu, Gmt, GmtBuilder, PistonSensor,
+    Propagation, ShackHartmann, Source, SourceBuilder, WavefrontSensor,
 };
 use log;
 use std::ops::Range;

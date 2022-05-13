@@ -34,8 +34,8 @@ pub mod pssn;
 pub mod raytracing;
 //pub mod sensitivities;
 pub mod piston_sensor;
-pub mod shackhartmann;
 pub mod source;
+pub mod wavefrontsensor;
 
 #[doc(inline)]
 pub use atmosphere::{Atmosphere, AtmosphereBuilder};
@@ -64,13 +64,15 @@ pub use ceo_bindings::{geqrf, gpu_double, gpu_float, mask, ormqr, set_device, ve
 #[doc(inline)]
 pub use piston_sensor::{PistonSensor, PistonSensorBuilder};
 #[doc(inline)]
-pub use shackhartmann::{Diffractive, Geometric, ShackHartmann, ShackHartmannBuilder, SH24, SH48};
-#[doc(inline)]
 pub use source::Propagation;
 #[doc(inline)]
 pub use source::{Source, SourceBuilder};
+#[doc(inline)]
+pub use wavefrontsensor::{
+    Diffractive, Geometric, ShackHartmann, ShackHartmannBuilder, SH24, SH48,
+};
 
-pub type GeometricShackHartmann = ShackHartmann<shackhartmann::Geometric>;
+pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;
 
 /// CEO macro builder
 ///
