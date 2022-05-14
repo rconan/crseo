@@ -3,8 +3,8 @@ use serde::Deserialize;
 use std::f32;
 use std::ffi::CString;
 
-use super::ceo_bindings::atmosphere;
 use super::{Builder, Propagation, Result, Source};
+use ffi::atmosphere;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]

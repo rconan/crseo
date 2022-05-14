@@ -14,14 +14,14 @@
 //! ```
 //! [`ceo!`](macro.ceo.html) is a macro that incorporates the necessary boilerplate code to create CEO elements.
 
+use ffi::{mask, set_device};
 use skyangle::*;
-use std::{error::Error, fmt, ptr};
+use std::{error::Error, fmt};
 
 pub mod analytic;
 pub mod atmosphere;
 pub mod calibrations;
 pub mod centroiding;
-pub mod ceo_bindings;
 pub mod cu;
 #[cfg(feature = "dosio")]
 pub mod dos;
@@ -59,8 +59,6 @@ pub use lmmse::{LinearMinimumMeanSquareError, LinearMinimumMeanSquareErrorBuilde
 pub use pssn::{PSSn, PSSnBuilder, PSSnEstimates};
 //#[doc(inline)]
 //pub use sensitivities::OpticalSensitivities;
-#[doc(hidden)]
-pub use ceo_bindings::{geqrf, gpu_double, gpu_float, mask, ormqr, set_device, vector};
 #[doc(inline)]
 pub use piston_sensor::{PistonSensor, PistonSensorBuilder};
 #[doc(inline)]
@@ -253,23 +251,6 @@ use cu::Single;
 #[derive(Clone, Debug)]
 pub struct Mask {
     _c_: mask,
-}
-impl Default for mask {
-    fn default() -> Self {
-        Self {
-            m: ptr::null_mut(),
-            f: ptr::null_mut(),
-            idx: ptr::null_mut(),
-            size_px: [0; 2usize],
-            nel: 0,
-            nnz: 0f32,
-            size_m: [0f32; 2usize],
-            area: 0f32,
-            delta: [0f32; 2usize],
-            handle: ptr::null_mut(),
-            d__piston_mask: ptr::null_mut(),
-        }
-    }
 }
 impl Mask {
     pub fn new() -> Self {

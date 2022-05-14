@@ -1,5 +1,5 @@
-use crate::ceo_bindings::{gmt_m1, gmt_m2, vector};
 use crate::{Builder, CrseoError, Propagation, Result, Source};
+use ffi::{gmt_m1, gmt_m2, vector};
 use std::{
     env,
     ffi::{CStr, CString},

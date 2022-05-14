@@ -1,10 +1,11 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
-
-use std::ptr;
+#![allow(improper_ctypes)]
 
 include!("bindings.rs");
+
+use std::ptr;
 
 unsafe impl Send for vector {}
 impl Default for vector {
@@ -22,6 +23,24 @@ impl From<[f64; 3]> for vector {
             x: v[0],
             y: v[1],
             z: v[2],
+        }
+    }
+}
+unsafe impl Send for mask {}
+impl Default for mask {
+    fn default() -> Self {
+        Self {
+            m: ptr::null_mut(),
+            f: ptr::null_mut(),
+            idx: ptr::null_mut(),
+            size_px: [0; 2usize],
+            nel: 0,
+            nnz: 0f32,
+            size_m: [0f32; 2usize],
+            area: 0f32,
+            delta: [0f32; 2usize],
+            handle: ptr::null_mut(),
+            d__piston_mask: ptr::null_mut(),
         }
     }
 }

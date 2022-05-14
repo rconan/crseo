@@ -21,8 +21,8 @@
 //! let mut src = ceo!(SOURCE, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use super::ceo_bindings::{bundle, dev2host, dev2host_int, source, vector};
 use super::{cu::Double, cu::Single, Builder, Centroiding, Cu, Result};
+use ffi::{bundle, dev2host, dev2host_int, source, vector};
 
 use std::{
     f32,

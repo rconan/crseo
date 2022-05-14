@@ -12,11 +12,8 @@
 //! let mut wfs = ceo!(SHACKHARTMANN:Geometric);
 //! ```
 
-use super::{
-    ceo_bindings::{geometricShackHartmann, mask, shackHartmann},
-    imaging::NoiseDataSheet,
-    Cu, Mask, Single, Source,
-};
+use super::{imaging::NoiseDataSheet, Cu, Mask, Single, Source};
+use ffi::{geometricShackHartmann, mask, shackHartmann};
 use std::f32;
 
 pub mod shackhartmann;

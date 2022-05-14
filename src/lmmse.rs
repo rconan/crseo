@@ -1,8 +1,8 @@
-use super::ceo_bindings::LMMSE as ceo_LMMSE;
 use super::{
     cu::Single, Atmosphere, AtmosphereBuilder, Builder, Conversion, Cu,
     GeometricShackHartmann as WFS, GmtBuilder, Mask, Result, Source, SourceBuilder,
 };
+use ffi::LMMSE as ceo_LMMSE;
 use std::ffi::CString;
 
 pub struct LinearMinimumMeanSquareError {

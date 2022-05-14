@@ -12,6 +12,7 @@ categories = ["science", "simulation"]
 keywords = ["telescope", "astronomy"]
 
 [dependencies]
+ffi = { version = "0.1.0", path = "sys", package = "crseo-sys" }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde-pickle = "0.6"
@@ -27,10 +28,6 @@ dosio = { version = "0.1.2", optional = true }
 
 [features]
 dos = ["dosio"]
-
-[build-dependencies]
-bindgen = "0.59"
-ceo = { version = "0.1.0", path = "CEO" }
 
 [dev-dependencies]
 simple_logger = "1.11.0"

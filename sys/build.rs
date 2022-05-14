@@ -1,6 +1,21 @@
 use bindgen;
+use std::path::Path;
 
 fn main() {
+    println!("cargo:rustc-link-search=native=/usr/local/lib");
+    println!("cargo:rustc-link-lib=static=ceo");
+    println!("cargo:rustc-link-lib=static=jsmn");
+    println!("cargo:rustc-link-lib=curl");
+    println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
+    println!("cargo:rustc-link-lib=cudart");
+    println!("cargo:rustc-link-lib=cudadevrt");
+    println!("cargo:rustc-link-lib=cublas");
+    println!("cargo:rustc-link-lib=cufft");
+    println!("cargo:rustc-link-lib=cusparse");
+    println!("cargo:rustc-link-lib=curand");
+    println!("cargo:rustc-link-lib=cusolver");
+    println!("cargo:rerun-if-changed=wrapper.hpp");
+
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
         .clang_arg("-I/usr/local/cuda/include")
@@ -37,23 +52,9 @@ fn main() {
         .allowlist_function("ormqr")
         .generate()
         .expect("Unable to generate bindings");
-    //    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+
+    let out_path = Path::new("src");
     bindings
-        .write_to_file("src/bindings.rs")
+        .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
-    let dir = env!("CARGO_MANIFEST_DIR");
-    println!("cargo:rustc-link-search=native={}/CEO/lib/", dir);
-    println!("cargo:rustc-link-search=native={}/CEO/jsmn", dir);
-    println!("cargo:rustc-link-lib=static=ceo");
-    println!("cargo:rustc-link-lib=static=jsmn");
-    println!("cargo:rustc-link-lib=curl");
-    println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
-    println!("cargo:rustc-link-lib=cudart");
-    println!("cargo:rustc-link-lib=cudadevrt");
-    println!("cargo:rustc-link-lib=cublas");
-    println!("cargo:rustc-link-lib=cufft");
-    println!("cargo:rustc-link-lib=cusparse");
-    println!("cargo:rustc-link-lib=curand");
-    println!("cargo:rustc-link-lib=cusolver");
-    println!("cargo:rerun-if-changed=wrapper.hpp");
 }

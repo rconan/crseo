@@ -1,5 +1,5 @@
-use super::ceo_bindings::{centroiding, dev2host, host2dev_char, mask};
 use super::Imaging;
+use ffi::{centroiding, dev2host, host2dev_char, mask};
 
 /// Wrapper for CEO centroiding
 pub struct Centroiding {

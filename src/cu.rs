@@ -1,5 +1,5 @@
-use super::ceo_bindings::{gpu_double, gpu_float};
-use core::ops::{AddAssign, Mul, SubAssign};
+use ffi::{gpu_double, gpu_float};
+use std::ops::{AddAssign, Mul, SubAssign};
 
 pub type Single = gpu_float;
 pub type Double = gpu_double;

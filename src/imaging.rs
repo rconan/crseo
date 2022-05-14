@@ -1,6 +1,6 @@
-use super::ceo_bindings::{dev2host, imaging};
 use super::Propagation;
 use super::Source;
+use ffi::{dev2host, imaging};
 use std::f32;
 
 #[derive(Debug, Copy, Clone)]

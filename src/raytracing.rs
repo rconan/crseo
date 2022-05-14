@@ -1,7 +1,5 @@
-use super::ceo_bindings::{
-    bundle, conic, intersect, reflect, refract, transform_to_R, transform_to_S,
-};
 use super::{cu, Builder, Result};
+use ffi::{bundle, conic, intersect, reflect, refract, transform_to_R, transform_to_S};
 
 pub struct CONIC {
     curvature_radius: f64,

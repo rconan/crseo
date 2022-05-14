@@ -1,5 +1,5 @@
 use super::{cu, Builder, Cu, Propagation, Result, Source, SourceBuilder};
-use crate::ceo_bindings::pssn;
+use ffi::pssn;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::fmt;
 

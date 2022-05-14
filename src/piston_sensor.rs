@@ -55,7 +55,7 @@ impl WavefrontSensor for PistonSensor {
         todo!()
     }
 
-    fn valid_lenslet(&mut self) -> &mut crate::mask {
+    fn valid_lenslet(&mut self) -> &mut ffi::mask {
         todo!()
     }
 }
