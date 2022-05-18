@@ -8,3 +8,4 @@ Cargo.lock
 *.svg
  markdown-code-fontification:rustic-mode
 /data
+/sys/target
