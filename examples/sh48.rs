@@ -71,6 +71,7 @@ fn main() -> std::result::Result<(), CrseoError> {
         Vec::<f64>::from(wfs.data()).iter().sum::<f64>()
     );
 
+    /*
     let mut poke = Into::<Cu<Single>>::into(Into::<Vec<f64>>::into(gmt2wfs.poke));
     let a = poke.qr().qr_solve(&mut wfs.data().into());
     /*let s: Vec<f32> = (&gmt2wfs.poke * &a).into();
@@ -85,6 +86,7 @@ fn main() -> std::result::Result<(), CrseoError> {
         .enumerate()
         .for_each(|x| println!("#{}: [{:+0.1},{:+0.1}]", 1 + x.0, x.1[0], x.1[1]));
     //    println!("M2 TT: {:#?}", a);
+    */
 
     println!(
         "WFE RMS [nm] without and with atmosphere: {:.0}/{:.0}",
