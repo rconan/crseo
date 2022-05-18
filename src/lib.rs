@@ -18,6 +18,7 @@ use ffi::{mask, set_device};
 use skyangle::*;
 use std::{error::Error, fmt};
 
+#[cfg(feature = "analytic")]
 pub mod analytic;
 pub mod atmosphere;
 pub mod calibrations;

@@ -1,6 +1,7 @@
 use crseo::{
-    calibrations, ceo, cu::Single, shackhartmann::Diffractive, shackhartmann::Geometric, Builder,
-    Calibration, CrseoError, Cu, WavefrontSensor, WavefrontSensorBuilder, GmtBuilder, SH48,
+    calibrations, ceo, cu::Single, wavefrontsensor::Diffractive, wavefrontsensor::Geometric,
+    Builder, Calibration, CrseoError, Cu, GmtBuilder, WavefrontSensor, WavefrontSensorBuilder,
+    SH48,
 };
 use serde_pickle as pickle;
 use skyangle::Conversion;
@@ -40,7 +41,7 @@ fn main() -> std::result::Result<(), CrseoError> {
         vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))],
     )];
     let now = Instant::now();
-    gmt2wfs.calibrate::<Geometric>(
+    gmt2wfs.calibrate(
         //mirror,
         //segments,
         vec![Some(spec); 7],

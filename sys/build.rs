@@ -1,12 +1,14 @@
-use bindgen;
 use std::path::Path;
 
 fn main() {
-    println!("cargo:rustc-link-search=native=/usr/local/lib");
+    if std::env::var("DOCS_RS").is_ok() {
+        return;
+    }
+    println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-lib=static=ceo");
     println!("cargo:rustc-link-lib=static=jsmn");
     println!("cargo:rustc-link-lib=curl");
-    println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
+    println!("cargo:rustc-link-search=/usr/local/cuda/lib64");
     println!("cargo:rustc-link-lib=cudart");
     println!("cargo:rustc-link-lib=cudadevrt");
     println!("cargo:rustc-link-lib=cublas");
@@ -44,7 +46,6 @@ fn main() {
         .allowlist_type("conic")
         .allowlist_function("transform_to_S")
         .allowlist_function("transform_to_R")
-        .allowlist_function("intersect")
         .allowlist_function("intersect")
         .allowlist_function("reflect")
         .allowlist_function("refract")
