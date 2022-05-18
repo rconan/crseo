@@ -1,7 +1,16 @@
 [package]
 name = "crseo-sys"
 version = "0.1.0"
+authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
+license = "MIT"
+description = "Cuda Engined Optics Rust Interface"
+repository = "https://github.com/rconan/crseo"
+documentation = "https://docs.rs/crseo-sys"
+readme = "README.md"
+categories = ["external-ffi-bindings", "science", "simulation"]
+keywords = ["telescope", "astronomy"]
+exclude = ["CEO/"]
 
 [build-dependencies]
 bindgen = "0.59.2"

@@ -8,7 +8,7 @@ description = "Cuda Engined Optics Rust Interface"
 repository = "https://github.com/rconan/crseo"
 documentation = "https://docs.rs/crseo"
 readme = "README.md"
-categories = ["science", "simulation"]
+categories = ["api-bindings", "science", "simulation"]
 keywords = ["telescope", "astronomy"]
 
 [dependencies]

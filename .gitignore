@@ -7,3 +7,4 @@ Cargo.lock
 *.png
 *.svg
  markdown-code-fontification:rustic-mode
+/data
