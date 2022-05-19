@@ -21,3 +21,4 @@ tar xvf ceo-modes.tar
 export GMT_MODES_PATH=`pwd`
 cd ..
 ```
+3. Install [Clang](https://rust-lang.github.io/rust-bindgen/requirements.html)
