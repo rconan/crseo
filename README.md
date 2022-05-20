@@ -7,7 +7,7 @@
 Install [CUDA](https://developer.nvidia.com/cuda-10.2-download-archive) and [Noweb](https://www.cs.tufts.edu/~nr/noweb/), then
 ```
 git clone -b rust https://github.com/rconan/ceo.git
-cd CEO
+cd ceo
 make all
 sudo make install
 cd ..
