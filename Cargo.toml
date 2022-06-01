@@ -26,7 +26,6 @@ skyangle = "0.1.0"
 dosio = { version = "0.1.2", optional = true }
 
 [features]
-dos = ["dosio"]
 analytic = ["nalgebra"]
 
 [dev-dependencies]

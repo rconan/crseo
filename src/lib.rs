@@ -24,8 +24,6 @@ pub mod atmosphere;
 pub mod calibrations;
 pub mod centroiding;
 pub mod cu;
-#[cfg(feature = "dosio")]
-pub mod dos;
 pub mod error;
 pub mod fwhm;
 pub mod gmt;
