@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::f32;
 use std::ffi::CString;
 
-use super::{Builder, Propagation, Result, Source};
+use super::{Builder, FromBuilder, Propagation, Result, Source};
 use ffi::atmosphere;
 
 #[allow(dead_code)]
@@ -276,6 +276,9 @@ pub struct Atmosphere {
     //filename: String,
     //k_duration: i32,
     propagate_ptr: fn(&mut Atmosphere, &mut Source, f32),
+}
+impl FromBuilder for Atmosphere {
+    type ComponentBuilder = AtmosphereBuilder;
 }
 impl Atmosphere {
     /*

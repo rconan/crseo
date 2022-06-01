@@ -21,7 +21,7 @@
 //! let mut src = ceo!(SOURCE, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use super::{cu::Double, cu::Single, Builder, Centroiding, Cu, Result};
+use super::{cu::Double, cu::Single, Builder, Centroiding, Cu, FromBuilder, Result};
 use ffi::{bundle, dev2host, dev2host_int, source, vector};
 
 use std::{
@@ -337,6 +337,9 @@ impl PartialEq for Source {
     fn eq(&self, other: &Self) -> bool {
         Into::<SourceBuilder>::into(self) == Into::<SourceBuilder>::into(other)
     }
+}
+impl FromBuilder for Source {
+    type ComponentBuilder = SourceBuilder;
 }
 impl Source {
     /// Creates and empty `Source`

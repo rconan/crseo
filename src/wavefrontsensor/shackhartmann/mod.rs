@@ -1,7 +1,7 @@
 use super::{Detector, Diffractive, Geometric, LensletArray, Model};
 use crate::{
-    imaging::NoiseDataSheet, Builder, Cu, Result, SourceBuilder, WavefrontSensor,
-    WavefrontSensorBuilder,
+    imaging::NoiseDataSheet, Builder, Cu, FromBuilder, Result, Source, SourceBuilder,
+    WavefrontSensor, WavefrontSensorBuilder,
 };
 pub mod sensor;
 pub use sensor::ShackHartmann;
@@ -31,6 +31,9 @@ pub struct ShackHartmannBuilder<T: Model> {
     pub lenslet_array: LensletArray,
     pub detector: Detector,
     marker: std::marker::PhantomData<T>,
+}
+impl<T: Model> FromBuilder for ShackHartmann<T> {
+    type ComponentBuilder = ShackHartmannBuilder<T>;
 }
 impl<T: Model> PartialEq for ShackHartmannBuilder<T> {
     fn eq(&self, other: &Self) -> bool {
@@ -77,7 +80,7 @@ impl<T: Model> WavefrontSensorBuilder for ShackHartmannBuilder<T> {
         let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
         match template {
             Some(src) => src,
-            None => SourceBuilder::builder(),
+            None => Source::builder(),
         }
         .size(self.n_sensor)
         .pupil_size(d * n_side_lenslet as f64)

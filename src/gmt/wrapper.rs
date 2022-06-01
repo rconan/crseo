@@ -1,4 +1,4 @@
-use crate::{Builder, CrseoError, Propagation, Result, Source};
+use crate::{Builder, CrseoError, FromBuilder, Propagation, Result, Source};
 use ffi::{gmt_m1, gmt_m2, vector};
 use std::{
     env,
@@ -6,6 +6,12 @@ use std::{
     path::Path,
 };
 
+/* pub enum ModeType {
+    None,
+    Zernike(usize),
+    Modes(String),
+}
+ */
 #[doc(hidden)]
 #[derive(Default, Debug, Clone)]
 pub struct Mirror {
@@ -192,6 +198,9 @@ pub struct Gmt {
     pub a1: Vec<f64>,
     // default M2 coefs values: Vec of 0f64
     pub a2: Vec<f64>,
+}
+impl FromBuilder for Gmt {
+    type ComponentBuilder = GmtBuilder;
 }
 impl Gmt {
     /// Returns `Gmt` M1 mode type
@@ -462,8 +471,10 @@ impl Propagation for Gmt {
             self._c_m1.trace(rays);
             rays.gmt_truss_onaxis();
             rays.gmt_m2_baffle();
+            /*
             self._c_m2.trace(rays);
             rays.to_sphere1(-5.830, 2.197173);
+            */
         }
     }
     fn time_propagate(&mut self, _secs: f64, src: &mut Source) {

@@ -1,6 +1,6 @@
 use super::{
-    cu::Single, Atmosphere, AtmosphereBuilder, Builder, Conversion, Cu,
-    GeometricShackHartmann as WFS, GmtBuilder, Mask, Result, Source, SourceBuilder,
+    cu::Single, Atmosphere, AtmosphereBuilder, Builder, Conversion, Cu, FromBuilder,
+    GeometricShackHartmann as WFS, Gmt, Mask, Result, Source, SourceBuilder,
 };
 use ffi::LMMSE as ceo_LMMSE;
 use std::ffi::CString;
@@ -26,9 +26,9 @@ pub struct LinearMinimumMeanSquareErrorBuilder {
 impl Default for LinearMinimumMeanSquareErrorBuilder {
     fn default() -> Self {
         LinearMinimumMeanSquareErrorBuilder {
-            atm: super::AtmosphereBuilder::builder(),
-            guide_star: super::SourceBuilder::builder(),
-            mmse_star: super::SourceBuilder::builder(),
+            atm: super::Atmosphere::builder(),
+            guide_star: super::Source::builder(),
+            mmse_star: super::Source::builder(),
             fov_diameter: None,
             n_side_lenslet: 0,
             solver_id: "MINRES".to_owned(),
@@ -69,7 +69,7 @@ impl LinearMinimumMeanSquareErrorBuilder {
 impl Builder for LinearMinimumMeanSquareErrorBuilder {
     type Component = LinearMinimumMeanSquareError;
     fn build(self) -> Result<LinearMinimumMeanSquareError> {
-        let mut gmt = GmtBuilder::builder().build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
         let mut mmse_star = self.mmse_star.build().unwrap();
         mmse_star.through(&mut gmt).xpupil();
         let mut pupil_mask = Mask::new();
@@ -118,6 +118,9 @@ impl Builder for LinearMinimumMeanSquareErrorBuilder {
         Ok(lmmse)
     }
 }
+impl FromBuilder for LinearMinimumMeanSquareError {
+    type ComponentBuilder = LinearMinimumMeanSquareErrorBuilder;
+}
 impl LinearMinimumMeanSquareError {
     pub fn get_wavefront_estimate(&mut self, wfs: &mut WFS) -> &mut Self {
         unsafe {
@@ -143,7 +146,7 @@ impl LinearMinimumMeanSquareError {
         first_kl: Option<usize>,
         stroke: Option<f64>,
     ) -> Vec<Vec<f64>> {
-        let mut gmt = GmtBuilder::builder().m2_n_mode(n_kl).build().unwrap();
+        let mut gmt = Gmt::builder().m2_n_mode(n_kl).build().unwrap();
         let mut kl: Vec<Vec<f32>> = vec![];
         let first_kl = first_kl.unwrap_or(0);
         let stroke = stroke.unwrap_or(1e-6);

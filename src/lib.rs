@@ -73,6 +73,13 @@ pub use wavefrontsensor::{
 
 pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;
 
+pub mod prelude {
+    pub use super::{
+        Atmosphere, Calibration, Diffractive, Geometric, Gmt, LinearMinimumMeanSquareError, PSSn,
+        ShackHartmann, Source, SH24, SH48,
+    };
+}
+
 /// CEO macro builder
 ///
 /// One macro to rule them all, one macro to find them, one macro to bring them all and in the darkness bind them all
@@ -119,16 +126,16 @@ pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;
 #[macro_export]
 macro_rules! ceo {
     ($element:ident) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::builder()).unwrap()
+        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()).unwrap()
     };
     ($element:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::builder()$(.$arg($($val),*))*).unwrap()
+        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
     };
     ($element:ident:$model:ident) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::builder()).unwrap()
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()).unwrap()
     };
     ($element:ident:$model:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::builder()$(.$arg($($val),*))*).unwrap()
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
     };
 }
 /*
@@ -151,14 +158,17 @@ pub type Result<T> = std::result::Result<T, CrseoError>;
 /// CEO builder type trait
 pub trait Builder: Default {
     type Component;
-    #[deprecated(note = "use `builder` instead")]
     fn new() -> Self {
         Default::default()
     }
-    fn builder() -> Self {
-        Default::default()
-    }
     fn build(self) -> Result<Self::Component>;
+}
+
+pub trait FromBuilder {
+    type ComponentBuilder: Builder;
+    fn builder() -> Self::ComponentBuilder {
+        Self::ComponentBuilder::new()
+    }
 }
 
 /// Interface for wavefront sensor builders

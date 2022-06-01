@@ -44,7 +44,7 @@ impl<T: Model> DerefMut for SH24<T> {
 impl<T: Model> Default for SH24<T> {
     fn default() -> Self {
         SH24(
-            ShackHartmannBuilder::builder()
+            ShackHartmannBuilder::new()
                 .n_sensor(1)
                 .lenslet_array(24, 32, 25.5 / 24.0)
                 .detector(12, Some(60), Some(2), None),

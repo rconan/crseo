@@ -1,3 +1,5 @@
+use crate::FromBuilder;
+
 use super::{cu, Builder, Cu, Propagation, Result, Source, SourceBuilder};
 use ffi::pssn;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
@@ -78,7 +80,7 @@ impl<T: PSSnErrors> PSSnBuilder<T> {
         }
     }
 }
-impl<T: Clone + PSSnErrors> Builder for PSSnBuilder<T> {
+impl<T: PSSnErrors> Builder for PSSnBuilder<T> {
     type Component = PSSn<T>;
     fn build(self) -> Result<PSSn<T>> {
         let mut src = self.src;
@@ -100,6 +102,9 @@ impl<T: Clone + PSSnErrors> Builder for PSSnBuilder<T> {
         pssn.estimates = vec![0.0; pssn._c_.N as usize];
         Ok(pssn)
     }
+}
+impl<S: PSSnErrors> FromBuilder for PSSn<S> {
+    type ComponentBuilder = PSSnBuilder<S>;
 }
 impl<S: PSSnErrors> PSSn<S> {
     /// Creates a new `PSSn` with r0=16cm at zenith, L0=25m a zenith distance of 30 degrees
