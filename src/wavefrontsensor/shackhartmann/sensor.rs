@@ -158,21 +158,21 @@ impl From<ShackHartmann<Diffractive>> for Source {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Builder, ShackHartmannBuilder, SourceBuilder};
+    use crate::{Builder, FromBuilder, ShackHartmann, ShackHartmannBuilder, Source, SourceBuilder};
 
     #[test]
     fn shack_hartmann_geometric_new() {
-        use crate::GmtBuilder;
-        let mut wfs = ShackHartmannBuilder::<Geometric>::builder()
+        use crate::Gmt;
+        let mut wfs = ShackHartmann::<Geometric>::builder()
             .n_sensor(1)
             .lenslet_array(48, 16, 25.5 / 48f64)
             .build()
             .unwrap();
-        let mut src = SourceBuilder::builder()
+        let mut src = Source::builder()
             .pupil_sampling(48 * 16 + 1)
             .build()
             .unwrap();
-        let mut gmt = GmtBuilder::builder().build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
     }

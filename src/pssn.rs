@@ -321,11 +321,11 @@ mod tests {
 
     #[test]
     fn pssn_new() {
-        use crate::{GmtBuilder, SourceBuilder};
-        let mut src = SourceBuilder::builder().build().unwrap();
-        let mut gmt = GmtBuilder::builder().build().unwrap();
+        use crate::{Gmt, Source};
+        let mut src = Source::builder().build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
         src.through(&mut gmt).xpupil();
-        let mut pssn = PSSnBuilder::<TelescopeError>::builder().build().unwrap();
+        let mut pssn = PSSn::<TelescopeError>::builder().build().unwrap();
         src.through(&mut pssn);
         println!("PSSN: {}", pssn.peek());
     }

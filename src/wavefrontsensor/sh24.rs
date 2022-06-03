@@ -4,7 +4,9 @@ use std::{
 };
 
 use super::{Model, ShackHartmann};
-use crate::{Builder, Result, ShackHartmannBuilder, SourceBuilder, WavefrontSensorBuilder};
+use crate::{
+    Builder, FromBuilder, Result, ShackHartmannBuilder, SourceBuilder, WavefrontSensorBuilder,
+};
 
 /// `ShackHartmann` "SH24" builder for GMT AGWS model
 ///
@@ -75,4 +77,26 @@ where
     fn build(mut self) -> Result<ShackHartmann<M>> {
         take(self.deref_mut()).build()
     }
+}
+
+pub struct ShackHartmann24x24<T: Model>(ShackHartmann<T>);
+impl<T: Model> Deref for ShackHartmann24x24<T> {
+    type Target = ShackHartmann<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl<T: Model> DerefMut for ShackHartmann24x24<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<M, T> FromBuilder for T
+where
+    M: Model,
+    T: DerefMut<Target = ShackHartmann<M>>,
+{
+    type ComponentBuilder = ShackHartmannBuilder<M>;
 }

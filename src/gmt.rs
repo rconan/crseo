@@ -597,15 +597,11 @@ impl SegmentsDof {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Builder;
+    use crate::{Builder, FromBuilder, SourceBuilder};
 
     #[test]
     fn gmt_new() {
-        GmtBuilder::builder()
-            .m1_n_mode(27)
-            .m2_n_mode(123)
-            .build()
-            .unwrap();
+        Gmt::builder().m1_n_mode(27).m2_n_mode(123).build().unwrap();
     }
 
     #[test]
@@ -615,29 +611,35 @@ mod tests {
 
     #[test]
     fn gmt_optical_alignment() {
-        use crate::SourceBuilder;
-        let mut src = SourceBuilder::builder()
-            .pupil_sampling(1001)
-            .build()
-            .unwrap();
-        let mut gmt = GmtBuilder::builder().build().unwrap();
+        use crate::Source;
+        let mut src = Source::builder().build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
         src.through(&mut gmt).xpupil();
         assert!(src.wfe_rms_10e(-9)[0] < 1.0);
     }
 
     #[test]
-    fn gmt_m1_rx_optical_sensitity() {
-        use crate::SourceBuilder;
-        let mut src = SourceBuilder::builder()
-            .pupil_sampling(1001)
-            .build()
-            .unwrap();
-        let mut gmt = GmtBuilder::builder().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
+    fn gmt_m1_rx_optical_sensitivity() {
+        use crate::Source;
+        let mut src = Source::builder().pupil_sampling(1001).build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
+        let seg_tts0: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
         gmt.update(Some(&rt), None, None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
-        let mut delta: Vec<f32> = Vec::with_capacity(7);
+        let seg_tts: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
+        let mut delta: Vec<f64> = Vec::with_capacity(7);
         for k in 0..7 {
             delta
                 .push(1e6 * (seg_tts[0][k] - seg_tts0[0][k]).hypot(seg_tts[1][k] - seg_tts0[1][k]));
@@ -646,18 +648,27 @@ mod tests {
     }
 
     #[test]
-    fn gmt_m1_ry_optical_sensitity() {
-        use crate::SourceBuilder;
-        let mut src = SourceBuilder::builder()
-            .pupil_sampling(1001)
-            .build()
-            .unwrap();
-        let mut gmt = GmtBuilder::builder().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
+    fn gmt_m1_ry_optical_sensitivity() {
+        use crate::Source;
+        let mut src = Source::builder().pupil_sampling(1001).build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
+        let seg_tts0: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
         gmt.update(Some(&rt), None, None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
-        let mut delta: Vec<f32> = Vec::with_capacity(7);
+        let seg_tts: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
+        let mut delta: Vec<f64> = Vec::with_capacity(7);
         for k in 0..7 {
             delta
                 .push(1e6 * (seg_tts[0][k] - seg_tts0[0][k]).hypot(seg_tts[1][k] - seg_tts0[1][k]));
@@ -666,18 +677,27 @@ mod tests {
     }
 
     #[test]
-    fn gmt_m2_rx_optical_sensitity() {
-        use crate::SourceBuilder;
-        let mut src = SourceBuilder::builder()
-            .pupil_sampling(1001)
-            .build()
-            .unwrap();
-        let mut gmt = GmtBuilder::builder().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
+    fn gmt_m2_rx_optical_sensitivity() {
+        use crate::Source;
+        let mut src = Source::builder().pupil_sampling(1001).build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
+        let seg_tts0: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
         let rt = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
         gmt.update(None, Some(&rt), None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
-        let mut delta: Vec<f32> = Vec::with_capacity(7);
+        let seg_tts: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
+        let mut delta: Vec<f64> = Vec::with_capacity(7);
         for k in 0..7 {
             delta
                 .push(1e6 * (seg_tts[0][k] - seg_tts0[0][k]).hypot(seg_tts[1][k] - seg_tts0[1][k]));
@@ -686,18 +706,27 @@ mod tests {
     }
 
     #[test]
-    fn gmt_m2_ry_optical_sensitity() {
-        use crate::SourceBuilder;
-        let mut src = SourceBuilder::builder()
-            .pupil_sampling(1001)
-            .build()
-            .unwrap();
-        let mut gmt = GmtBuilder::builder().build().unwrap();
-        let seg_tts0 = src.through(&mut gmt).xpupil().segment_gradients();
+    fn gmt_m2_ry_optical_sensitivity() {
+        use crate::Source;
+        let mut src = Source::builder().pupil_sampling(1001).build().unwrap();
+        let mut gmt = Gmt::builder().build().unwrap();
+        let seg_tts0: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
         let rt = vec![vec![0f64, 0f64, 0f64, 0f64, 1e-6, 0f64]; 7];
         gmt.update(None, Some(&rt), None, None);
-        let seg_tts = src.through(&mut gmt).xpupil().segment_gradients();
-        let mut delta: Vec<f32> = Vec::with_capacity(7);
+        let seg_tts: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .segment_gradients()
+            .chunks(7)
+            .map(|x| x.to_owned())
+            .collect();
+        let mut delta: Vec<f64> = Vec::with_capacity(7);
         for k in 0..7 {
             delta
                 .push(1e6 * (seg_tts[0][k] - seg_tts0[0][k]).hypot(seg_tts[1][k] - seg_tts0[1][k]));

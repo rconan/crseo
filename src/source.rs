@@ -787,8 +787,8 @@ impl<'a> Rays<'a> {
 
 #[cfg(test)]
 mod tests {
-    //    use super::*;
-    //    use crate::Gmt;
+    use super::*;
+    use crate::Gmt;
 
     /*
         #[test]
