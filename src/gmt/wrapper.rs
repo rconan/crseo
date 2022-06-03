@@ -471,10 +471,8 @@ impl Propagation for Gmt {
             self._c_m1.trace(rays);
             rays.gmt_truss_onaxis();
             rays.gmt_m2_baffle();
-            /*
             self._c_m2.trace(rays);
             rays.to_sphere1(-5.830, 2.197173);
-            */
         }
     }
     fn time_propagate(&mut self, _secs: f64, src: &mut Source) {
