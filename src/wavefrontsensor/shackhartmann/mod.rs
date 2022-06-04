@@ -16,8 +16,8 @@ pub use sensor::ShackHartmann;
 ///    - lenslet_pitch: 25.5m
 ///  - detector:
 ///    - n_px_framelet: 512px
-///    - n_px_imagelet: None[512px]
-///    - osf: None[2]
+///    - n_px_imagelet: None\[512px\]
+///    - osf: None\[2\]
 ///
 /// # Examples
 ///

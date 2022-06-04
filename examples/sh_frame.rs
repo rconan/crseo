@@ -1,6 +1,7 @@
 use complot as plt;
 use crseo::{
-    ceo, imaging::NoiseDataSheet, shackhartmann::WavefrontSensorBuilder, Builder, Diffractive, SH48,
+    ceo, imaging::NoiseDataSheet, Builder, Diffractive, WavefrontSensor, WavefrontSensorBuilder,
+    SH48,
 };
 use indicatif::{ProgressBar, ProgressStyle};
 use skyangle::SkyAngle;
@@ -12,7 +13,7 @@ fn main() {
     //    let mut wfs = ceo!(SH48: Diffractive, n_sensor = [1]);
     //    let mut src = wfs.new_guide_stars();
     let (mut wfs, mut src) = {
-        let wfs_blueprint = SH48::<Diffractive>::builder()
+        let wfs_blueprint = SH48::<Diffractive>::new()
             .n_sensor(3)
             .detector_noise_specs(NoiseDataSheet::new(1e-3).read_out(1.));
         let src_blueprint = wfs_blueprint
@@ -39,7 +40,11 @@ fn main() {
 
     let res = wfs.detector_resolution();
     let frame = wfs.frame();
-    println!("WFS resolution: {:?}; frame: {}", res, frame.len());
+    println!(
+        "WFS resolution: {:?}; frame: {}",
+        res,
+        frame.as_ref().unwrap().len()
+    );
 
     let n_sample = 1_000;
     let pb = ProgressBar::new(n_sample);
@@ -59,7 +64,13 @@ fn main() {
     }
     pb.finish();
 
-    for (i, frame) in wfs.frame().chunks(res.0 * res.1).enumerate() {
+    for (i, frame) in wfs
+        .frame()
+        .as_mut()
+        .unwrap()
+        .chunks(res.0 * res.1)
+        .enumerate()
+    {
         //println!("#{}: Flux: {}", i + 1, frame.iter().sum::<f32>());
         let filename = format!("examples/wfs_frame_{}.png", i + 1);
         let _: plt::Heatmap = ((frame, res), Some(plt::Config::new().filename(filename))).into();

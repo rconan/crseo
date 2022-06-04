@@ -1,5 +1,5 @@
 use bincode;
-use crseo::{ceo, Gmt, Source};
+use crseo::ceo;
 use serde::Serialize;
 use skyangle::Conversion;
 use std::fs::File;
@@ -77,12 +77,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                 src.segment_gradients()
                     .into_iter()
                     .zip(push_segment_tip_tilt.into_iter())
-                    .flat_map(|(left, right)| {
-                        left.into_iter()
-                            .zip(right.into_iter())
-                            .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke)
-                            .collect::<Vec<f64>>()
-                    }),
+                    .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke),
             );
         }
     }
@@ -139,12 +134,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                 src.segment_gradients()
                     .into_iter()
                     .zip(push_segment_tip_tilt.into_iter())
-                    .flat_map(|(left, right)| {
-                        left.into_iter()
-                            .zip(right.into_iter())
-                            .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke)
-                            .collect::<Vec<f64>>()
-                    }),
+                    .map(|(l, r)| 0.5f64 * (r as f64 - l as f64) / stroke),
             );
         }
     }

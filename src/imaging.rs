@@ -8,13 +8,13 @@ use std::f32;
 pub struct LensletArray {
     /// The number of lenslet per side
     pub n_side_lenslet: i32,
-    /// Dimension [m] of one lenslet
+    /// Dimension \[m\] of one lenslet
     pub lenslet_size: f64,
 }
 #[derive(Copy, Clone, Debug, PartialEq)]
 /// Detector noise specifications
 pub struct NoiseDataSheet {
-    /// Exposure time [s]
+    /// Exposure time \[s\]
     pub exposure_time: f64,
     /// Read-out noise rms (# of photo-electron per pixel)
     pub rms_read_out_noise: f64,
@@ -140,7 +140,7 @@ impl Imaging {
     pub fn n_frame(&self) -> u32 {
         self._c_.N_FRAME as u32
     }
-    /// Reads out the detector by adding noise to the frame if a `NoiseDataSheet` is passed and the intensity is scaled according to the detector `exposure` time [s]
+    /// Reads out the detector by adding noise to the frame if a `NoiseDataSheet` is passed and the intensity is scaled according to the detector `exposure` time \[s]\
     pub fn readout(
         &mut self,
         exposure: f64,
@@ -210,7 +210,7 @@ impl Propagation for Imaging {
 /// Imaging tests
 mod tests {
     use super::{Imaging, NoiseDataSheet};
-    use crate::{ceo, Builder, Centroiding, Conversion, GmtBuilder, Source};
+    use crate::{ceo, Centroiding, Conversion, Source};
 
     #[test]
     /// Test the intensity per lenslet
@@ -332,17 +332,21 @@ mod tests {
 
         let n = sensor.resolution().pow(2);
         let nbg_px = 1000f64;
+        let n_background_photon = n as f64 * nbg_px;
+        println!("Background photon #: {n_background_photon}");
         sensor.reset().readout(
             1f64,
-            Some(NoiseDataSheet::new(1.).background(n as f64 * nbg_px)),
+            Some(NoiseDataSheet::new(1.).background(n_background_photon)),
         );
         let mut frame = vec![0f32; n as usize];
         sensor.frame_transfer(&mut frame);
 
-        let m = frame.iter().sum::<f32>() / n as f32;
-        let v = frame.iter().map(|x| (x - m).powi(2)).sum::<f32>() / n as f32;
+        let mut m = frame.iter().sum::<f32>() / n as f32;
+        let mut v = frame.iter().map(|x| (x - m).powi(2)).sum::<f32>() / n as f32;
+        m /= n as f32;
+        v /= n as f32;
         println!("background photon: [{},{}]", m, v);
-        assert!((m as f64 - nbg_px).abs() / nbg_px < 1e-2);
+        assert!((m as f64 - nbg_px).abs() / nbg_px < 2e-2);
         assert!((v as f64 - nbg_px).abs() / nbg_px < 2e-2);
     }
     #[test]

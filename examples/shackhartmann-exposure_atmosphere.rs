@@ -1,7 +1,7 @@
 //use complot::{Plot, Scatter};
 use crseo::{
-    ceo, imaging::NoiseDataSheet, shackhartmann::WavefrontSensor, Builder, Diffractive, AtmosphereBuilder,
-    ShackHartmannBuilder,
+    ceo, imaging::NoiseDataSheet, Atmosphere, Builder, Diffractive, FromBuilder,
+    ShackHartmannBuilder, WavefrontSensor,
 };
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use skyangle::Conversion;
@@ -22,14 +22,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     src.fwhm(6.);
     let now = Instant::now();
     println!("Precomputing atmospheric phase screens ...");
-    let mut atm = AtmosphereBuilder::builder()
+    let mut atm = Atmosphere::builder()
         .ray_tracing(26., 520, 0., 30., None, None)
         .build()?;
     let eta = now.elapsed();
     println!("... done in {}ms", eta.as_millis());
 
     let pitch = src.pupil_size / n_lenslet as f64;
-    let mut diff_wfs = ShackHartmannBuilder::<Diffractive>::builder()
+    let mut diff_wfs = ShackHartmannBuilder::<Diffractive>::new()
         .lenslet_array(n_lenslet, n_px_lenslet, pitch)
         .detector(
             n_px_framelet,
@@ -65,7 +65,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .through(&mut diff_wfs);
         }
         diff_wfs.process();
-        let centroids_error: f64 = Vec::<f32>::from(diff_wfs.get_data())
+        let centroids_error: f64 = diff_wfs
+            .data()
             .iter()
             .map(|&c| c.to_mas() as f64)
             .map(|c| c * c)

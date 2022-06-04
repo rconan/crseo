@@ -73,8 +73,9 @@ pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;
 
 pub mod prelude {
     pub use super::{
-        Atmosphere, Calibration, Diffractive, Geometric, Gmt, LinearMinimumMeanSquareError, PSSn,
-        ShackHartmann, Source, SH24, SH48,
+        calibrations, Atmosphere, Builder, Calibration, Diffractive, FromBuilder, Geometric, Gmt,
+        LinearMinimumMeanSquareError, PSSn, ShackHartmann, Source, WavefrontSensor,
+        WavefrontSensorBuilder, SH24, SH48,
     };
 }
 

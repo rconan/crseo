@@ -27,9 +27,9 @@ pub enum Mirror {
 /// GMT segment functions
 #[derive(Clone, Debug)]
 pub enum Segment {
-    /// Rigid body translations (stroke[m],range(`None`: 0..3))
+    /// Rigid body translations (stroke\[m\],range(`None`: 0..3))
     Txyz(f64, Option<Range<usize>>),
-    /// Rigid body rotations (stroke[rd],range(`None`: 3..6))
+    /// Rigid body rotations (stroke\[rd\],range(`None`: 3..6))
     Rxyz(f64, Option<Range<usize>>),
     /// Modal surface coefficients
     Modes(f64, Range<usize>),

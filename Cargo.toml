@@ -1,6 +1,6 @@
 [package]
 name = "crseo"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
 license = "MIT"
@@ -20,7 +20,7 @@ libm = "0.2.1"
 roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
-nalgebra = { version = "0.30", optional = true }
+nalgebra = { version = "0.31", optional = true }
 thiserror = "1.0.30"
 skyangle = "0.1.0"
 dosio = { version = "0.1.2", optional = true }
@@ -37,6 +37,7 @@ plotters = "0.3.1"
 indicatif = "0.16.2"
 complot = { version = "0.3.1", features = ["png"] }
 env_logger = "0.9.0"
+anyhow = "1.0.57"
 
 [[bench]]
 name = "ceo_benchmark"

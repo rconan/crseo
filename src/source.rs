@@ -464,7 +464,7 @@ impl Source {
             .map(|x| x as f64)
             .collect()
     }
-    /// Returns the wavefront error root mean square [m]x10^-`exp`
+    /// Returns the wavefront error root mean square \[m]\`x10^-`exp`
     pub fn wfe_rms_10e(&mut self, exp: i32) -> Vec<f64> {
         unsafe {
             self._c_.wavefront.rms(self._wfe_rms.as_mut_ptr());
@@ -787,8 +787,6 @@ impl<'a> Rays<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::Gmt;
 
     /*
         #[test]
@@ -838,8 +836,8 @@ mod tests {
             assert_eq!(nv, 1144);
         }
     */
-    #[test]
     /*
+    #[test]
         fn source_masklet() {
             let n_let = 48usize;
             let mut src = Source::new(1, 25.5, n_let as i32 * 16 + 1);

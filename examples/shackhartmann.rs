@@ -1,7 +1,7 @@
 use complot::{Plot, Scatter};
 use crseo::{
-    ceo, imaging::NoiseDataSheet, shackhartmann::WavefrontSensor, Builder, Diffractive, Geometric,
-    AtmosphereBuilder, ShackHartmannBuilder,
+    ceo, imaging::NoiseDataSheet, Atmosphere, Builder, Diffractive, FromBuilder, Geometric,
+    ShackHartmannBuilder, WavefrontSensor,
 };
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use skyangle::Conversion;
@@ -22,17 +22,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     src.fwhm(6.);
     let now = Instant::now();
     println!("Precomputing atmospheric phase screens ...");
-    let mut atm = AtmosphereBuilder::builder()
+    let mut atm = Atmosphere::builder()
         .ray_tracing(26., 520, 0., 1., None, None)
         .build()?;
     let eta = now.elapsed();
     println!("... done in {}ms", eta.as_millis());
 
     let pitch = src.pupil_size / n_lenslet as f64;
-    let mut geom_wfs = ShackHartmannBuilder::<Geometric>::builder()
+    let mut geom_wfs = ShackHartmannBuilder::<Geometric>::new()
         .lenslet_array(n_lenslet, n_px_lenslet, pitch)
         .build()?;
-    let mut diff_wfs = ShackHartmannBuilder::<Diffractive>::builder()
+    let mut diff_wfs = ShackHartmannBuilder::<Diffractive>::new()
         .lenslet_array(n_lenslet, n_px_lenslet, pitch)
         .detector(
             n_px_framelet,
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "Frame: {:?}/{}",
         diff_wfs.detector_resolution(),
-        frame.len()
+        frame.as_ref().unwrap().len()
     );
 
     geom_centroids
@@ -80,11 +80,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .enumerate()
         .map(|(k, (&g, &d))| (k as f64, vec![g.to_mas() as f64, d.to_mas() as f64]))
         .collect::<Plot>();
-    let _: complot::Heatmap = ((frame.as_slice(), diff_wfs.detector_resolution()), None).into();
+    let _: complot::Heatmap = (
+        (
+            frame.as_ref().unwrap().as_slice(),
+            diff_wfs.detector_resolution(),
+        ),
+        None,
+    )
+        .into();
 
-    Vec::<f32>::from(geom_wfs.get_data())
+    geom_wfs
+        .data()
         .iter()
-        .zip(Vec::<f32>::from(diff_wfs.get_data()).iter())
+        .zip(diff_wfs.data().iter())
         .map(|(&g, &d)| (g.to_mas() as f64, vec![d.to_mas() as f64]))
         .collect::<Scatter>();
 
@@ -110,7 +118,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let frame = diff_wfs.frame();
     let filename = "wfs+atm.png";
     let _: complot::Heatmap = (
-        (frame.as_slice(), diff_wfs.detector_resolution()),
+        (
+            frame.as_ref().unwrap().as_slice(),
+            diff_wfs.detector_resolution(),
+        ),
         Some(complot::Config::new().filename(filename)),
     )
         .into();

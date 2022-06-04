@@ -597,7 +597,7 @@ impl SegmentsDof {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Builder, FromBuilder, SourceBuilder};
+    use crate::{Builder, FromBuilder};
 
     #[test]
     fn gmt_new() {

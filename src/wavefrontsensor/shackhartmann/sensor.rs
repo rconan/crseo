@@ -8,7 +8,7 @@ pub struct ShackHartmann<S: Model> {
     pub n_side_lenslet: i32,
     /// The number of pixel per lenslet in the telescope pupil
     pub n_px_lenslet: i32,
-    /// The lenslet array pitch [m]
+    /// The lenslet array pitch \[m\]
     pub d: f64,
     /// The number of WFS
     pub n_sensor: i32,
@@ -158,7 +158,7 @@ impl From<ShackHartmann<Diffractive>> for Source {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Builder, FromBuilder, ShackHartmann, ShackHartmannBuilder, Source, SourceBuilder};
+    use crate::{Builder, FromBuilder, ShackHartmann, Source};
 
     #[test]
     fn shack_hartmann_geometric_new() {

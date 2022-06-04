@@ -1,7 +1,7 @@
-use crseo::{ceo, Builder, AtmosphereBuilder};
-use serde_pickle as pkl;
+use crseo::{ceo, Atmosphere, Builder, FromBuilder};
+//use serde_pickle as pkl;
 use skyangle::Conversion;
-use std::fs::File;
+//use std::fs::File;
 
 fn main() {
     env_logger::init();
@@ -13,7 +13,7 @@ fn main() {
 
     const CFD_RATE: usize = 1;
     const CFD_DELAY: usize = 10; // seconds
-    let cfd_sampling_frequency = sim_sampling_frequency / CFD_RATE;
+    let _cfd_sampling_frequency = sim_sampling_frequency / CFD_RATE;
 
     const M1_RATE: usize = 10;
     assert_eq!(sim_sampling_frequency / M1_RATE, 100); // Hz
@@ -24,14 +24,12 @@ fn main() {
     const FSM_RATE: usize = 5;
     assert_eq!(sim_sampling_frequency / FSM_RATE, 200); // Hz
 
-    type D = Vec<f64>;
-
     let sim_duration = (CFD_DELAY + 30 * SH48_RATE / sim_sampling_frequency) as f64;
 
     let atm_duration = 20f32;
     let atm_n_duration = Some((sim_duration / atm_duration as f64).ceil() as i32);
     let atm_sampling = 48 * 16 + 1;
-    let atm_builder = AtmosphereBuilder::builder().ray_tracing(
+    let atm_builder = Atmosphere::builder().ray_tracing(
         25.5,
         atm_sampling,
         20f32.from_arcmin(),

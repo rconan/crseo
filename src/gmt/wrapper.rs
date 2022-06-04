@@ -251,7 +251,7 @@ impl Gmt {
     }
     /// Keeps only the M1 segment specified in the vector `sid`
     ///
-    /// * `sid` - vector of segment ID numbers in the range [1,7]
+    /// * `sid` - vector of segment ID numbers in the range \[1,7\]
     pub fn keep(&mut self, sid: &mut [i32]) -> &mut Self {
         unsafe {
             self._c_m1.keep(sid.as_mut_ptr(), sid.len() as i32);
@@ -261,7 +261,7 @@ impl Gmt {
     }
     /// Sets M1 segment rigid body motion with:
     ///
-    /// * `sid` - the segment ID number in the range [1,7]
+    /// * `sid` - the segment ID number in the range \[1,7\]
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
     pub fn m1_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
@@ -282,7 +282,7 @@ impl Gmt {
     }
     /// Sets M2 segment rigid body motion with:
     ///
-    /// * `sid` - the segment ID number in the range [1,7]
+    /// * `sid` - the segment ID number in the range \[1,7\]
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
     pub fn m2_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
