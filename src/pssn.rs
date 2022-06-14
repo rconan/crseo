@@ -26,12 +26,13 @@ pub struct PSSn<S> {
     pub otf: Vec<f32>,
 }
 
+#[derive(Clone)]
 /// [`CEO`](../struct.CEO.html#impl-1) [`PSSn`](../struct.PSSn.html) builder type
 pub struct PSSnBuilder<T> {
     pub r0_at_zenith: f64,
     pub oscale: f64,
     pub zenith_angle: f64,
-    src: Source,
+    src: SourceBuilder,
     marker: std::marker::PhantomData<T>,
 }
 impl<T: PSSnErrors> PartialEq for PSSnBuilder<T> {
@@ -52,7 +53,7 @@ impl<T: PSSnErrors> Default for PSSnBuilder<T> {
             r0_at_zenith: 0.16,
             oscale: 25.0,
             zenith_angle: 30_f64.to_radians(),
-            src: SourceBuilder::default().build().unwrap(),
+            src: SourceBuilder::default(),
             marker: std::marker::PhantomData,
         }
     }
@@ -73,17 +74,14 @@ impl<T: PSSnErrors> PSSnBuilder<T> {
             ..self
         }
     }
-    pub fn source(self, src: &Source) -> Self {
-        Self {
-            src: SourceBuilder::from(src).build().unwrap(),
-            ..self
-        }
+    pub fn source(self, src: SourceBuilder) -> Self {
+        Self { src, ..self }
     }
 }
 impl<T: PSSnErrors> Builder for PSSnBuilder<T> {
     type Component = PSSn<T>;
     fn build(self) -> Result<PSSn<T>> {
-        let mut src = self.src;
+        let mut src = self.src.build()?;
         let mut pssn = PSSn::<T> {
             _c_: Default::default(),
             r0_at_zenith: self.r0_at_zenith as f32,
