@@ -252,15 +252,29 @@ impl PSSn<AtmosphereTelescopeError> {
 
 pub trait PSSnEstimates: Propagation + Send {
     fn estimates(&mut self) -> Vec<f64>;
+    fn otf(&mut self) -> Vec<f32>;
+    fn atmosphere(&self) -> (f64, f64, f64);
 }
 impl PSSnEstimates for PSSn<TelescopeError> {
     fn estimates(&mut self) -> Vec<f64> {
         self.peek().estimates.iter().map(|x| *x as f64).collect()
     }
+    fn otf(&mut self) -> Vec<f32> {
+        self.telescope_error_otf()
+    }
+    fn atmosphere(&self) -> (f64, f64, f64) {
+        (self.wavelength as f64, self.r0() as f64, self.oscale as f64)
+    }
 }
 impl PSSnEstimates for PSSn<AtmosphereTelescopeError> {
     fn estimates(&mut self) -> Vec<f64> {
         self.peek().estimates.iter().map(|x| *x as f64).collect()
+    }
+    fn otf(&mut self) -> Vec<f32> {
+        self.telescope_error_otf()
+    }
+    fn atmosphere(&self) -> (f64, f64, f64) {
+        (self.wavelength as f64, self.r0() as f64, self.oscale as f64)
     }
 }
 impl Propagation for Box<dyn PSSnEstimates> {
@@ -279,6 +293,12 @@ where
 {
     fn estimates(&mut self) -> Vec<f64> {
         (**self).estimates()
+    }
+    fn otf(&mut self) -> Vec<f32> {
+        (**self).otf()
+    }
+    fn atmosphere(&self) -> (f64, f64, f64) {
+        (**self).atmosphere()
     }
 }
 impl<S> Drop for PSSn<S> {

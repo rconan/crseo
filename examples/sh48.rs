@@ -8,7 +8,7 @@ use std::fs::File;
 use std::time::Instant;
 
 fn main() -> std::result::Result<(), CrseoError> {
-    let n_sensor = 3;
+    let n_sensor = 1;
     let mut gmt = ceo!(GmtBuilder);
     println!("M1 mode: {}", gmt.get_m1_mode_type());
     println!("M2 mode: {}", gmt.get_m2_mode_type());
@@ -32,7 +32,8 @@ fn main() -> std::result::Result<(), CrseoError> {
     wfs.calibrate(&mut gs, 0.8);
     //    println!("# valid lenslet: {}", wfs.n_valid_lenslet());
 
-    let mut gmt2wfs = Calibration::new(&gmt, &gs, SH48::<Geometric>::new().n_sensor(n_sensor));
+    let mut gmt2wfs = 
+    Calibration::new(&gmt, &gs, SH48::<Geometric>::new().n_sensor(n_sensor));
     let mirror = vec![calibrations::Mirror::M2];
     let segments = vec![vec![calibrations::Segment::Rxyz(1e-6, Some(0..2))]; 7];
     let spec = vec![(
@@ -48,7 +49,7 @@ fn main() -> std::result::Result<(), CrseoError> {
         calibrations::ValidLensletCriteria::Threshold(Some(0.8)),
     );
     println!(
-        "GTM 2 WFS calibration [{}x{}] in {}s",
+        "GMT 2 WFS calibration [{}x{}] in {}s",
         gmt2wfs.n_data,
         gmt2wfs.n_mode,
         now.elapsed().as_secs()

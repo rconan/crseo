@@ -8,10 +8,10 @@ use std::ops::Range;
 
 pub enum ValidLensletCriteria<'a> {
     Threshold(Option<f64>),
-    OtherSensor(&'a mut dyn WavefrontSensor),
+    OtherSensor(&'a mut Box<dyn WavefrontSensor>),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 /// GMT mirror functions
 pub enum Mirror {
     /// M1 rigid body motion
@@ -242,7 +242,7 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
                                 wfs.calibrate(&mut src, value.unwrap_or(0f64));
                             }
                             OtherSensor(ref mut other_wfs) => {
-                                wfs.valid_lenslet_from(*other_wfs);
+                                wfs.valid_lenslet_from((*other_wfs).as_mut());
                                 wfs.set_reference_slopes(&mut src);
                             }
                         }
