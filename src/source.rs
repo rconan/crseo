@@ -485,34 +485,42 @@ impl Source {
         }
         sxy.into_iter().flatten().map(|x| x as f64).collect()
     }
-    pub fn segment_wfe_rms(&mut self) -> Vec<f64> {
-        let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
+    /// Returns the segment WFE piston and standard deviation
+    pub fn segment_wfe(&mut self) -> Vec<(f64, f64)> {
+        let n_ray_total = self._c_.rays.N_RAY_TOTAL as usize;
+        let n_ray = n_ray_total / self.size as usize;
+        let mut mask = vec![0i32; n_ray_total];
         unsafe {
             dev2host_int(
                 mask.as_mut_ptr(),
                 self._c_.rays.d__piston_mask,
-                self._c_.rays.N_RAY_TOTAL,
+                n_ray_total as i32,
             );
         }
         self.phase();
-        let mut segment_wfe_std: Vec<f64> = Vec::with_capacity(7);
-        for k in 1..8 {
-            let segment_phase = mask
-                .iter()
-                .zip(self._phase.iter())
-                .filter(|x| *x.0 == k)
-                .map(|x| *x.1)
-                .collect::<Vec<f32>>();
-            let n = segment_phase.len() as f32;
-            let mean = segment_phase.iter().sum::<f32>() / n;
-            let var = segment_phase
-                .iter()
-                .map(|x| (x - mean).powi(2))
-                .sum::<f32>()
-                / n;
-            segment_wfe_std.push(var.sqrt() as f64);
+        let mut segment_wfe: Vec<(f64, f64)> = Vec::with_capacity(7 * self.size as usize * 2);
+        for (mask, phase) in mask.chunks(n_ray).zip(self._phase.chunks(n_ray)) {
+            for k in 1..8 {
+                let segment_phase = mask
+                    .iter()
+                    .zip(phase)
+                    .filter_map(|(&mask, &phase)| (mask == k).then_some(phase))
+                    .collect::<Vec<f32>>();
+                let n = segment_phase.len() as f32;
+                let mean = segment_phase.iter().sum::<f32>() / n;
+                let var = segment_phase
+                    .iter()
+                    .map(|x| (x - mean).powi(2))
+                    .sum::<f32>()
+                    / n;
+                segment_wfe.push((mean as f64, var.sqrt() as f64));
+            }
         }
-        segment_wfe_std
+        segment_wfe
+    }
+    /// Returns the segment standard deviation
+    pub fn segment_wfe_rms(&mut self) -> Vec<f64> {
+        self.segment_wfe().into_iter().map(|(_, s)| s).collect()
     }
     pub fn segment_wfe_rms_10e(&mut self, exp: i32) -> Vec<f64> {
         self.segment_wfe_rms()
@@ -520,30 +528,9 @@ impl Source {
             .map(|x| x * 10_f64.powi(-exp))
             .collect()
     }
+    /// Returns the segment WFE piston
     pub fn segment_piston(&mut self) -> Vec<f64> {
-        let mut mask = vec![0i32; self._c_.rays.N_RAY_TOTAL as usize];
-        unsafe {
-            dev2host_int(
-                mask.as_mut_ptr(),
-                self._c_.rays.d__piston_mask,
-                self._c_.rays.N_RAY_TOTAL,
-            );
-        }
-        self.phase();
-        let mut segment_mean: Vec<f64> = Vec::with_capacity(7);
-        for k in 1..8 {
-            let segment_phase = mask
-                .iter()
-                .zip(self._phase.iter())
-                .filter(|x| *x.0 == k)
-                .map(|x| *x.1)
-                .collect::<Vec<f32>>();
-            let n = segment_phase.len() as f32;
-            let mean = segment_phase.iter().sum::<f32>() / n;
-            //let var = segment_phase.iter().map(|x| (x-mean).powi(2)).sum::<f32>()/n;
-            segment_mean.push(mean as f64);
-        }
-        segment_mean
+        self.segment_wfe().into_iter().map(|(p, _)| p).collect()
     }
     pub fn segment_piston_10e(&mut self, exp: i32) -> Vec<f64> {
         self.segment_piston()
