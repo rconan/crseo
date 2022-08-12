@@ -598,6 +598,13 @@ impl Source {
             self._c_.reset_rays();
         }
     }
+    /// Resets the wavefront phase to 0
+    pub fn reset_phase(&mut self) -> &mut Self {
+        unsafe {
+            self._c_.wavefront.reset_phase();
+        }
+        self
+    }
     /// Updates the `zenith` and `azimuth` of the `Source`
     pub fn update(&mut self, mut zenith: Vec<f64>, mut azimuth: Vec<f64>) {
         unsafe {

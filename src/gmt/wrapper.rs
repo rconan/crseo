@@ -331,7 +331,19 @@ impl Gmt {
         }
     }
     /// Sets M2 modal coefficients
-    pub fn m2_modes(&mut self, a: &mut [f64]) {
+    ///
+    /// The coefficients are given segment wise
+    /// with the same number of modes per segment
+    pub fn m2_modes(&mut self, a: &[f64]) {
+        let a_n_mode = a.len() / 7;
+        self.a2
+            .chunks_mut(self.m2_n_mode)
+            .zip(a.chunks(a_n_mode))
+            .for_each(|(a2, a)| a2.iter_mut().zip(a).for_each(|(a2, a)| *a2 = *a));
+        unsafe {
+            self._c_m2.BS.update(self.a2.as_mut_ptr());
+        }
+        /*
         if self.m2_n_mode > a.len() {
             unsafe {
                 self._c_m2.BS.update(
@@ -345,6 +357,7 @@ impl Gmt {
                 self._c_m2.BS.update(a.as_mut_ptr());
             }
         }
+        */
     }
     pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
         let mut a = vec![0f64; 7 * self.m2_n_mode];
