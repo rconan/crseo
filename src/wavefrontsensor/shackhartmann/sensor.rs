@@ -78,6 +78,21 @@ impl<M: Model> WavefrontSensor for ShackHartmann<M> {
     fn valid_lenslet(&mut self) -> &mut crate::mask {
         <M as Model>::valid_lenslet(&mut self._c_)
     }
+
+    fn n_valid_lenslet(&mut self) -> Vec<usize> {
+        let lenslet_mask: Vec<f32> = self.lenslet_mask().into();
+        lenslet_mask
+            .chunks(lenslet_mask.len() / self.n_sensor as usize)
+            .map(|x| {
+                x.iter().fold(0usize, |mut a, &x| {
+                    if x > 0f32 {
+                        a += 1;
+                    }
+                    a
+                })
+            })
+            .collect()
+    }
 }
 impl<M: Model> ShackHartmann<M> {
     pub fn n_valid_lenslet(&mut self) -> usize {

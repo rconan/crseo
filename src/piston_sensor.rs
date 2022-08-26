@@ -58,6 +58,10 @@ impl WavefrontSensor for PistonSensor {
     fn valid_lenslet(&mut self) -> &mut ffi::mask {
         todo!()
     }
+
+    fn n_valid_lenslet(&mut self) -> Vec<usize> {
+        todo!()
+    }
 }
 
 impl Propagation for PistonSensor {

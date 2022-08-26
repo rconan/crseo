@@ -202,6 +202,7 @@ pub trait WavefrontSensor: Propagation + Send {
     fn n_frame(&self) -> usize;
     fn valid_lenslet_from(&mut self, wfs: &mut dyn WavefrontSensor);
     fn valid_lenslet(&mut self) -> &mut mask;
+    fn n_valid_lenslet(&mut self) -> Vec<usize>;
 }
 
 impl<'a, T: WavefrontSensor + ?Sized> WavefrontSensor for &'a mut Box<T> {
@@ -239,6 +240,10 @@ impl<'a, T: WavefrontSensor + ?Sized> WavefrontSensor for &'a mut Box<T> {
 
     fn valid_lenslet(&mut self) -> &mut mask {
         (**self).valid_lenslet()
+    }
+
+    fn n_valid_lenslet(&mut self) -> Vec<usize> {
+        (**self).n_valid_lenslet()
     }
 }
 impl<'a, T: WavefrontSensor + ?Sized> Propagation for &'a mut Box<T> {
