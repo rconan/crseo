@@ -10,7 +10,6 @@ documentation = "https://docs.rs/crseo-sys"
 readme = "README.md"
 categories = ["external-ffi-bindings", "science", "simulation"]
 keywords = ["telescope", "astronomy"]
-exclude = ["CEO/"]
 
 [build-dependencies]
 bindgen = "0.59.2"
