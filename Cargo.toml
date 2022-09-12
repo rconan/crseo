@@ -11,6 +11,9 @@ readme = "README.md"
 categories = ["api-bindings", "science", "simulation"]
 keywords = ["telescope", "astronomy"]
 
+[workspace]
+members = ["nat"]
+
 [dependencies]
 ffi = { version = "0.1.0", path = "sys", package = "crseo-sys" }
 rand = "0.8"
