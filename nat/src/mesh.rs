@@ -23,6 +23,6 @@ impl Mesh {
             .collect();
         Builder::new()
             .add_nodes(vertices.as_slice())
-            .set_switches(&format!("qa{:}", max_area_triangle))
+            .set_switches(&format!("Qqa{:}", max_area_triangle))
     }
 }
