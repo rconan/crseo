@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::f32;
 use std::ffi::CString;
 
-use super::{Builder, FromBuilder, Propagation, Result, Source};
+use super::{Builder, Cu, FromBuilder, Propagation, Result, Single, Source};
 use ffi::atmosphere;
 
 #[allow(dead_code)]
@@ -393,8 +393,41 @@ impl Atmosphere {
         }
         self
     }
-    pub fn r0(&mut self, new_r0: f64) {
+    pub fn get_phase_values<'a, T>(
+        &mut self,
+        src: &mut Source,
+        x: &'a [T],
+        y: &'a [T],
+        t: f64,
+    ) -> Vec<T>
+    where
+        &'a [T]: Into<Cu<Single>>,
+        Cu<Single>: Into<Vec<T>>,
+        T: 'a,
+    {
+        let n = x.len();
+        let mut gx: Cu<Single> = x.into();
+        let mut gy: Cu<Single> = y.into();
+        let mut ps = Cu::<Single>::vector(n);
+        ps.malloc();
+        unsafe {
+            self._c_.get_phase_screen(
+                ps.as_mut_ptr(),
+                gx.as_mut_ptr(),
+                gy.as_mut_ptr(),
+                n as i32,
+                src.as_raw_mut_ptr(),
+                t as f32,
+            )
+        }
+        ps.into()
+    }
+    pub fn update_r0(&mut self, new_r0: f64) {
         self._c_.r0 = new_r0 as f32;
+    }
+    pub fn r0(&self) -> f64 {
+        let secz = 1f64 / self.zenith_angle.cos();
+        (self.r0_at_zenith.powf(-5.0 / 3.0) * secz).powf(-3.0 / 5.0)
     }
     pub fn reset(&mut self) {
         unsafe {

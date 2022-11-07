@@ -124,12 +124,12 @@ impl Cu<Single> {
     pub fn as_mut_ptr(&mut self) -> *mut f32 {
         self._c_.dev_data
     }
-    pub fn to_dev(&mut self, host_data: &mut [f32]) -> &mut Self {
+    pub fn to_dev(&mut self, host_data: &[f32]) -> &mut Self {
         if !self.dev_alloc {
             self.malloc();
         }
         unsafe {
-            self._c_.host_data = host_data.as_mut_ptr();
+            self._c_.host_data = host_data.as_ptr() as *mut f32;
             self._c_.host2dev();
         }
         self
@@ -243,10 +243,31 @@ impl From<Vec<f32>> for Cu<Single> {
         this
     }
 }
+impl From<&mut [f32]> for Cu<Single> {
+    fn from(item: &mut [f32]) -> Self {
+        let mut this = Cu::<Single>::vector(item.len());
+        this.to_dev(item);
+        this
+    }
+}
+impl From<&[f32]> for Cu<Single> {
+    fn from(item: &[f32]) -> Self {
+        let mut this = Cu::<Single>::vector(item.len());
+        this.to_dev(item);
+        this
+    }
+}
 impl From<Vec<f64>> for Cu<Single> {
     fn from(item: Vec<f64>) -> Self {
         let mut this = Cu::<Single>::vector(item.len());
         this.to_dev(&mut item.into_iter().map(|x| x as f32).collect::<Vec<f32>>());
+        this
+    }
+}
+impl From<&[f64]> for Cu<Single> {
+    fn from(item: &[f64]) -> Self {
+        let mut this = Cu::<Single>::vector(item.len());
+        this.to_dev(&mut item.into_iter().map(|x| *x as f32).collect::<Vec<f32>>());
         this
     }
 }

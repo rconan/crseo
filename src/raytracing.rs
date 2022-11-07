@@ -1,17 +1,17 @@
-use super::{cu, Builder, Result};
+use super::{cu, Builder, FromBuilder, Result};
 use ffi::{bundle, conic, intersect, reflect, refract, transform_to_R, transform_to_S};
 
-pub struct CONIC {
+pub struct ConicBuilder {
     curvature_radius: f64,
     conic_cst: f64,
     origin: [f64; 3],
     euler_angles: [f64; 3],
     conic_origin: [f64; 3],
 }
-impl Default for CONIC {
+impl Default for ConicBuilder {
     fn default() -> Self {
         Self {
-            curvature_radius: 1f64,
+            curvature_radius: std::f64::INFINITY,
             conic_cst: -1f64,
             origin: [0f64; 3],
             euler_angles: [0f64; 3],
@@ -19,7 +19,7 @@ impl Default for CONIC {
         }
     }
 }
-impl CONIC {
+impl ConicBuilder {
     pub fn curvature_radius(self, curvature_radius: f64) -> Self {
         Self {
             curvature_radius,
@@ -34,7 +34,7 @@ impl CONIC {
     }
     pub fn conic_origin(self, conic_origin: [f64; 3]) -> Self {
         Self {
-            origin: conic_origin,
+            conic_origin: conic_origin,
             ..self
         }
     }
@@ -45,7 +45,7 @@ impl CONIC {
         }
     }
 }
-impl Builder for CONIC {
+impl Builder for ConicBuilder {
     type Component = Conic;
     fn build(self) -> Result<Self::Component> {
         let mut optics = Conic::default();
@@ -61,9 +61,17 @@ impl Builder for CONIC {
         Ok(optics)
     }
 }
+impl FromBuilder for Conic {
+    type ComponentBuilder = ConicBuilder;
+}
 #[derive(Default)]
 pub struct Conic {
     _c_: conic,
+}
+impl Conic {
+    pub fn trace(&mut self, rays: &mut Rays) {
+        unsafe { self._c_.trace(&mut rays._c_) }
+    }
 }
 impl Drop for Conic {
     fn drop(&mut self) {
@@ -73,14 +81,23 @@ impl Drop for Conic {
     }
 }
 
-#[derive(Default)]
-pub struct RAYS {
+pub struct RaysBuilder {
     pub zenith: f64,
     pub azimuth: f64,
     pub xy: Vec<f64>,
     pub origin: [f64; 3],
 }
-impl RAYS {
+impl Default for RaysBuilder {
+    fn default() -> Self {
+        Self {
+            zenith: 0f64,
+            azimuth: 0f64,
+            xy: vec![0f64, 0f64],
+            origin: [0f64; 3],
+        }
+    }
+}
+impl RaysBuilder {
     pub fn zenith(self, zenith: f64) -> Self {
         Self { zenith, ..self }
     }
@@ -94,7 +111,7 @@ impl RAYS {
         Self { origin, ..self }
     }
 }
-impl Builder for RAYS {
+impl Builder for RaysBuilder {
     type Component = Rays;
     fn build(self) -> Result<Self::Component> {
         let mut rays = Rays::default();
@@ -110,15 +127,35 @@ impl Builder for RAYS {
                 self.origin.into(),
             );
         }
+        rays.x = x;
+        rays.y = y;
         Ok(rays)
     }
+}
+impl FromBuilder for Rays {
+    type ComponentBuilder = RaysBuilder;
 }
 #[derive(Default)]
 pub struct Rays {
     _c_: bundle,
+    x: Vec<f64>,
+    y: Vec<f64>,
 }
 
 impl Rays {
+    pub fn to_sphere(&mut self, focal_plane_distance: f64, focal_plane_radius: f64) -> &mut Self {
+        unsafe {
+            self._c_
+                .to_sphere1(focal_plane_distance, focal_plane_radius);
+        }
+        self
+    }
+    pub fn to_z_plane(&mut self, z: f64) -> &mut Self {
+        unsafe {
+            self._c_.to_z_plane(z);
+        }
+        self
+    }
     pub fn intersect(&mut self, optics: &mut Conic) -> &mut Self {
         unsafe {
             intersect(&mut self._c_, &mut optics._c_);
@@ -160,11 +197,27 @@ impl Rays {
         }
         data.into()
     }
+    pub fn chief_coordinates(&mut self) -> Vec<f64> {
+        let mut data = cu::Cu::<cu::Double>::vector(3);
+        data.malloc();
+        unsafe {
+            self._c_.get_chief_coordinates(data.as_mut_ptr());
+        }
+        data.into()
+    }
     pub fn directions(&mut self) -> Vec<f64> {
         let mut data = cu::Cu::<cu::Double>::vector(3 * self.n_ray());
         data.malloc();
         unsafe {
             self._c_.get_directions(data.as_mut_ptr());
+        }
+        data.into()
+    }
+    pub fn chief_directions(&mut self) -> Vec<f64> {
+        let mut data = cu::Cu::<cu::Double>::vector(3);
+        data.malloc();
+        unsafe {
+            self._c_.get_chief_directions(data.as_mut_ptr());
         }
         data.into()
     }
@@ -214,18 +267,18 @@ mod tests {
 
     #[test]
     fn single_ray() {
-        let mut m1 = CONIC::new()
+        let mut m1 = ConicBuilder::new()
             .curvature_radius(36.)
             .conic_cst(1. - 0.9982857)
             .build()
             .unwrap();
-        let mut m2 = CONIC::new()
+        let mut m2 = ConicBuilder::new()
             .curvature_radius(-4.1639009)
             .conic_cst(1. - 0.71692784)
             .conic_origin([0., 0., 20.26247614])
             .build()
             .unwrap();
-        let mut rays = RAYS::new()
+        let mut rays = RaysBuilder::new()
             .xy(vec![0., 0.])
             .origin([0., 0., 25.])
             .build()
@@ -246,18 +299,18 @@ mod tests {
     }
     #[test]
     fn multiple_ray() {
-        let mut m1 = CONIC::new()
+        let mut m1 = ConicBuilder::new()
             .curvature_radius(36.)
             .conic_cst(1. - 0.9982857)
             .build()
             .unwrap();
-        let mut m2 = CONIC::new()
+        let mut m2 = ConicBuilder::new()
             .curvature_radius(-4.1639009)
             .conic_cst(1. - 0.71692784)
             .conic_origin([0., 0., 20.26247614])
             .build()
             .unwrap();
-        let mut rays = RAYS::new()
+        let mut rays = RaysBuilder::new()
             .xy([0., 0.].repeat(1_000_000))
             .origin([0., 0., 25.])
             .build()

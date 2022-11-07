@@ -616,22 +616,35 @@ impl Source {
         }
     }
     /// Adds `phase` to the `Source` wavefront
-    pub fn add(&mut self, phase: &mut Cu<Single>) -> &mut Self {
+    pub fn add<'a, T>(&mut self, phase: &'a [T]) -> &mut Self
+    where
+        &'a [T]: Into<Cu<Single>>,
+    {
         unsafe {
-            self._c_.wavefront.add_phase(1.0, phase.as_mut_ptr());
+            let mut cu: Cu<Single> = phase.into();
+            self._c_.wavefront.add_phase(1.0, cu.as_mut_ptr());
         }
         self
     }
-    pub fn sub(&mut self, phase: &mut Cu<Single>) -> &mut Self {
+    /// Substracts `phase` to the `Source` wavefront
+    pub fn sub<'a, T>(&mut self, phase: &'a [T]) -> &mut Self
+    where
+        &'a [T]: Into<Cu<Single>>,
+    {
         unsafe {
-            self._c_.wavefront.add_phase(-1.0, phase.as_mut_ptr());
+            let mut cu: Cu<Single> = phase.into();
+            self._c_.wavefront.add_phase(-1.0, cu.as_mut_ptr());
         }
         self
     }
-    /// Adds `phase` to the `Source` wavefront
-    pub fn add_same(&mut self, phase: &mut Cu<Single>) -> &mut Self {
+    /// Adds the *same* `phase` to all the `Source` wavefronts
+    pub fn add_same<'a, T>(&mut self, phase: &'a [T]) -> &mut Self
+    where
+        &'a [T]: Into<Cu<Single>>,
+    {
         unsafe {
-            self._c_.wavefront.add_same_phase(1.0, phase.as_mut_ptr());
+            let mut cu: Cu<Single> = phase.into();
+            self._c_.wavefront.add_same_phase(1.0, cu.as_mut_ptr());
         }
         self
     }
@@ -650,6 +663,14 @@ impl Source {
         let mut phase: Cu<Single> = Cu::vector(self._c_.wavefront.N_PX as usize);
         phase.from_ptr(self._c_.wavefront.phase);
         phase
+    }
+    pub fn phase_as_slice<'a, T>(&'a mut self) -> &'a [T]
+    where
+        Cu<Single>: Into<&'a [T]>,
+    {
+        let mut phase: Cu<Single> = Cu::vector(self._c_.wavefront.N_PX as usize);
+        phase.from_ptr(self._c_.wavefront.phase);
+        phase.into()
     }
     /// Returns the wavefront amplitude in the exit pupil of the telescope
     pub fn amplitude(&mut self) -> Vec<f32> {

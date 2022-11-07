@@ -9,3 +9,4 @@ Cargo.lock
  markdown-code-fontification:rustic-mode
 /data
 /sys/target
+/nat
