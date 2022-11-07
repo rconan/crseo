@@ -1,7 +1,8 @@
 use log;
 use serde::Deserialize;
-use std::f32;
 use std::ffi::CString;
+use std::ops::Mul;
+use std::{f32, ops::Div};
 
 use super::{Builder, Cu, FromBuilder, Propagation, Result, Single, Source};
 use ffi::atmosphere;
@@ -406,6 +407,46 @@ impl Atmosphere {
         T: 'a,
     {
         let n = x.len();
+        let mut gx: Cu<Single> = x.into();
+        let mut gy: Cu<Single> = y.into();
+        let mut ps = Cu::<Single>::vector(n);
+        ps.malloc();
+        unsafe {
+            self._c_.get_phase_screen(
+                ps.as_mut_ptr(),
+                gx.as_mut_ptr(),
+                gy.as_mut_ptr(),
+                n as i32,
+                src.as_raw_mut_ptr(),
+                t as f32,
+            )
+        }
+        ps.into()
+    }
+    pub fn get_phase_screen<'a, T>(
+        &mut self,
+        src: &mut Source,
+        t: f64,
+        (s_x, n_x): (T, usize),
+        other_side: Option<(T, usize)>,
+    ) -> Vec<T>
+    where
+        T: 'a + Copy + From<u32> + Div<Output = T> + Mul<Output = T>,
+        Vec<T>: Into<Cu<Single>>,
+        Cu<Single>: Into<Vec<T>>,
+    {
+        let (s_y, n_y) = other_side.unwrap_or((s_x, n_x));
+        let n = n_x * n_y;
+        let mut x: Vec<T> = Vec::with_capacity(n);
+        let mut y: Vec<T> = Vec::with_capacity(n);
+        let delta_x = s_x / T::try_from(n_x as u32 - 1).unwrap();
+        let delta_y = s_y / T::try_from(n_x as u32 - 1).unwrap();
+        for i in 0..n_x {
+            for j in 0..n_y {
+                x.push(delta_x * T::try_from(i as u32).unwrap());
+                y.push(delta_y * T::try_from(j as u32).unwrap());
+            }
+        }
         let mut gx: Cu<Single> = x.into();
         let mut gy: Cu<Single> = y.into();
         let mut ps = Cu::<Single>::vector(n);
