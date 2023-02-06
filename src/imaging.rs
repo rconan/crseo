@@ -1,6 +1,8 @@
 use super::Propagation;
 use super::Source;
 use ffi::{dev2host, imaging};
+use serde::Deserialize;
+use serde::Serialize;
 use std::f32;
 
 #[derive(Debug, Copy, Clone)]
@@ -11,7 +13,7 @@ pub struct LensletArray {
     /// Dimension \[m\] of one lenslet
     pub lenslet_size: f64,
 }
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 /// Detector noise specifications
 pub struct NoiseDataSheet {
     /// Exposure time \[s\]

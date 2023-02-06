@@ -257,6 +257,13 @@ impl From<&[f32]> for Cu<Single> {
         this
     }
 }
+impl From<&[&Cu<Single>]> for Cu<Single> {
+    fn from(item: &[&Cu<Single>]) -> Self {
+        let this = Cu::<Single>::vector(item.len());
+        this.mv(item[0]);
+        this
+    }
+}
 impl From<Vec<f64>> for Cu<Single> {
     fn from(item: Vec<f64>) -> Self {
         let mut this = Cu::<Single>::vector(item.len());

@@ -703,3 +703,17 @@ impl Default for conic {
         }
     }
 }
+
+unsafe impl Send for pyramid {}
+impl Default for pyramid {
+    fn default() -> Self {
+        Self {
+            N_PX_LENSLET: 0,
+            N_SIDE_LENSLET: 0,
+            modulation: 0f32,
+            modulation_sampling: 0,
+            camera: imaging::default(),
+            alpha: 0f32,
+        }
+    }
+}

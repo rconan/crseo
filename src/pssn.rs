@@ -26,13 +26,14 @@ pub struct PSSn<S> {
     pub otf: Vec<f32>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 /// [`CEO`](../struct.CEO.html#impl-1) [`PSSn`](../struct.PSSn.html) builder type
 pub struct PSSnBuilder<T> {
     pub r0_at_zenith: f64,
     pub oscale: f64,
     pub zenith_angle: f64,
     src: SourceBuilder,
+    #[serde(skip)]
     marker: std::marker::PhantomData<T>,
 }
 impl<T: PSSnErrors> PartialEq for PSSnBuilder<T> {

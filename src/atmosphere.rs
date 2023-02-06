@@ -1,5 +1,5 @@
 use log;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::ffi::CString;
 use std::ops::Mul;
 use std::{f32, ops::Div};
@@ -26,7 +26,7 @@ struct GmtAtmosphere {
     seed: i32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[doc(hidden)]
 pub struct TurbulenceProfile {
     pub n_layer: usize,
@@ -46,7 +46,7 @@ impl Default for TurbulenceProfile {
         }
     }
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[doc(hidden)]
 pub struct RayTracing {
     pub width: f32,
@@ -57,7 +57,7 @@ pub struct RayTracing {
     pub n_duration: Option<i32>,
 }
 /// [`CEO`](../struct.CEO.html#impl-6) [`Atmosphere`](../struct.Atmosphere.html) builder type
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AtmosphereBuilder {
     pub r0_at_zenith: f64,
     pub oscale: f64,

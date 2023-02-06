@@ -1,5 +1,6 @@
 use crate::{Builder, CrseoError, FromBuilder, Propagation, Result, Source};
 use ffi::{gmt_m1, gmt_m2, vector};
+use serde::{Deserialize, Serialize};
 use std::{
     env,
     ffi::{CStr, CString},
@@ -13,7 +14,7 @@ use std::{
 }
  */
 #[doc(hidden)]
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Mirror {
     mode_type: String,
     n_mode: usize,
@@ -67,7 +68,7 @@ impl Mirror {
 /// use ceo::{Builder, GMT};
 /// let mut gmt = GMT::new().m1_n_mode(27).build();
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GmtBuilder {
     m1: Mirror,
     m2: Mirror,

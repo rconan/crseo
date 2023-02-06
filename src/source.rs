@@ -23,6 +23,7 @@
 
 use super::{cu::Double, cu::Single, Builder, Centroiding, Cu, FromBuilder, Result};
 use ffi::{bundle, dev2host, dev2host_int, source, vector};
+use serde::{Deserialize, Serialize};
 
 use std::{
     f32,
@@ -36,7 +37,8 @@ pub trait Propagation {
     fn time_propagate(&mut self, secs: f64, src: &mut Source);
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum PupilSampling {
     SquareGrid {
         size: Option<f64>,
@@ -91,7 +93,7 @@ impl PupilSampling {
 /// use ceo::{Builder, SOURCE, Conversion};
 /// let mut src = SOURCE::new().size(3).on_ring(8f32.from_arcmin()).build();
 /// ```
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SourceBuilder {
     pub size: usize,
     pub pupil_size: f64,
@@ -190,7 +192,6 @@ impl SourceBuilder {
     ///  Builds a star field made of 21 sources located at the vertices of a Delaunay mesh sampling a 10 arcminute field of view
     pub fn field_delaunay21(self) -> Self {
         use super::Conversion;
-        use serde::Deserialize;
         use serde_pickle as pickle;
         #[derive(Deserialize)]
         struct Field {
@@ -692,6 +693,17 @@ impl Source {
             self._c_.rays.get_coordinates(d_xyz.malloc().as_mut_ptr());
         }
         d_xyz.into()
+    }
+    pub fn zenith_azimuth(&mut self, (zenith, azimuth): (Vec<f64>, Vec<f64>)) -> &mut Self {
+        assert_eq!(self.size as usize, zenith.len());
+        unsafe {
+            self._c_.update_directions(
+                zenith.as_ptr() as *mut _,
+                azimuth.as_ptr() as *mut _,
+                self.size,
+            );
+            self
+        }
     }
     /// Returns the flux integrated in `n_let`X`n_let` bins
     pub fn fluxlet(&mut self, n_let: usize) -> Vec<f32> {

@@ -18,6 +18,6 @@ fn main() -> anyhow::Result<()> {
             zernike::projection(&ps, 11, n_xy)
         })
         .collect();
-    MatFile::save("zernike_coefficients")?.var("coefs", &coefficients);
+    MatFile::save("zernike_coefficients.mat")?.var("coefs", &coefficients);
     Ok(())
 }

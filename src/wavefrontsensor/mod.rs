@@ -14,6 +14,7 @@
 
 use super::{imaging::NoiseDataSheet, Cu, Mask, Single, Source};
 use ffi::{geometricShackHartmann, mask, shackHartmann};
+use serde::{Deserialize, Serialize};
 use std::f32;
 
 pub mod shackhartmann;
@@ -22,6 +23,8 @@ mod sh48;
 pub use sh48::SH48;
 mod sh24;
 pub use sh24::SH24;
+mod pyramid;
+pub use pyramid::{Pyramid, PyramidBuilder};
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
@@ -354,7 +357,7 @@ impl Model for Diffractive {
 /// Lenslet array specifications
 /// n_side_lenslet, n_px_lenslet, d
 #[doc(hidden)]
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub struct LensletArray(pub usize, pub usize, pub f64);
 impl Default for LensletArray {
     fn default() -> Self {
@@ -364,7 +367,7 @@ impl Default for LensletArray {
 /// Detector noise model specifications
 /// n_px_framelet, n_px_imagelet, osf, detector_noise_specs
 #[doc(hidden)]
-#[derive(Debug, Clone, PartialEq, Copy)]
+#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub struct Detector(
     pub usize,
     pub Option<usize>,

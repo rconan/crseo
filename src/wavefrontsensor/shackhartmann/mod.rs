@@ -5,6 +5,7 @@ use crate::{
 };
 pub mod sensor;
 pub use sensor::ShackHartmann;
+use serde::{Deserialize, Serialize};
 
 /// `ShackHartmann` builder
 ///
@@ -25,7 +26,7 @@ pub use sensor::ShackHartmann;
 /// use ceo::{Builder,  SHACKHARTMANN, Geometric};
 /// let mut wfs = SHACKHARTMANN::<Geometric>::new().build();
 /// ```
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ShackHartmannBuilder<T: Model> {
     pub n_sensor: usize,
     pub lenslet_array: LensletArray,
