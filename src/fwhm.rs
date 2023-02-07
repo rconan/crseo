@@ -77,7 +77,7 @@ impl Fwhm {
 mod tests {
     use super::*;
     use crate::{
-        ceo, pssn::TelescopeError as TE, Atmosphere, Builder, Conversion, FromBuilder, Gmt, PSSn,
+        pssn::TelescopeError as TE, Atmosphere, Builder, Conversion, FromBuilder, Gmt, PSSn,
     };
     use std::time::Instant;
 

@@ -24,7 +24,7 @@ pub use sh48::SH48;
 mod sh24;
 pub use sh24::SH24;
 mod pyramid;
-pub use pyramid::{Pyramid, PyramidBuilder};
+pub use pyramid::{Pyramid, PyramidBuilder, QuadCell};
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;

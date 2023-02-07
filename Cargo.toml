@@ -20,13 +20,10 @@ libm = "0.2.1"
 roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
-nalgebra = { version = "0.31", optional = true }
+nalgebra = { version = "0.31" }
 thiserror = "1.0.30"
 skyangle = "0.1.0"
 dosio = { version = "0.1.2", optional = true }
-
-[features]
-analytic = ["nalgebra"]
 
 [dev-dependencies]
 simple_logger = "1.11.0"

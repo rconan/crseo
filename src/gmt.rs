@@ -21,8 +21,8 @@
 use std::f64::consts::PI;
 use std::fmt::Display;
 
-mod wrapper;
-pub use wrapper::{Gmt, GmtBuilder};
+mod gmt;
+pub use gmt::{Gmt, GmtBuilder};
 
 #[derive(Debug, thiserror::Error)]
 pub enum GmtError {
