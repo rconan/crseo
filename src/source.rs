@@ -627,6 +627,16 @@ impl Source {
         }
         self
     }
+    pub fn axpy<'a, T>(&mut self, alpha: f32, phase: &'a [T]) -> &mut Self
+    where
+        &'a [T]: Into<Cu<Single>>,
+    {
+        unsafe {
+            let mut cu: Cu<Single> = phase.into();
+            self._c_.wavefront.add_phase(alpha, cu.as_mut_ptr());
+        }
+        self
+    }
     /// Substracts `phase` to the `Source` wavefront
     pub fn sub<'a, T>(&mut self, phase: &'a [T]) -> &mut Self
     where
