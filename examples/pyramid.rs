@@ -1,13 +1,21 @@
+use std::time::Instant;
+
 use crseo::{wavefrontsensor::Pyramid, Atmosphere, Builder, FromBuilder, Gmt, Source};
 
 fn main() -> anyhow::Result<()> {
     let n_lenslet = 90;
-    let n_mode = 150;
+    let n_mode = 500;
 
     let builder = Pyramid::builder().n_lenslet(n_lenslet).modulation(8., 101);
     let mut pym = builder.clone().build().unwrap();
 
+    let now = Instant::now();
     let mut slopes_mat = builder.calibrate(n_mode);
+    println!(
+        "M2 {}modes/segment calibrated in {}s",
+        n_mode,
+        now.elapsed().as_secs()
+    );
     slopes_mat.pseudo_inverse().unwrap();
 
     let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
@@ -28,7 +36,12 @@ fn main() -> anyhow::Result<()> {
             .xpupil()
             .through(&mut atm)
             .through(&mut pym);
-        println!("#{:03}: WFE RMS: {:4.0?}nm", i, src.wfe_rms_10e(-9));
+        println!(
+            "#{:03}: WFE RMS [nm]: {:4.0?} {:4.0?}",
+            i,
+            src.wfe_rms_10e(-9),
+            src.segment_wfe_rms_10e(-9)
+        );
 
         let coefs = (&slopes_mat * &pym).unwrap();
         // dbg!(&coefs);

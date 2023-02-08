@@ -263,15 +263,6 @@ impl Pyramid {
             let kl_coef = 1e-2 * kl_a0 as f32 / phase_minmax.0.abs().max(phase_minmax.1);
             // println!("KL coef.:{:e}", kl_coef);
 
-            let _: complot::Heatmap = (
-                (
-                    src.phase().as_slice(),
-                    (self.pupil_sampling(), self.pupil_sampling()),
-                ),
-                Some(complot::Config::new().filename(format!("KLC{kl_mode}.png"))),
-            )
-                .into();
-
             gmt.m2_modes_ij(sid - 1, kl_mode, kl_coef as f64);
             src.through(&mut gmt).xpupil().through(self);
             let slopes_push = Slopes::from((&quad_cell, &*self));

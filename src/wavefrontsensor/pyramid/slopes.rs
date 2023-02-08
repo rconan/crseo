@@ -9,15 +9,20 @@ use crate::wavefrontsensor::LensletArray;
 
 use super::{Mat, Pyramid, QuadCell};
 
+/// Pyramid measurements
+///
+/// The measurements vector concatenates all the pairs [sx,sy]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Slopes(pub(super) Vec<f32>);
 impl Slopes {
+    /// Returns the length of the measurements vector
     pub fn len(&self) -> usize {
         self.0.len()
     }
 }
 type V = nalgebra::DVector<f32>;
 impl From<Slopes> for V {
+    /// Converts the pyramid measurments into a [nalgebra] vector
     fn from(value: Slopes) -> Self {
         V::from_column_slice(&value.0)
     }
@@ -29,6 +34,10 @@ impl From<Slopes> for V {
     }
 } */
 impl From<(&QuadCell, &Pyramid)> for Slopes {
+    /// Computes the pyramid measurements
+    ///
+    /// The pyramid detector frame is contained within [Pyramid] and [QuadCell] provides the
+    /// optional frame mask  and measurements of reference
     fn from((qc, pym): (&QuadCell, &Pyramid)) -> Self {
         let (sx, sy, a) = {
             let (n, m) = pym.camera_resolution();
@@ -93,6 +102,7 @@ impl Sub for Slopes {
     }
 }
 
+/// A collection of pyramid measurements
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct SlopesArray {
     pub(super) slopes: Vec<Slopes>,
@@ -101,6 +111,7 @@ pub struct SlopesArray {
     inverse: Option<Mat>,
 }
 impl From<(QuadCell, Vec<Slopes>)> for SlopesArray {
+    /// Convert a vector of measurements and the associated [QuadCell] into a [SlopesArray]
     fn from((quad_cell, slopes): (QuadCell, Vec<Slopes>)) -> Self {
         Self {
             slopes,
@@ -119,12 +130,15 @@ impl SlopesArray {
     pub fn shape(&self) -> (usize, usize) {
         (self.slopes[0].len(), self.slopes.len())
     }
+    #[inline]
     pub fn nrows(&self) -> usize {
         self.slopes[0].len()
     }
+    #[inline]
     pub fn ncols(&self) -> usize {
         self.slopes.len()
     }
+    /// Compute the slopes array pseudo-inverse
     pub fn pseudo_inverse(&mut self) -> Result<&mut Self, Box<dyn Error>> {
         let mat = Mat::from_iterator(
             self.nrows(),
@@ -176,6 +190,7 @@ impl Mul<&Pyramid> for &SlopesArray {
     }
 }
 
+/// A collection of [SlopesArray]
 #[derive(Default, Debug, Serialize)]
 pub struct Calibration(Vec<SlopesArray>);
 impl Deref for Calibration {
@@ -200,6 +215,7 @@ impl Calibration {
     pub fn ncols(&self) -> usize {
         self.iter().map(|x| x.ncols()).sum()
     }
+    /// Compute the pseudo-inverse of each slope array
     pub fn pseudo_inverse(&mut self) -> Result<&mut Self, Box<dyn Error>> {
         self.iter_mut()
             .map(|x| x.pseudo_inverse())
