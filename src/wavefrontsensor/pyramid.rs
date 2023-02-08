@@ -2,7 +2,7 @@ use std::thread;
 
 use super::LensletArray;
 use crate::{Builder, FromBuilder, Gmt, Propagation, Source};
-use ffi::pyramid;
+use ffi::{get_device_count, pyramid, set_device};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 
@@ -49,7 +49,7 @@ impl PyramidBuilder {
         });
         self
     }
-    pub fn calibrate(self, n_mode: usize) -> crate::Result<Calibration> {
+    pub fn calibrate(self, n_mode: usize) -> Calibration {
         let m = MultiProgress::new();
         let mut handle = vec![];
         for sid in 1..=7 {
@@ -61,16 +61,19 @@ impl PyramidBuilder {
                 .unwrap(),
             );
             pb.set_message(format!("Calibrating segment #{sid}"));
-            let mut pym = self.clone().build()?;
+            let n = unsafe { get_device_count() };
             handle.push(thread::spawn(move || {
+                unsafe { set_device((sid - 1) as i32 % n) };
+                let mut pym = self.clone().build().unwrap();
                 pym.calibrate_segment(sid, n_mode, Some(pb))
             }));
         }
-        handle.into_iter().fold(Calibration::default(), |mut c, h| {
+        let calibration = handle.into_iter().fold(Calibration::default(), |mut c, h| {
             c.push(h.join().unwrap());
             c
         });
-        todo!()
+        m.clear().unwrap();
+        calibration
     }
 }
 
@@ -287,7 +290,7 @@ impl Pyramid {
     }
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize)]
 pub struct QuadCell {
     mask: Option<nalgebra::DMatrix<bool>>,
     sxy0: Option<Slopes>,

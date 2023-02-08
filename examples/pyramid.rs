@@ -7,7 +7,7 @@ fn main() -> anyhow::Result<()> {
     let builder = Pyramid::builder().n_lenslet(n_lenslet).modulation(8., 101);
     let mut pym = builder.clone().build().unwrap();
 
-    let mut slopes_mat = pym.calibrate(n_mode);
+    let mut slopes_mat = builder.calibrate(n_mode);
     slopes_mat.pseudo_inverse().unwrap();
 
     let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
@@ -22,7 +22,7 @@ fn main() -> anyhow::Result<()> {
     let mut buffer = vec![0f64; 7 * n_mode];
     let gain = 0.5;
 
-    for i in 0..25 {
+    for i in 0..100 {
         pym.reset();
         src.through(&mut gmt)
             .xpupil()
@@ -45,6 +45,15 @@ fn main() -> anyhow::Result<()> {
         // dbg!(&buffer);
         gmt.m2_modes(&buffer);
     }
+
+    let _: complot::Heatmap = (
+        (
+            src.phase().as_slice(),
+            (pym.pupil_sampling(), pym.pupil_sampling()),
+        ),
+        Some(complot::Config::new().filename("opd.png")),
+    )
+        .into();
 
     Ok(())
 }

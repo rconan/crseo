@@ -276,6 +276,10 @@ extern "C" {
     #[link_name = "\u{1}_Z10set_devicei"]
     pub fn set_device(id: ::std::os::raw::c_int);
 }
+extern "C" {
+    #[link_name = "\u{1}_Z16get_device_countv"]
+    pub fn get_device_count() -> ::std::os::raw::c_int;
+}
 pub type rtd = f64;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

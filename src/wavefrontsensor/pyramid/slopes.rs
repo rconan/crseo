@@ -93,10 +93,11 @@ impl Sub for Slopes {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SlopesArray {
     pub(super) slopes: Vec<Slopes>,
     pub(super) quad_cell: QuadCell,
+    #[serde(skip)]
     inverse: Option<Mat>,
 }
 impl From<(QuadCell, Vec<Slopes>)> for SlopesArray {
@@ -175,7 +176,7 @@ impl Mul<&Pyramid> for &SlopesArray {
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct Calibration(Vec<SlopesArray>);
 impl Deref for Calibration {
     type Target = Vec<SlopesArray>;

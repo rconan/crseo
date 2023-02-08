@@ -27,6 +27,7 @@ fn main() {
         .allowlist_type("gpu_double")
         .allowlist_type("mask")
         .allowlist_function("set_device")
+        .allowlist_function("get_device_count")
         .allowlist_function("host2dev_char")
         .allowlist_function("host2dev")
         .allowlist_function("dev2host")

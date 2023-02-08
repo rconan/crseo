@@ -20,7 +20,7 @@ libm = "0.2.1"
 roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
-nalgebra = { version = "0.31", features = ["serde"] }
+nalgebra = { version = "0.31", features = ["serde-serialize"] }
 thiserror = "1.0.30"
 skyangle = "0.1.0"
 dosio = { version = "0.1.2", optional = true }
