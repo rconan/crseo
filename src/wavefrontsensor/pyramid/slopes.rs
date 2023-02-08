@@ -121,19 +121,23 @@ impl From<(QuadCell, Vec<Slopes>)> for SlopesArray {
     }
 }
 impl SlopesArray {
+    /// Creates a new [SlopesArray]
     pub fn new(slopes: Vec<Slopes>) -> Self {
         Self {
             slopes,
             ..Default::default()
         }
     }
+    /// Returns the number of rows and columns of the [SlopesArray]
     pub fn shape(&self) -> (usize, usize) {
         (self.slopes[0].len(), self.slopes.len())
     }
+    /// Returns the number of rows of the [SlopesArray]
     #[inline]
     pub fn nrows(&self) -> usize {
         self.slopes[0].len()
     }
+    /// Returns the number of columns of the [SlopesArray]
     #[inline]
     pub fn ncols(&self) -> usize {
         self.slopes.len()
@@ -160,17 +164,14 @@ pub enum SlopesError {
 
 impl Mul<Slopes> for &mut SlopesArray {
     type Output = Option<Vec<f32>>;
-
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [Slopes]
     fn mul(self, rhs: Slopes) -> Self::Output {
-        self.inverse
-            .as_ref()
-            .map(|pinv| pinv * V::from(rhs))
-            .map(|x| x.as_slice().to_vec())
+        <&SlopesArray as Mul<Slopes>>::mul(self, rhs)
     }
 }
 impl Mul<Slopes> for &SlopesArray {
     type Output = Option<Vec<f32>>;
-
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [Slopes]
     fn mul(self, rhs: Slopes) -> Self::Output {
         self.inverse
             .as_ref()
@@ -180,7 +181,7 @@ impl Mul<Slopes> for &SlopesArray {
 }
 impl Mul<&Pyramid> for &SlopesArray {
     type Output = Option<Vec<f32>>;
-
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
     fn mul(self, pym: &Pyramid) -> Self::Output {
         let slopes = Slopes::from((&self.quad_cell, pym));
         self.inverse
@@ -206,12 +207,15 @@ impl DerefMut for Calibration {
     }
 }
 impl Calibration {
+    /// Returns the number of rows and columns of the calibration matrix
     pub fn shape(&self) -> (usize, usize) {
         (self.nrows(), self.ncols())
     }
+    /// Returns the number of rows of the calibration matrix
     pub fn nrows(&self) -> usize {
         self.iter().map(|x| x.nrows()).sum()
     }
+    /// Returns the number of columns of the calibration matrix
     pub fn ncols(&self) -> usize {
         self.iter().map(|x| x.ncols()).sum()
     }
@@ -225,7 +229,7 @@ impl Calibration {
 }
 impl Mul<&Pyramid> for &Calibration {
     type Output = Option<Vec<f32>>;
-
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
     fn mul(self, pym: &Pyramid) -> Self::Output {
         Some(self.iter().flat_map(|x| x * pym).flatten().collect())
     }

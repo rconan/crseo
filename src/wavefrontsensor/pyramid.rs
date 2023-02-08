@@ -77,6 +77,8 @@ impl PyramidBuilder {
     }
 }
 
+
+/// Wrapper to CEO pyramid
 pub struct Pyramid {
     _c_: pyramid,
     lenslet_array: LensletArray,
@@ -281,6 +283,10 @@ impl Pyramid {
     }
 }
 
+/// Quad cell data
+///
+/// Holds the mask applied to the detector frame and
+/// the reference slopes
 #[derive(Default, Debug, Clone, Serialize)]
 pub struct QuadCell {
     mask: Option<nalgebra::DMatrix<bool>>,
