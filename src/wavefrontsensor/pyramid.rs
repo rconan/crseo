@@ -77,7 +77,6 @@ impl PyramidBuilder {
     }
 }
 
-
 /// Wrapper to CEO pyramid
 pub struct Pyramid {
     _c_: pyramid,
@@ -390,7 +389,7 @@ mod tests {
             .modulation(8., 101)
             .build()
             .unwrap();
-        let mut slopes_mat = pym.calibrate_segment(sid, 15);
+        let mut slopes_mat = pym.calibrate_segment(sid, 15, None);
         dbg!(slopes_mat.shape());
         slopes_mat.pseudo_inverse().unwrap();
 

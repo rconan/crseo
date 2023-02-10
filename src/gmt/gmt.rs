@@ -72,6 +72,7 @@ impl Mirror {
 pub struct GmtBuilder {
     m1: Mirror,
     m2: Mirror,
+    pointing_error: Option<(f64, f64)>,
 }
 impl Default for GmtBuilder {
     fn default() -> Self {
@@ -84,6 +85,7 @@ impl Default for GmtBuilder {
                 mode_type: "Karhunen-Loeve".into(),
                 ..Default::default()
             },
+            pointing_error: None,
         }
     }
 }
@@ -130,6 +132,13 @@ impl GmtBuilder {
             ..self
         }
     }
+    /// Set the pointing error
+    ///
+    /// The pointing error is given as the pair (delta_zenith, azimuth) in radians
+    pub fn pointing_error(mut self, pointing_error: (f64, f64)) -> Self {
+        self.pointing_error = Some(pointing_error);
+        self
+    }
 }
 impl Mirror {
     fn mode_path(&self) -> Result<String> {
@@ -159,6 +168,7 @@ impl Builder for GmtBuilder {
             m2_max_n: 0,
             a1: self.m1.a.clone(),
             a2: self.m2.a.clone(),
+            pointing_error: self.pointing_error,
         };
         let m1_mode_type = CString::new(self.m1.mode_path()?)?;
         gmt.m1_n_mode = self.m1.n_mode;
@@ -181,6 +191,7 @@ impl From<&Gmt> for GmtBuilder {
         Self {
             m1: gmt.get_m1(),
             m2: gmt.get_m2(),
+            pointing_error: gmt.pointing_error,
         }
     }
 }
@@ -199,6 +210,8 @@ pub struct Gmt {
     pub a1: Vec<f64>,
     // default M2 coefs values: Vec of 0f64
     pub a2: Vec<f64>,
+    // pointing error
+    pointing_error: Option<(f64, f64)>,
 }
 impl FromBuilder for Gmt {
     type ComponentBuilder = GmtBuilder;
@@ -478,18 +491,69 @@ impl Drop for Gmt {
 impl Propagation for Gmt {
     /// Ray traces a `Source` through `Gmt`, ray tracing stops at the exit pupil
     fn propagate(&mut self, src: &mut Source) {
-        unsafe {
-            src.as_raw_mut_ptr().reset_rays();
-            let rays = &mut src.as_raw_mut_ptr().rays;
-            self._c_m2.blocking(rays);
-            self._c_m1.trace(rays);
-            rays.gmt_truss_onaxis();
-            rays.gmt_m2_baffle();
-            self._c_m2.trace(rays);
-            rays.to_sphere1(-5.830, 2.197173);
+        if let Some((pz, pa)) = self.pointing_error {
+            let (s, c) = pa.sin_cos();
+            let (px, py) = (pz * c, pz * s);
+            let (zenith, azimuth): (Vec<_>, Vec<_>) = src
+                .zenith
+                .iter()
+                .map(|z| *z as f64)
+                .zip(src.azimuth.iter().map(|a| *a as f64))
+                .map(|(z, a)| {
+                    let (s, c) = a.sin_cos();
+                    (z * c - px, z * s - py)
+                })
+                .map(|(x, y)| (x.hypot(y), y.atan2(x)))
+                .unzip();
+            src.update(zenith, azimuth);
+            unsafe {
+                src.as_raw_mut_ptr().reset_rays();
+                let rays = &mut src.as_raw_mut_ptr().rays;
+                self._c_m2.blocking(rays);
+                self._c_m1.trace(rays);
+                rays.gmt_truss_onaxis();
+                rays.gmt_m2_baffle();
+                self._c_m2.trace(rays);
+                rays.to_sphere1(-5.830, 2.197173);
+            }
+            src.update(
+                src.zenith.iter().map(|x| *x as f64).collect(),
+                src.azimuth.iter().map(|x| *x as f64).collect(),
+            );
+        } else {
+            unsafe {
+                src.as_raw_mut_ptr().reset_rays();
+                let rays = &mut src.as_raw_mut_ptr().rays;
+                self._c_m2.blocking(rays);
+                self._c_m1.trace(rays);
+                rays.gmt_truss_onaxis();
+                rays.gmt_m2_baffle();
+                self._c_m2.trace(rays);
+                rays.to_sphere1(-5.830, 2.197173);
+            }
         }
     }
     fn time_propagate(&mut self, _secs: f64, src: &mut Source) {
         self.propagate(src)
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use std::f64::consts::{FRAC_PI_2, PI};
+
+    use super::*;
+    use skyangle::Conversion;
+
+    #[test]
+    fn pointing_error() {
+        let mut gmt = Gmt::builder()
+            .pointing_error((1f64.from_arcsec(), FRAC_PI_2))
+            .build()
+            .unwrap();
+        let mut src = Source::builder().build().unwrap();
+        src.through(&mut gmt).xpupil();
+        let tt: Vec<_> = src.gradients().into_iter().map(|x| x.to_mas()).collect();
+        dbg!(tt);
     }
 }

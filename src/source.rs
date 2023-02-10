@@ -427,6 +427,20 @@ impl Source {
             )
         }
     }
+    /// Returns the cartesian (x,y) source coordinates in the OSS coodinates system
+    pub fn xy(&self) -> (f64, f64) {
+        (self._c_.theta_x as f64, self._c_.theta_x as f64)
+    }
+    /// Updates the `zenith` and `azimuth` of the `Source`
+    pub fn update(&mut self, mut zenith: Vec<f64>, mut azimuth: Vec<f64>) {
+        unsafe {
+            self._c_.update_directions(
+                zenith.as_mut_ptr(),
+                azimuth.as_mut_ptr(),
+                zenith.len() as i32,
+            );
+        }
+    }
     /// Returns the `Source` wavelength \[m\]
     pub fn wavelength(&mut self) -> f64 {
         unsafe { self._c_.wavelength() as f64 }
@@ -606,16 +620,6 @@ impl Source {
         }
         self
     }
-    /// Updates the `zenith` and `azimuth` of the `Source`
-    pub fn update(&mut self, mut zenith: Vec<f64>, mut azimuth: Vec<f64>) {
-        unsafe {
-            self._c_.update_directions(
-                zenith.as_mut_ptr(),
-                azimuth.as_mut_ptr(),
-                zenith.len() as i32,
-            );
-        }
-    }
     /// Adds `phase` to the `Source` wavefront
     pub fn add<'a, T>(&mut self, phase: &'a [T]) -> &mut Self
     where
@@ -703,17 +707,6 @@ impl Source {
             self._c_.rays.get_coordinates(d_xyz.malloc().as_mut_ptr());
         }
         d_xyz.into()
-    }
-    pub fn zenith_azimuth(&mut self, (zenith, azimuth): (Vec<f64>, Vec<f64>)) -> &mut Self {
-        assert_eq!(self.size as usize, zenith.len());
-        unsafe {
-            self._c_.update_directions(
-                zenith.as_ptr() as *mut _,
-                azimuth.as_ptr() as *mut _,
-                self.size,
-            );
-            self
-        }
     }
     /// Returns the flux integrated in `n_let`X`n_let` bins
     pub fn fluxlet(&mut self, n_let: usize) -> Vec<f32> {
