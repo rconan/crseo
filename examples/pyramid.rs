@@ -1,8 +1,8 @@
 use std::time::Instant;
 
 use crseo::{
-    wavefrontsensor::Pyramid, Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensorBuilder,
-    Source,
+    wavefrontsensor::Pyramid, Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor,
+    SegmentWiseSensorBuilder, Source,
 };
 
 fn main() -> anyhow::Result<()> {
@@ -22,11 +22,7 @@ fn main() -> anyhow::Result<()> {
     slopes_mat.pseudo_inverse().unwrap();
 
     let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
-    let mut src = Source::builder()
-        .pupil_sampling(pym.pupil_sampling())
-        .build()
-        .unwrap();
-    src.rotate_rays(0.5 * std::f64::consts::FRAC_PI_6);
+    let mut src = pym.guide_star(None).build().unwrap();
 
     let mut atm = Atmosphere::builder().build()?;
 

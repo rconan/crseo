@@ -104,6 +104,7 @@ pub struct SourceBuilder {
     pub magnitude: Vec<f32>,
     pub rays_coordinates: Option<(Vec<f64>, Vec<f64>)>,
     pub fwhm: Option<f64>,
+    pub rays_azimuth: Option<f64>,
 }
 impl Default for SourceBuilder {
     fn default() -> Self {
@@ -120,6 +121,7 @@ impl Default for SourceBuilder {
             magnitude: vec![0f32],
             rays_coordinates: None,
             fwhm: None,
+            rays_azimuth: None,
         }
     }
 }
@@ -148,6 +150,10 @@ impl SourceBuilder {
             band: band.to_owned(),
             ..self
         }
+    }
+    pub fn rays_azimuth(mut self, rays_azimuth: f64) -> Self {
+        self.rays_azimuth = Some(rays_azimuth);
+        self
     }
     /// Set the source zenith and azimuth angles
     pub fn zenith_azimuth(self, zenith: Vec<f32>, azimuth: Vec<f32>) -> Self {
@@ -296,6 +302,9 @@ impl Builder for SourceBuilder {
         if let Some(fwhm) = self.fwhm {
             src._c_.fwhm = fwhm as f32;
         }
+        if let Some(angle) = self.rays_azimuth {
+            src.rotate_rays(angle)
+        }
         Ok(src)
     }
 }
@@ -315,6 +324,7 @@ impl From<&Source> for SourceBuilder {
             magnitude: src.magnitude.clone(),
             rays_coordinates: None,
             fwhm: Some(src._c_.fwhm as f64),
+            rays_azimuth: None,
         }
     }
 }

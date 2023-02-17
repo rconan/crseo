@@ -23,7 +23,7 @@ impl Default for PyramidBuilder {
                 n_px_lenslet: 8,
                 d: 0f64,
             },
-            modulation: None,
+            modulation: None::<Modulation>,
             alpha: 0.5f32,
             n_gs: 1,
         }

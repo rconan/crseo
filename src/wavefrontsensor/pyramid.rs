@@ -1,264 +1,21 @@
-use super::LensletArray;
-use crate::{Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, Source};
-use ffi::pyramid;
-use indicatif::ProgressBar;
-use serde::{Deserialize, Serialize};
-
-mod slopes;
-pub use slopes::{Calibration, Slopes, SlopesArray};
 mod builder;
 pub use builder::PyramidBuilder;
+mod pyramid;
+pub use pyramid::Pyramid;
 
-type Mat = nalgebra::DMatrix<f32>;
-
-#[derive(Default, Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 struct Modulation {
     amplitude: f32,
     sampling: i32,
 }
 
-/// Wrapper to CEO pyramid
-pub struct Pyramid {
-    _c_: pyramid,
-    lenslet_array: LensletArray,
-    alpha: f32,
-    modulation: Option<Modulation>,
-}
-impl Drop for Pyramid {
-    /// Frees CEO memory before dropping `Pyramid`
-    fn drop(&mut self) {
-        unsafe {
-            self._c_.cleanup();
-        }
-    }
-}
-impl FromBuilder for Pyramid {
-    type ComponentBuilder = PyramidBuilder;
-}
-impl Propagation for Pyramid {
-    fn propagate(&mut self, src: &mut crate::Source) {
-        if let Some(Modulation {
-            amplitude,
-            sampling,
-        }) = self.modulation
-        {
-            unsafe {
-                self._c_.camera.propagateThroughModulatedPyramid(
-                    src.as_raw_mut_ptr(),
-                    amplitude,
-                    sampling,
-                    self.alpha,
-                )
-            }
-        } else {
-            unsafe {
-                self._c_
-                    .camera
-                    .propagateThroughPyramid(src.as_raw_mut_ptr(), self.alpha)
-            }
-        }
-    }
-
-    fn time_propagate(&mut self, _secs: f64, _src: &mut crate::Source) {
-        todo!()
-    }
-}
-
-impl Pyramid {
-    pub fn frame(&self) -> Vec<f32> {
-        let n = self._c_.camera.N_PX_CAMERA.pow(2) * self._c_.camera.N_SOURCE;
-        let mut frame = vec![0f32; n as usize];
-        unsafe {
-            ffi::dev2host(frame.as_mut_ptr(), self._c_.camera.d__frame, n);
-        }
-        frame
-    }
-    pub fn reset(&mut self) {
-        unsafe {
-            self._c_.camera.reset();
-        }
-    }
-    #[inline]
-    pub fn n_px_camera(&self) -> usize {
-        self._c_.camera.N_PX_CAMERA as usize
-    }
-    pub fn pupil_sampling(&self) -> usize {
-        let LensletArray {
-            n_side_lenslet,
-            n_px_lenslet,
-            ..
-        } = self.lenslet_array;
-        n_side_lenslet * n_px_lenslet
-    }
-    pub fn camera_resolution(&self) -> (usize, usize) {
-        (self.n_px_camera(), self.n_px_camera())
-    }
-    pub fn data(&mut self) -> (Mat, Mat) {
-        let (n, m) = self.camera_resolution();
-        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
-        let n0 = n_side_lenslet / 2;
-        let n1 = n0 + n / 2;
-        let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
-        let row_diff = mat.rows(n0, n_side_lenslet) - mat.rows(n1, n_side_lenslet);
-        let row_col_data =
-            row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet);
-        let col_diff = mat.columns(n0, n_side_lenslet) - mat.columns(n1, n_side_lenslet);
-        let col_row_data = col_diff.rows(n0, n_side_lenslet) + col_diff.rows(n1, n_side_lenslet);
-        (row_col_data, col_row_data)
-    }
-    pub fn add_quads(&mut self) -> Mat {
-        let (n, m) = self.camera_resolution();
-        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
-        let n0 = n_side_lenslet / 2;
-        let n1 = n0 + n / 2;
-        let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
-        let row_diff = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
-        row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet)
-    }
-}
-impl SegmentWiseSensor for Pyramid {
-    fn calibrate_segment(
-        &mut self,
-        sid: usize,
-        n_mode: usize,
-        pb: Option<ProgressBar>,
-    ) -> SlopesArray {
-        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
-
-        // Setting the pyramid mask restricted to the segment
-        let mut gmt = Gmt::builder().build().unwrap();
-        gmt.keep(&[sid as i32]);
-        let mut src = Source::builder()
-            .pupil_sampling(n_side_lenslet)
-            .build()
-            .unwrap();
-        src.rotate_rays(0.5 * std::f64::consts::FRAC_PI_6);
-        src.through(&mut gmt).xpupil();
-
-        let pupil = nalgebra::DMatrix::<f32>::from_iterator(
-            n_side_lenslet,
-            n_side_lenslet,
-            src.amplitude().into_iter().rev(),
-        );
-
-        let mut quad_cell = QuadCell::new(pupil);
-
-        let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
-        gmt.keep(&[sid as i32]);
-        // let mut pym = Pyramid::builder().n_lenslet(n_lenslet).build().unwrap();
-        let mut src = Source::builder()
-            .pupil_sampling(self.pupil_sampling())
-            .build()
-            .unwrap();
-        src.rotate_rays(0.5 * std::f64::consts::FRAC_PI_6);
-        self.reset();
-        src.through(&mut gmt).xpupil().through(self);
-        quad_cell.set_ref_with(Slopes::from((&quad_cell, &*self)));
-        self.reset();
-
-        let mut slopes = vec![];
-        let o2p = (2. * std::f64::consts::PI / src.wavelength()) as f32;
-
-        for kl_mode in 1..n_mode {
-            pb.as_ref().map(|pb| pb.inc(1));
-            gmt.reset();
-            let kl_a0 = 1e-6;
-            gmt.m2_modes_ij(sid - 1, kl_mode, kl_a0);
-            src.through(&mut gmt).xpupil();
-            let opd = src.phase().clone();
-            let opd_minmax =
-                opd.iter()
-                    .fold((f32::INFINITY, f32::NEG_INFINITY), |(min, max), value| {
-                        (
-                            if *value < min { *value } else { min },
-                            if *value > max { *value } else { max },
-                        )
-                    });
-            let phase_minmax = (o2p * opd_minmax.0, o2p * opd_minmax.1);
-            // println!("𝜑 minmax: {:?}", phase_minmax);
-            let kl_coef = 1e-2 * kl_a0 as f32 / phase_minmax.0.abs().max(phase_minmax.1);
-            // println!("KL coef.:{:e}", kl_coef);
-
-            gmt.m2_modes_ij(sid - 1, kl_mode, kl_coef as f64);
-            src.through(&mut gmt).xpupil().through(self);
-            let slopes_push = Slopes::from((&quad_cell, &*self));
-            self.reset();
-
-            gmt.m2_modes_ij(sid - 1, kl_mode, -kl_coef as f64);
-            src.through(&mut gmt).xpupil().through(self);
-            let slopes_pull = Slopes::from((&quad_cell, &*self));
-            self.reset();
-
-            slopes.push((slopes_push - slopes_pull) / (2. * kl_coef));
-            // slopes.push(slopes_push / kl_coef);
-        }
-        pb.as_ref().map(|pb| pb.finish());
-        (quad_cell, slopes).into()
-    }
-}
-
-/// Quad cell data
-///
-/// Holds the mask applied to the detector frame and
-/// the reference slopes
-#[derive(Default, Debug, Clone, Serialize)]
-pub struct QuadCell {
-    pub(crate) mask: Option<nalgebra::DMatrix<bool>>,
-    pub(crate) sxy0: Option<Slopes>,
-}
-impl QuadCell {
-    pub fn new(mask: nalgebra::DMatrix<f32>) -> Self {
-        Self {
-            mask: Some(nalgebra::DMatrix::<bool>::from_iterator(
-                mask.nrows(),
-                mask.ncols(),
-                mask.into_iter()
-                    .map(|p| if *p > 0f32 { true } else { false }),
-            )),
-            sxy0: None,
-        }
-    }
-    pub fn set_ref_with(&mut self, slopes: Slopes) {
-        self.sxy0 = Some(slopes);
-    }
-    pub fn sx(&self, slopes: &Slopes) -> Option<Mat> {
-        let Some(mask) = self.mask.as_ref() else { return None };
-        let (nrows, ncols) = mask.shape();
-        let mut slopes_iter = slopes.0.iter().step_by(2);
-        Some(Mat::from_iterator(
-            nrows,
-            ncols,
-            mask.iter().map(|m| {
-                if *m {
-                    *slopes_iter.next().unwrap()
-                } else {
-                    0f32
-                }
-            }),
-        ))
-    }
-    pub fn sy(&self, slopes: &Slopes) -> Option<Mat> {
-        let Some(mask) = self.mask.as_ref() else { return None };
-        let (nrows, ncols) = mask.shape();
-        let mut slopes_iter = slopes.0.iter().skip(1).step_by(2);
-        Some(Mat::from_iterator(
-            nrows,
-            ncols,
-            mask.iter().map(|m| {
-                if *m {
-                    *slopes_iter.next().unwrap()
-                } else {
-                    0f32
-                }
-            }),
-        ))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FromBuilder, Gmt, Source};
+    use crate::{
+        wavefrontsensor::{data_processing::DataRef, Slopes},
+        FromBuilder, Gmt, Source,
+    };
 
     #[test]
     fn calibrate() {
@@ -384,7 +141,7 @@ mod tests {
         )
             .into();
 
-        let mut quad_cell = QuadCell::new(pupil);
+        let mut quad_cell = DataRef::new(pupil);
 
         let mut gmt = Gmt::builder().m2("Karhunen-Loeve", 100).build().unwrap();
         gmt.keep(&[sid as i32]);
