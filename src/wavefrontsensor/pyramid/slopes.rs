@@ -5,7 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::wavefrontsensor::LensletArray;
+use crate::wavefrontsensor::{GeomShack, LensletArray};
 
 use super::{Mat, Pyramid, QuadCell};
 
@@ -13,7 +13,7 @@ use super::{Mat, Pyramid, QuadCell};
 ///
 /// The measurements vector concatenates all the pairs [sx,sy]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct Slopes(pub(super) Vec<f32>);
+pub struct Slopes(pub(crate) Vec<f32>);
 impl Slopes {
     /// Returns the length of the measurements vector
     pub fn len(&self) -> usize {
@@ -41,17 +41,17 @@ impl From<(&QuadCell, &Pyramid)> for Slopes {
     fn from((qc, pym): (&QuadCell, &Pyramid)) -> Self {
         let (sx, sy, a) = {
             let (n, m) = pym.camera_resolution();
-            let LensletArray(n_lenslet, _, _) = pym.lenslet_array;
-            let n0 = n_lenslet / 2;
+            let LensletArray { n_side_lenslet, .. } = pym.lenslet_array;
+            let n0 = n_side_lenslet / 2;
             let n1 = n0 + n / 2;
             let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &pym.frame());
-            let row_diff = mat.rows(n0, n_lenslet) - mat.rows(n1, n_lenslet);
-            let sx = row_diff.columns(n0, n_lenslet) + row_diff.columns(n1, n_lenslet);
-            let col_diff = mat.columns(n0, n_lenslet) - mat.columns(n1, n_lenslet);
-            let sy = col_diff.rows(n0, n_lenslet) + col_diff.rows(n1, n_lenslet);
+            let row_diff = mat.rows(n0, n_side_lenslet) - mat.rows(n1, n_side_lenslet);
+            let sx = row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet);
+            let col_diff = mat.columns(n0, n_side_lenslet) - mat.columns(n1, n_side_lenslet);
+            let sy = col_diff.rows(n0, n_side_lenslet) + col_diff.rows(n1, n_side_lenslet);
 
-            let row_sum = mat.rows(n0, n_lenslet) + mat.rows(n1, n_lenslet);
-            let a = row_sum.columns(n0, n_lenslet) + row_sum.columns(n1, n_lenslet);
+            let row_sum = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
+            let a = row_sum.columns(n0, n_side_lenslet) + row_sum.columns(n1, n_side_lenslet);
             (sx, sy, a)
         };
 
@@ -190,7 +190,17 @@ impl Mul<&Pyramid> for &SlopesArray {
             .map(|x| x.as_slice().to_vec())
     }
 }
-
+impl Mul<&GeomShack> for &SlopesArray {
+    type Output = Option<Vec<f32>>;
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
+    fn mul(self, pym: &GeomShack) -> Self::Output {
+        let slopes = Slopes::from((&self.quad_cell, pym));
+        self.inverse
+            .as_ref()
+            .map(|pinv| pinv * V::from(slopes))
+            .map(|x| x.as_slice().to_vec())
+    }
+}
 /// A collection of [SlopesArray]
 #[derive(Default, Debug, Serialize)]
 pub struct Calibration(Vec<SlopesArray>);
@@ -231,6 +241,13 @@ impl Mul<&Pyramid> for &Calibration {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
     fn mul(self, pym: &Pyramid) -> Self::Output {
+        Some(self.iter().flat_map(|x| x * pym).flatten().collect())
+    }
+}
+impl Mul<&GeomShack> for &Calibration {
+    type Output = Option<Vec<f32>>;
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
+    fn mul(self, pym: &GeomShack) -> Self::Output {
         Some(self.iter().flat_map(|x| x * pym).flatten().collect())
     }
 }

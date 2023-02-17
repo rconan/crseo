@@ -211,7 +211,7 @@ pub struct Gmt {
     // default M2 coefs values: Vec of 0f64
     pub a2: Vec<f64>,
     // pointing error
-    pointing_error: Option<(f64, f64)>,
+    pub pointing_error: Option<(f64, f64)>,
 }
 impl FromBuilder for Gmt {
     type ComponentBuilder = GmtBuilder;
@@ -540,7 +540,7 @@ impl Propagation for Gmt {
 
 #[cfg(test)]
 pub mod tests {
-    use std::f64::consts::{FRAC_PI_2, PI};
+    use std::f64::consts::FRAC_PI_2;
 
     use super::*;
     use skyangle::Conversion;

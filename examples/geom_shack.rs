@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use crseo::{
-    wavefrontsensor::Pyramid, Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensorBuilder,
+    wavefrontsensor::GeomShack, Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensorBuilder,
     Source,
 };
 
@@ -9,8 +9,8 @@ fn main() -> anyhow::Result<()> {
     let n_lenslet = 90;
     let n_mode = 500;
 
-    let builder = Pyramid::builder().n_lenslet(n_lenslet).modulation(8., 101);
-    let mut pym = builder.clone().build().unwrap();
+    let builder = GeomShack::builder().lenslet(n_lenslet, 16);
+    let mut wfs = builder.clone().build().unwrap();
 
     let now = Instant::now();
     let mut slopes_mat = builder.calibrate(n_mode);
@@ -23,10 +23,9 @@ fn main() -> anyhow::Result<()> {
 
     let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
     let mut src = Source::builder()
-        .pupil_sampling(pym.pupil_sampling())
+        .pupil_sampling(wfs.pupil_sampling())
         .build()
         .unwrap();
-    src.rotate_rays(0.5 * std::f64::consts::FRAC_PI_6);
 
     let mut atm = Atmosphere::builder().build()?;
 
@@ -34,11 +33,11 @@ fn main() -> anyhow::Result<()> {
     let gain = 0.5;
 
     for i in 0..100 {
-        pym.reset();
+        wfs.reset();
         src.through(&mut gmt)
             .xpupil()
             .through(&mut atm)
-            .through(&mut pym);
+            .through(&mut wfs);
         println!(
             "#{:03}: WFE RMS [nm]: {:4.0?} {:4.0?}",
             i,
@@ -46,7 +45,7 @@ fn main() -> anyhow::Result<()> {
             src.segment_wfe_rms_10e(-9)
         );
 
-        let coefs = (&slopes_mat * &pym).unwrap();
+        let coefs = (&slopes_mat * &wfs).unwrap();
         // dbg!(&coefs);
 
         buffer
@@ -65,7 +64,7 @@ fn main() -> anyhow::Result<()> {
     let _: complot::Heatmap = (
         (
             src.phase().as_slice(),
-            (pym.pupil_sampling(), pym.pupil_sampling()),
+            (wfs.pupil_sampling(), wfs.pupil_sampling()),
         ),
         Some(complot::Config::new().filename("opd.png")),
     )

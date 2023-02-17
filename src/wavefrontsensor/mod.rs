@@ -12,10 +12,15 @@
 //! let mut wfs = ceo!(SHACKHARTMANN:Geometric);
 //! ```
 
+use crate::Builder;
+
+use self::pyramid::{Calibration, SlopesArray};
+
 use super::{imaging::NoiseDataSheet, Cu, Mask, Single, Source};
-use ffi::{geometricShackHartmann, mask, shackHartmann};
+use ffi::{geometricShackHartmann, get_device_count, mask, set_device, shackHartmann};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
-use std::f32;
+use std::{f32, thread};
 
 pub mod shackhartmann;
 pub use shackhartmann::{ShackHartmann, ShackHartmannBuilder};
@@ -25,6 +30,8 @@ mod sh24;
 pub use sh24::SH24;
 mod pyramid;
 pub use pyramid::{Pyramid, PyramidBuilder, QuadCell};
+mod geom_shack;
+pub use geom_shack::{GeomShack, GeomShackBuilder};
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
@@ -358,10 +365,18 @@ impl Model for Diffractive {
 /// n_side_lenslet, n_px_lenslet, d
 #[doc(hidden)]
 #[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
-pub struct LensletArray(pub usize, pub usize, pub f64);
+pub struct LensletArray {
+    pub n_side_lenslet: usize,
+    pub n_px_lenslet: usize,
+    pub d: f64,
+}
 impl Default for LensletArray {
     fn default() -> Self {
-        LensletArray(1, 511, 25.5)
+        LensletArray {
+            n_side_lenslet: 1,
+            n_px_lenslet: 511,
+            d: 25.5,
+        }
     }
 }
 /// Detector noise model specifications
@@ -377,5 +392,55 @@ pub struct Detector(
 impl Default for Detector {
     fn default() -> Self {
         Detector(512, None, None, None)
+    }
+}
+
+pub trait SegmentWiseSensor {
+    fn calibrate_segment(
+        &mut self,
+        sid: usize,
+        n_mode: usize,
+        pb: Option<ProgressBar>,
+    ) -> SlopesArray;
+    fn calibrate(&mut self, n_mode: usize) -> Calibration {
+        (1..=7)
+            .inspect(|i| println!("Calibrating segment # {i}"))
+            .fold(Calibration::default(), |mut c, i| {
+                c.push(self.calibrate_segment(i, n_mode, None));
+                c
+            })
+    }
+}
+
+pub trait SegmentWiseSensorBuilder: Builder + Clone + Copy + Send + Sized + 'static {
+    fn calibrate(self, n_mode: usize) -> Calibration
+    where
+        Self::Component: SegmentWiseSensor,
+    {
+        let m = MultiProgress::new();
+        let mut handle = vec![];
+        for sid in 1..=7 {
+            let pb = m.add(ProgressBar::new(n_mode as u64 - 1));
+            pb.set_style(
+                ProgressStyle::with_template(
+                    "{msg} [{eta_precise}] {bar:50.cyan/blue} {pos:>7}/{len:7}",
+                )
+                .unwrap(),
+            );
+            pb.set_message(format!("Calibrating segment #{sid}"));
+            let n = unsafe { get_device_count() };
+            let builder = self.clone();
+            handle.push(thread::spawn(move || {
+                unsafe { set_device((sid - 1) as i32 % n) };
+                let mut pym = builder.build().unwrap();
+                pym.calibrate_segment(sid, n_mode, Some(pb))
+            }));
+        }
+        let calibration = handle.into_iter().fold(Calibration::default(), |mut c, h| {
+            c.push(h.join().unwrap());
+            c
+        });
+        m.clear().unwrap();
+        calibration
     }
 }

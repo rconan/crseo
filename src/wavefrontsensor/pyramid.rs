@@ -1,13 +1,13 @@
-use std::thread;
-
 use super::LensletArray;
-use crate::{Builder, FromBuilder, Gmt, Propagation, Source};
-use ffi::{get_device_count, pyramid, set_device};
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use crate::{Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, Source};
+use ffi::pyramid;
+use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
 
-pub mod slopes;
+mod slopes;
 pub use slopes::{Calibration, Slopes, SlopesArray};
+mod builder;
+pub use builder::PyramidBuilder;
 
 type Mat = nalgebra::DMatrix<f32>;
 
@@ -15,66 +15,6 @@ type Mat = nalgebra::DMatrix<f32>;
 struct Modulation {
     amplitude: f32,
     sampling: i32,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct PyramidBuilder {
-    lenslet_array: LensletArray,
-    modulation: Option<Modulation>,
-    alpha: f32,
-    n_gs: i32,
-}
-impl Default for PyramidBuilder {
-    fn default() -> Self {
-        Self {
-            lenslet_array: LensletArray(30, 8, 0f64),
-            modulation: None,
-            alpha: 0.5f32,
-            n_gs: 1,
-        }
-    }
-}
-impl FromBuilder for Pyramid {
-    type ComponentBuilder = PyramidBuilder;
-}
-impl PyramidBuilder {
-    pub fn n_lenslet(mut self, n_lenslet: usize) -> Self {
-        self.lenslet_array.0 = n_lenslet;
-        self
-    }
-    pub fn modulation(mut self, amplitude: f32, sampling: i32) -> Self {
-        self.modulation = Some(Modulation {
-            amplitude,
-            sampling,
-        });
-        self
-    }
-    pub fn calibrate(self, n_mode: usize) -> Calibration {
-        let m = MultiProgress::new();
-        let mut handle = vec![];
-        for sid in 1..=7 {
-            let pb = m.add(ProgressBar::new(n_mode as u64 - 1));
-            pb.set_style(
-                ProgressStyle::with_template(
-                    "{msg} [{eta_precise}] {bar:50.cyan/blue} {pos:>7}/{len:7}",
-                )
-                .unwrap(),
-            );
-            pb.set_message(format!("Calibrating segment #{sid}"));
-            let n = unsafe { get_device_count() };
-            handle.push(thread::spawn(move || {
-                unsafe { set_device((sid - 1) as i32 % n) };
-                let mut pym = self.clone().build().unwrap();
-                pym.calibrate_segment(sid, n_mode, Some(pb))
-            }));
-        }
-        let calibration = handle.into_iter().fold(Calibration::default(), |mut c, h| {
-            c.push(h.join().unwrap());
-            c
-        });
-        m.clear().unwrap();
-        calibration
-    }
 }
 
 /// Wrapper to CEO pyramid
@@ -92,37 +32,9 @@ impl Drop for Pyramid {
         }
     }
 }
-impl Builder for PyramidBuilder {
-    type Component = Pyramid;
-
-    fn build(self) -> crate::Result<Self::Component> {
-        let mut pym = Pyramid {
-            _c_: pyramid::default(),
-            lenslet_array: self.lenslet_array,
-            alpha: self.alpha,
-            modulation: self.modulation,
-        };
-        let LensletArray(n_side_lenslet, n_px_lenslet, _) = self.lenslet_array;
-        let n_pupil_sampling = n_side_lenslet * n_px_lenslet;
-        let Modulation {
-            amplitude,
-            sampling,
-        } = self.modulation.unwrap_or_default();
-        unsafe {
-            pym._c_.setup(
-                n_side_lenslet as i32,
-                n_pupil_sampling as i32,
-                amplitude,
-                sampling,
-                self.alpha,
-                self.n_gs,
-            );
-        };
-
-        Ok(pym)
-    }
+impl FromBuilder for Pyramid {
+    type ComponentBuilder = PyramidBuilder;
 }
-
 impl Propagation for Pyramid {
     fn propagate(&mut self, src: &mut crate::Source) {
         if let Some(Modulation {
@@ -171,58 +83,61 @@ impl Pyramid {
         self._c_.camera.N_PX_CAMERA as usize
     }
     pub fn pupil_sampling(&self) -> usize {
-        self.lenslet_array.0 * self.lenslet_array.1
+        let LensletArray {
+            n_side_lenslet,
+            n_px_lenslet,
+            ..
+        } = self.lenslet_array;
+        n_side_lenslet * n_px_lenslet
     }
     pub fn camera_resolution(&self) -> (usize, usize) {
         (self.n_px_camera(), self.n_px_camera())
     }
     pub fn data(&mut self) -> (Mat, Mat) {
         let (n, m) = self.camera_resolution();
-        let LensletArray(n_lenslet, _, _) = self.lenslet_array;
-        let n0 = n_lenslet / 2;
+        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
+        let n0 = n_side_lenslet / 2;
         let n1 = n0 + n / 2;
         let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
-        let row_diff = mat.rows(n0, n_lenslet) - mat.rows(n1, n_lenslet);
-        let row_col_data = row_diff.columns(n0, n_lenslet) + row_diff.columns(n1, n_lenslet);
-        let col_diff = mat.columns(n0, n_lenslet) - mat.columns(n1, n_lenslet);
-        let col_row_data = col_diff.rows(n0, n_lenslet) + col_diff.rows(n1, n_lenslet);
+        let row_diff = mat.rows(n0, n_side_lenslet) - mat.rows(n1, n_side_lenslet);
+        let row_col_data =
+            row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet);
+        let col_diff = mat.columns(n0, n_side_lenslet) - mat.columns(n1, n_side_lenslet);
+        let col_row_data = col_diff.rows(n0, n_side_lenslet) + col_diff.rows(n1, n_side_lenslet);
         (row_col_data, col_row_data)
     }
     pub fn add_quads(&mut self) -> Mat {
         let (n, m) = self.camera_resolution();
-        let LensletArray(n_lenslet, _, _) = self.lenslet_array;
-        let n0 = n_lenslet / 2;
+        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
+        let n0 = n_side_lenslet / 2;
         let n1 = n0 + n / 2;
         let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
-        let row_diff = mat.rows(n0, n_lenslet) + mat.rows(n1, n_lenslet);
-        row_diff.columns(n0, n_lenslet) + row_diff.columns(n1, n_lenslet)
+        let row_diff = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
+        row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet)
     }
-    pub fn calibrate(&mut self, n_mode: usize) -> Calibration {
-        (1..=7)
-            .inspect(|i| println!("Calibrating segment # {i}"))
-            .fold(Calibration::default(), |mut c, i| {
-                c.push(self.calibrate_segment(i, n_mode, None));
-                c
-            })
-    }
-    pub fn calibrate_segment(
+}
+impl SegmentWiseSensor for Pyramid {
+    fn calibrate_segment(
         &mut self,
         sid: usize,
         n_mode: usize,
         pb: Option<ProgressBar>,
     ) -> SlopesArray {
-        let LensletArray(n_lenslet, _, _) = self.lenslet_array;
+        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
 
         // Setting the pyramid mask restricted to the segment
         let mut gmt = Gmt::builder().build().unwrap();
         gmt.keep(&[sid as i32]);
-        let mut src = Source::builder().pupil_sampling(n_lenslet).build().unwrap();
+        let mut src = Source::builder()
+            .pupil_sampling(n_side_lenslet)
+            .build()
+            .unwrap();
         src.rotate_rays(0.5 * std::f64::consts::FRAC_PI_6);
         src.through(&mut gmt).xpupil();
 
         let pupil = nalgebra::DMatrix::<f32>::from_iterator(
-            n_lenslet,
-            n_lenslet,
+            n_side_lenslet,
+            n_side_lenslet,
             src.amplitude().into_iter().rev(),
         );
 
@@ -288,8 +203,8 @@ impl Pyramid {
 /// the reference slopes
 #[derive(Default, Debug, Clone, Serialize)]
 pub struct QuadCell {
-    mask: Option<nalgebra::DMatrix<bool>>,
-    sxy0: Option<Slopes>,
+    pub(crate) mask: Option<nalgebra::DMatrix<bool>>,
+    pub(crate) sxy0: Option<Slopes>,
 }
 impl QuadCell {
     pub fn new(mask: nalgebra::DMatrix<f32>) -> Self {

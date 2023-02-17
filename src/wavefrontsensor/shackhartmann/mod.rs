@@ -59,7 +59,11 @@ impl<T: Model> ShackHartmannBuilder<T> {
     }
     pub fn lenslet_array(self, n_side_lenslet: usize, n_px_lenslet: usize, d: f64) -> Self {
         Self {
-            lenslet_array: LensletArray(n_side_lenslet, n_px_lenslet, d),
+            lenslet_array: LensletArray {
+                n_side_lenslet,
+                n_px_lenslet,
+                d,
+            },
             ..self
         }
     }
@@ -78,7 +82,11 @@ impl<T: Model> ShackHartmannBuilder<T> {
 }
 impl<T: Model> WavefrontSensorBuilder for ShackHartmannBuilder<T> {
     fn guide_stars(&self, template: Option<SourceBuilder>) -> SourceBuilder {
-        let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
+        let LensletArray {
+            n_side_lenslet,
+            n_px_lenslet,
+            d,
+        } = self.lenslet_array;
         match template {
             Some(src) => src,
             None => Source::builder(),
@@ -97,7 +105,11 @@ impl<T: Model> WavefrontSensorBuilder for ShackHartmannBuilder<T> {
 impl<T: Model> Builder for ShackHartmannBuilder<T> {
     type Component = ShackHartmann<T>;
     fn build(self) -> Result<ShackHartmann<T>> {
-        let LensletArray(n_side_lenslet, n_px_lenslet, d) = self.lenslet_array;
+        let LensletArray {
+            n_side_lenslet,
+            n_px_lenslet,
+            d,
+        } = self.lenslet_array;
         let Detector(n_px_framelet, n_px_imagelet, osf, detector_noise_model) = self.detector;
         let mut wfs = ShackHartmann::<T> {
             _c_: Model::new(),
