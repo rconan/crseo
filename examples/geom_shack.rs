@@ -1,8 +1,9 @@
 use std::time::Instant;
 
 use crseo::{
-    wavefrontsensor::GeomShack, Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor,
-    SegmentWiseSensorBuilder, Source,
+    calibrations::Segment,
+    wavefrontsensor::{GeomShack, Mirror, SegmentCalibration, DOF},
+    Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor, SegmentWiseSensorBuilder, Source,
 };
 
 fn main() -> anyhow::Result<()> {
@@ -13,7 +14,10 @@ fn main() -> anyhow::Result<()> {
     let mut wfs = builder.clone().build().unwrap();
 
     let now = Instant::now();
-    let mut slopes_mat = builder.calibrate(n_mode);
+    let mut slopes_mat = builder.calibrate(
+        SegmentCalibration::modes("Karhunen-Loeve", 1..n_mode, "M2"),
+        wfs.guide_star(None),
+    );
     println!(
         "M2 {}modes/segment calibrated in {}s",
         n_mode,

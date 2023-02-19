@@ -8,7 +8,10 @@ mod tests {
     use std::fs::File;
 
     use super::*;
-    use crate::{FromBuilder, Gmt, Source};
+    use crate::{
+        wavefrontsensor::{Mirror, SegmentCalibration, DOF},
+        Builder, FromBuilder, Gmt, SegmentWiseSensor, Source,
+    };
 
     #[test]
     fn geom_shack() {
@@ -42,13 +45,29 @@ mod tests {
         )
         .unwrap();
 
-        let calib = wfs.calibrate_segment(1, 15, None);
-        dbg!(calib.shape());
+        let calib = wfs.calibrate_segment(None, 1, 15, None);
+        println!("{calib}");
         serde_pickle::to_writer(
             &mut File::create("geom_shack_calibration.pkl").unwrap(),
             &calib,
             Default::default(),
         )
         .unwrap();
+
+        let sc = SegmentCalibration::Modes {
+            name: "Karhunen-Loeve".to_string(),
+            dof: DOF::Range(1..15),
+            mirror: Mirror::M2,
+        };
+
+        let calib2 = sc.calibrate(1, &mut wfs, Source::builder(), None);
+        println!("{calib2}");
+        serde_pickle::to_writer(
+            &mut File::create("geom_shack_calibration2.pkl").unwrap(),
+            &calib,
+            Default::default(),
+        )
+        .unwrap();
+        // assert_eq!(calib, calib2);
     }
 }

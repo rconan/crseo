@@ -8,7 +8,7 @@ type Mat = nalgebra::DMatrix<f32>;
 ///
 /// Holds the mask applied to the detector frame and
 /// the reference slopes
-#[derive(Default, Debug, Clone, Serialize)]
+#[derive(Default, Debug, Clone, Serialize, PartialEq)]
 pub struct DataRef {
     pub(crate) mask: Option<nalgebra::DMatrix<bool>>,
     pub(crate) sxy0: Option<Slopes>,

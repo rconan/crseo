@@ -14,7 +14,7 @@ mod tests {
     use super::*;
     use crate::{
         wavefrontsensor::{data_processing::DataRef, Slopes},
-        FromBuilder, Gmt, Source,
+        Builder, FromBuilder, Gmt, SegmentWiseSensor, Source,
     };
 
     #[test]
@@ -26,7 +26,7 @@ mod tests {
             .modulation(8., 101)
             .build()
             .unwrap();
-        let mut slopes_mat = pym.calibrate(3);
+        let mut slopes_mat = pym.calibrate(None, 3);
         dbg!(slopes_mat.shape());
         slopes_mat.pseudo_inverse().unwrap();
 
@@ -61,7 +61,7 @@ mod tests {
             .modulation(8., 101)
             .build()
             .unwrap();
-        let mut slopes_mat = pym.calibrate_segment(sid, 15, None);
+        let mut slopes_mat = pym.calibrate_segment(None, sid, 15, None);
         dbg!(slopes_mat.shape());
         slopes_mat.pseudo_inverse().unwrap();
 

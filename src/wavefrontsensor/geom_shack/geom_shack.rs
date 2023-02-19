@@ -5,7 +5,7 @@ use indicatif::ProgressBar;
 use crate::{
     cu::Single,
     wavefrontsensor::{data_processing::DataRef, Calibration, LensletArray, Slopes, SlopesArray},
-    Builder, Cu, FromBuilder, Gmt, Propagation, SegmentWiseSensor, Source,
+    Builder, Cu, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
 };
 
 use super::GeomShackBuilder;
@@ -40,11 +40,6 @@ impl Propagation for GeomShack {
 }
 
 impl GeomShack {
-    pub fn reset(&mut self) {
-        unsafe {
-            self._c_.reset();
-        }
-    }
     pub fn n_total_lenslet(&self) -> usize {
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
         n_side_lenslet * n_side_lenslet * self.n_gs
@@ -57,6 +52,11 @@ impl GeomShack {
 }
 
 impl SegmentWiseSensor for GeomShack {
+    fn reset(&mut self) {
+        unsafe {
+            self._c_.reset();
+        }
+    }
     fn pupil_sampling(&self) -> usize {
         let LensletArray {
             n_side_lenslet,
@@ -65,18 +65,14 @@ impl SegmentWiseSensor for GeomShack {
         } = self.lenslet_array;
         n_side_lenslet * n_px_lenslet + 1
     }
-    fn calibrate_segment(
-        &mut self,
-        sid: usize,
-        n_mode: usize,
-        pb: Option<ProgressBar>,
-    ) -> SlopesArray {
+    fn zeroed_segment(&mut self, sid: usize, src_builder: Option<SourceBuilder>) -> DataRef {
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
-
         // Setting the WFS mask restricted to the segment
         let mut gmt = Gmt::builder().build().unwrap();
         gmt.keep(&[sid as i32]);
-        let mut src = Source::builder()
+        let mut src = src_builder
+            .clone()
+            .unwrap_or_default()
             .pupil_sampling(n_side_lenslet)
             .build()
             .unwrap();
@@ -88,19 +84,40 @@ impl SegmentWiseSensor for GeomShack {
             src.amplitude().into_iter(),
         );
 
-        let mut quad_cell = DataRef::new(pupil);
+        let mut date_ref = DataRef::new(pupil);
 
-        let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
-        gmt.keep(&[sid as i32]);
-        // let mut pym = Pyramid::builder().n_lenslet(n_lenslet).build().unwrap();
-        let mut src = Source::builder()
+        let mut src = src_builder
+            .clone()
+            .unwrap_or_default()
             .pupil_sampling(self.pupil_sampling())
             .build()
             .unwrap();
         self.reset();
         src.through(&mut gmt).xpupil().through(self);
-        quad_cell.set_ref_with(Slopes::from((&quad_cell, &*self)));
+        date_ref.set_ref_with(Slopes::from((&date_ref, &*self)));
         self.reset();
+        date_ref
+    }
+    fn into_slopes(&self, data_ref: &DataRef) -> Slopes {
+        Slopes::from((data_ref, self))
+    }
+    fn calibrate_segment(
+        &mut self,
+        src_builder: Option<SourceBuilder>,
+        sid: usize,
+        n_mode: usize,
+        pb: Option<ProgressBar>,
+    ) -> SlopesArray {
+        let quad_cell = self.zeroed_segment(sid, src_builder.clone());
+
+        let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
+        gmt.keep(&[sid as i32]);
+
+        let mut src = src_builder
+            .unwrap_or_default()
+            .pupil_sampling(self.pupil_sampling())
+            .build()
+            .unwrap();
 
         let mut slopes = vec![];
         let o2p = (2. * std::f64::consts::PI / src.wavelength()) as f32;
@@ -175,7 +192,7 @@ impl Mul<&GeomShack> for &SlopesArray {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
     fn mul(self, pym: &GeomShack) -> Self::Output {
-        let slopes = Slopes::from((&self.quad_cell, pym));
+        let slopes = Slopes::from((&self.data_ref, pym));
         self.inverse
             .as_ref()
             .map(|pinv| pinv * V::from(slopes))

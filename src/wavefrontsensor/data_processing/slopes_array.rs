@@ -1,4 +1,4 @@
-use std::{error::Error, ops::Mul};
+use std::{error::Error, fmt::Display, ops::Mul};
 
 use serde::Serialize;
 
@@ -7,21 +7,26 @@ use super::{DataRef, Slopes};
 type Mat = nalgebra::DMatrix<f32>;
 
 /// A collection of pyramid measurements
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize, PartialEq)]
 pub struct SlopesArray {
     pub(crate) slopes: Vec<Slopes>,
-    pub(crate) quad_cell: DataRef,
+    pub(crate) data_ref: DataRef,
     #[serde(skip)]
     pub(crate) inverse: Option<Mat>,
 }
 impl From<(DataRef, Vec<Slopes>)> for SlopesArray {
     /// Convert a vector of measurements and the associated [QuadCell] into a [SlopesArray]
-    fn from((quad_cell, slopes): (DataRef, Vec<Slopes>)) -> Self {
+    fn from((data_ref, slopes): (DataRef, Vec<Slopes>)) -> Self {
         Self {
             slopes,
-            quad_cell,
+            data_ref,
             inverse: None,
         }
+    }
+}
+impl Display for SlopesArray {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "SlopesArray: {:?}", self.shape())
     }
 }
 impl SlopesArray {

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// Wavefront sensor measurements
 ///
 /// The measurements vector concatenates all the pairs [sx,sy]
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct Slopes(pub(crate) Vec<f32>);
 impl Slopes {
     /// Returns the length of the measurements vector

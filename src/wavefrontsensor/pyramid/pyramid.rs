@@ -4,7 +4,7 @@ use indicatif::ProgressBar;
 
 use crate::{
     wavefrontsensor::{data_processing::DataRef, Calibration, LensletArray, Slopes, SlopesArray},
-    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, Source, SourceBuilder,
+    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
 };
 
 use super::{Modulation, PyramidBuilder};
@@ -67,11 +67,7 @@ impl Pyramid {
         }
         frame
     }
-    pub fn reset(&mut self) {
-        unsafe {
-            self._c_.camera.reset();
-        }
-    }
+
     #[inline]
     pub fn n_px_camera(&self) -> usize {
         self._c_.camera.N_PX_CAMERA as usize
@@ -104,6 +100,11 @@ impl Pyramid {
 }
 
 impl SegmentWiseSensor for Pyramid {
+    fn reset(&mut self) {
+        unsafe {
+            self._c_.camera.reset();
+        }
+    }
     fn pupil_sampling(&self) -> usize {
         let LensletArray {
             n_side_lenslet,
@@ -117,22 +118,17 @@ impl SegmentWiseSensor for Pyramid {
             .rays_azimuth(0.5 * std::f64::consts::FRAC_PI_6)
             .pupil_sampling(self.pupil_sampling())
     }
-    fn calibrate_segment(
-        &mut self,
-        sid: usize,
-        n_mode: usize,
-        pb: Option<ProgressBar>,
-    ) -> SlopesArray {
+    fn zeroed_segment(&mut self, sid: usize, src_builder: Option<SourceBuilder>) -> DataRef {
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
-
         // Setting the pyramid mask restricted to the segment
         let mut gmt = Gmt::builder().build().unwrap();
         gmt.keep(&[sid as i32]);
-        let mut src = Source::builder()
+        let mut src = src_builder
+            .clone()
+            .unwrap_or_default()
             .pupil_sampling(n_side_lenslet)
             .build()
             .unwrap();
-        src.rotate_rays(0.5 * std::f64::consts::FRAC_PI_6);
         src.through(&mut gmt).xpupil();
 
         let pupil = nalgebra::DMatrix::<f32>::from_iterator(
@@ -141,20 +137,41 @@ impl SegmentWiseSensor for Pyramid {
             src.amplitude().into_iter().rev(),
         );
 
-        let mut quad_cell = DataRef::new(pupil);
+        let mut data_ref = DataRef::new(pupil);
 
-        let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
         gmt.keep(&[sid as i32]);
-        // let mut pym = Pyramid::builder().n_lenslet(n_lenslet).build().unwrap();
-        let mut src = Source::builder()
+        let mut src = src_builder
+            .clone()
+            .unwrap_or_default()
             .pupil_sampling(self.pupil_sampling())
             .build()
             .unwrap();
-        src.rotate_rays(0.5 * std::f64::consts::FRAC_PI_6);
         self.reset();
         src.through(&mut gmt).xpupil().through(self);
-        quad_cell.set_ref_with(Slopes::from((&quad_cell, &*self)));
+        data_ref.set_ref_with(Slopes::from((&data_ref, &*self)));
         self.reset();
+        data_ref
+    }
+    fn into_slopes(&self, data_ref: &DataRef) -> Slopes {
+        Slopes::from((data_ref, self))
+    }
+    fn calibrate_segment(
+        &mut self,
+        src_builder: Option<SourceBuilder>,
+        sid: usize,
+        n_mode: usize,
+        pb: Option<ProgressBar>,
+    ) -> SlopesArray {
+        let quad_cell = self.zeroed_segment(sid, src_builder.clone());
+
+        let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
+        gmt.keep(&[sid as i32]);
+
+        let mut src = src_builder
+            .unwrap_or_default()
+            .pupil_sampling(self.pupil_sampling())
+            .build()
+            .unwrap();
 
         let mut slopes = vec![];
         let o2p = (2. * std::f64::consts::PI / src.wavelength()) as f32;
@@ -244,7 +261,7 @@ impl Mul<&Pyramid> for &SlopesArray {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
     fn mul(self, pym: &Pyramid) -> Self::Output {
-        let slopes = Slopes::from((&self.quad_cell, pym));
+        let slopes = Slopes::from((&self.data_ref, pym));
         self.inverse
             .as_ref()
             .map(|pinv| pinv * V::from(slopes))

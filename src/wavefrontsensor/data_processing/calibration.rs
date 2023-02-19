@@ -1,4 +1,5 @@
 mod calibration;
+
 pub use calibration::Calibration;
 mod builder;
-pub use builder::CalibrationBuilder;
+pub use builder::{Mirror, SegmentCalibration, DOF, RBM};
