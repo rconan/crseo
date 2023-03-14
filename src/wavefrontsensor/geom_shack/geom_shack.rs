@@ -84,7 +84,7 @@ impl SegmentWiseSensor for GeomShack {
             src.amplitude().into_iter(),
         );
 
-        let mut date_ref = DataRef::new(pupil);
+        let mut data_ref = DataRef::new(pupil);
 
         let mut src = src_builder
             .clone()
@@ -94,9 +94,9 @@ impl SegmentWiseSensor for GeomShack {
             .unwrap();
         self.reset();
         src.through(&mut gmt).xpupil().through(self);
-        date_ref.set_ref_with(Slopes::from((&date_ref, &*self)));
+        data_ref.set_ref_with(Slopes::from((&data_ref, &*self)));
         self.reset();
-        date_ref
+        data_ref
     }
     fn into_slopes(&self, data_ref: &DataRef) -> Slopes {
         Slopes::from((data_ref, self))

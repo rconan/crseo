@@ -384,6 +384,9 @@ impl Source {
             magnitude: vec![0.0; size as usize],
         }
     }
+    pub fn pupil_sampling(&self) -> usize {
+        self.pupil_sampling as usize
+    }
     pub fn from(args: (i32, f64, i32)) -> Source {
         Source::new(args.0, args.1, args.2)
     }
