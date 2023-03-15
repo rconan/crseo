@@ -204,6 +204,7 @@ pub trait WavefrontSensor: Propagation + Send {
     fn valid_lenslet_from(&mut self, wfs: &mut dyn WavefrontSensor);
     fn valid_lenslet(&mut self) -> &mut mask;
     fn n_valid_lenslet(&mut self) -> Vec<usize>;
+    fn left_multiply(&self, calibration: &wavefrontsensor::Calibration) -> Option<Vec<f32>>;
 }
 
 impl<'a, T: WavefrontSensor + ?Sized> WavefrontSensor for &'a mut Box<T> {
@@ -245,6 +246,9 @@ impl<'a, T: WavefrontSensor + ?Sized> WavefrontSensor for &'a mut Box<T> {
 
     fn n_valid_lenslet(&mut self) -> Vec<usize> {
         (**self).n_valid_lenslet()
+    }
+    fn left_multiply(&self, calibration: &wavefrontsensor::Calibration) -> Option<Vec<f32>> {
+        (**self).left_multiply(calibration)
     }
 }
 impl<'a, T: WavefrontSensor + ?Sized> Propagation for &'a mut Box<T> {

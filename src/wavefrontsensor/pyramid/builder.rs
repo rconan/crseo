@@ -44,7 +44,16 @@ impl PyramidBuilder {
     }
 }
 
-impl SegmentWiseSensorBuilder for PyramidBuilder {}
+impl SegmentWiseSensorBuilder for PyramidBuilder {
+    fn pupil_sampling(&self) -> usize {
+        let LensletArray {
+            n_side_lenslet,
+            n_px_lenslet,
+            ..
+        } = self.lenslet_array;
+        n_side_lenslet * n_px_lenslet
+    }
+}
 
 impl Builder for PyramidBuilder {
     type Component = Pyramid;

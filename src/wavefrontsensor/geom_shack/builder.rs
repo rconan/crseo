@@ -31,7 +31,16 @@ impl GeomShackBuilder {
     }
 }
 
-impl SegmentWiseSensorBuilder for GeomShackBuilder {}
+impl SegmentWiseSensorBuilder for GeomShackBuilder {
+    fn pupil_sampling(&self) -> usize {
+        let LensletArray {
+            n_side_lenslet,
+            n_px_lenslet,
+            ..
+        } = self.lenslet_array;
+        n_side_lenslet * n_px_lenslet + 1
+    }
+}
 
 impl Builder for GeomShackBuilder {
     type Component = GeomShack;

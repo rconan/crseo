@@ -3,10 +3,68 @@ pub use builder::PyramidBuilder;
 mod pyramid;
 pub use pyramid::Pyramid;
 
+use crate::{SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
+
 #[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 struct Modulation {
     amplitude: f32,
     sampling: i32,
+}
+
+impl WavefrontSensorBuilder for PyramidBuilder {
+    fn guide_stars(&self, gs: Option<SourceBuilder>) -> SourceBuilder {
+        gs.unwrap_or_default()
+            .rays_azimuth(0.5 * std::f64::consts::FRAC_PI_6)
+            .pupil_sampling(self.pupil_sampling())
+    }
+}
+
+impl WavefrontSensor for Pyramid {
+    fn calibrate(&mut self, _src: &mut crate::Source, _threshold: f64) {
+        todo!()
+    }
+
+    fn reset(&mut self) {
+        unsafe {
+            self._c_.camera.reset();
+        }
+    }
+
+    fn process(&mut self) {
+        todo!()
+    }
+
+    fn readout(&mut self) {
+        todo!()
+    }
+
+    fn data(&mut self) -> Vec<f64> {
+        todo!()
+    }
+
+    fn frame(&self) -> Option<Vec<f32>> {
+        todo!()
+    }
+
+    fn n_frame(&self) -> usize {
+        todo!()
+    }
+
+    fn valid_lenslet_from(&mut self, _wfs: &mut dyn WavefrontSensor) {
+        todo!()
+    }
+
+    fn valid_lenslet(&mut self) -> &mut ffi::mask {
+        todo!()
+    }
+
+    fn n_valid_lenslet(&mut self) -> Vec<usize> {
+        todo!()
+    }
+
+    fn left_multiply(&self, calibration: &super::Calibration) -> Option<Vec<f32>> {
+        calibration * self
+    }
 }
 
 #[cfg(test)]

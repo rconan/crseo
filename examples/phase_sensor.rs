@@ -3,14 +3,15 @@ use std::time::Instant;
 use crseo::{
     wavefrontsensor::{PhaseSensor, SegmentCalibration},
     Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor, SegmentWiseSensorBuilder, Source,
+    WavefrontSensor,
 };
 
 fn main() -> anyhow::Result<()> {
-    let n_mode = 500;
+    let n_mode = 350;
 
     let builder = PhaseSensor::builder();
     let mut wfs = builder.clone().build().unwrap();
-    let src_builder = Source::builder();
+    let src_builder = Source::builder().pupil_sampling(92);
 
     let now = Instant::now();
     let mut slopes_mat = builder.calibrate(

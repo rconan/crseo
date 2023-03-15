@@ -5,7 +5,7 @@ use indicatif::ProgressBar;
 use crate::{
     cu::Single,
     wavefrontsensor::{data_processing::DataRef, Calibration, LensletArray, Slopes, SlopesArray},
-    Builder, Cu, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
+    Builder, Cu, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder, WavefrontSensor,
 };
 
 use super::GeomShackBuilder;
@@ -52,11 +52,6 @@ impl GeomShack {
 }
 
 impl SegmentWiseSensor for GeomShack {
-    fn reset(&mut self) {
-        unsafe {
-            self._c_.reset();
-        }
-    }
     fn pupil_sampling(&self) -> usize {
         let LensletArray {
             n_side_lenslet,
@@ -207,3 +202,13 @@ impl Mul<&GeomShack> for &Calibration {
         Some(self.iter().flat_map(|x| x * wfs).flatten().collect())
     }
 }
+/* impl<'a, T> Mul<&'a Box<T>> for &'a Calibration
+where
+    &'a Calibration: Mul<&'a T>,
+{
+    type Output = Option<Vec<f32>>;
+
+    fn mul(self, rhs: &'a Box<T>) -> Self::Output {
+        self * (**rhs)
+    }
+} */

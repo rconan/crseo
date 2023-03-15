@@ -62,6 +62,13 @@ impl WavefrontSensor for PistonSensor {
     fn n_valid_lenslet(&mut self) -> Vec<usize> {
         todo!()
     }
+
+    fn left_multiply(
+        &self,
+        _calibration: &crate::wavefrontsensor::Calibration,
+    ) -> Option<Vec<f32>> {
+        todo!()
+    }
 }
 
 impl Propagation for PistonSensor {

@@ -93,6 +93,13 @@ impl<M: Model> WavefrontSensor for ShackHartmann<M> {
             })
             .collect()
     }
+
+    fn left_multiply(
+        &self,
+        _calibration: &crate::wavefrontsensor::Calibration,
+    ) -> Option<Vec<f32>> {
+        todo!()
+    }
 }
 impl<M: Model> ShackHartmann<M> {
     pub fn n_valid_lenslet(&mut self) -> usize {

@@ -16,8 +16,8 @@ use std::{
 #[doc(hidden)]
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Mirror {
-    mode_type: String,
-    n_mode: usize,
+    pub mode_type: String,
+    pub n_mode: usize,
     a: Vec<f64>,
 }
 impl Mirror {
@@ -70,9 +70,9 @@ impl Mirror {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GmtBuilder {
-    m1: Mirror,
-    m2: Mirror,
-    pointing_error: Option<(f64, f64)>,
+    pub m1: Mirror,
+    pub m2: Mirror,
+    pub pointing_error: Option<(f64, f64)>,
 }
 impl Default for GmtBuilder {
     fn default() -> Self {

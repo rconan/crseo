@@ -4,7 +4,7 @@ use indicatif::ProgressBar;
 
 use crate::{
     wavefrontsensor::{data_processing::DataRef, Calibration, LensletArray, Slopes, SlopesArray},
-    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
+    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder, WavefrontSensor,
 };
 
 use super::{Modulation, PyramidBuilder};
@@ -100,23 +100,13 @@ impl Pyramid {
 }
 
 impl SegmentWiseSensor for Pyramid {
-    fn reset(&mut self) {
-        unsafe {
-            self._c_.camera.reset();
-        }
-    }
     fn pupil_sampling(&self) -> usize {
         let LensletArray {
             n_side_lenslet,
             n_px_lenslet,
             ..
         } = self.lenslet_array;
-        n_side_lenslet * n_px_lenslet
-    }
-    fn guide_star(&self, gs: Option<SourceBuilder>) -> SourceBuilder {
-        gs.unwrap_or_default()
-            .rays_azimuth(0.5 * std::f64::consts::FRAC_PI_6)
-            .pupil_sampling(self.pupil_sampling())
+        n_side_lenslet * n_px_lenslet + 1
     }
     fn zeroed_segment(&mut self, sid: usize, src_builder: Option<SourceBuilder>) -> DataRef {
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;

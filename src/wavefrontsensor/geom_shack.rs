@@ -3,6 +3,67 @@ pub use builder::GeomShackBuilder;
 mod geom_shack;
 pub use geom_shack::GeomShack;
 
+use crate::{SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
+
+use super::Calibration;
+
+impl WavefrontSensorBuilder for GeomShackBuilder {
+    fn guide_stars(&self, gs: Option<SourceBuilder>) -> SourceBuilder {
+        gs.unwrap_or_default().pupil_sampling(self.pupil_sampling())
+    }
+}
+
+impl WavefrontSensor for GeomShack {
+    fn calibrate(&mut self, _src: &mut crate::Source, _threshold: f64) {
+        todo!()
+    }
+
+    fn reset(&mut self) {
+        unsafe {
+            self._c_.reset();
+        }
+    }
+
+    fn process(&mut self) {
+        todo!()
+    }
+
+    fn readout(&mut self) {
+        todo!()
+    }
+
+    fn data(&mut self) -> Vec<f64> {
+        GeomShack::data(&self)
+            .into_iter()
+            .map(|x| x as f64)
+            .collect()
+    }
+
+    fn frame(&self) -> Option<Vec<f32>> {
+        todo!()
+    }
+
+    fn n_frame(&self) -> usize {
+        todo!()
+    }
+
+    fn valid_lenslet_from(&mut self, _wfs: &mut dyn WavefrontSensor) {
+        todo!()
+    }
+
+    fn valid_lenslet(&mut self) -> &mut ffi::mask {
+        todo!()
+    }
+
+    fn n_valid_lenslet(&mut self) -> Vec<usize> {
+        todo!()
+    }
+
+    fn left_multiply(&self, calibration: &Calibration) -> Option<Vec<f32>> {
+        calibration * self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs::File;

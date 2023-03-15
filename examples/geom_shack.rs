@@ -1,22 +1,21 @@
 use std::time::Instant;
 
 use crseo::{
-    calibrations::Segment,
-    wavefrontsensor::{GeomShack, Mirror, SegmentCalibration, DOF},
-    Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor, SegmentWiseSensorBuilder, Source,
+    wavefrontsensor::{GeomShack, SegmentCalibration},
+    Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor, SegmentWiseSensorBuilder,
+    WavefrontSensor, WavefrontSensorBuilder,
 };
 
 fn main() -> anyhow::Result<()> {
-    let n_lenslet = 90;
-    let n_mode = 500;
+    let n_lenslet = 92;
+    let n_mode = 50;
 
     let builder = GeomShack::builder().lenslet(n_lenslet, 16);
-    let mut wfs = builder.clone().build().unwrap();
 
     let now = Instant::now();
     let mut slopes_mat = builder.calibrate(
         SegmentCalibration::modes("Karhunen-Loeve", 1..n_mode, "M2"),
-        wfs.guide_star(None),
+        builder.guide_stars(None),
     );
     println!(
         "M2 {}modes/segment calibrated in {}s",
@@ -26,15 +25,15 @@ fn main() -> anyhow::Result<()> {
     slopes_mat.pseudo_inverse().unwrap();
 
     let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
-    let mut src = wfs.guide_star(None).build().unwrap();
+    let mut src = builder.guide_stars(None).build().unwrap();
+    let mut wfs = builder.build().unwrap();
 
     let mut atm = Atmosphere::builder().build()?;
 
     let mut buffer = vec![0f64; 7 * n_mode];
     let gain = 0.5;
 
-    for i in 0..100 {
-        wfs.reset();
+    for i in 0..10 {
         src.through(&mut gmt)
             .xpupil()
             .through(&mut atm)
@@ -48,6 +47,7 @@ fn main() -> anyhow::Result<()> {
 
         let coefs = (&slopes_mat * &wfs).unwrap();
         // dbg!(&coefs);
+        wfs.reset();
 
         buffer
             .chunks_mut(n_mode)

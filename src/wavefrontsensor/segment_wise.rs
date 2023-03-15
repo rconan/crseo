@@ -1,13 +1,14 @@
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
-use crate::{Builder, Propagation, SourceBuilder};
+use crate::{Builder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
 
 use super::{
     data_processing::{DataRef, SegmentCalibration},
     Calibration, Slopes, SlopesArray,
 };
 
-pub trait SegmentWiseSensor {
+pub trait SegmentWiseSensor: WavefrontSensor {
+    fn pupil_sampling(&self) -> usize;
     fn calibrate_segment(
         &mut self,
         src: Option<SourceBuilder>,
@@ -23,19 +24,18 @@ pub trait SegmentWiseSensor {
                 c
             })
     }
-    fn pupil_sampling(&self) -> usize;
-    fn guide_star(&self, gs: Option<SourceBuilder>) -> SourceBuilder {
-        gs.unwrap_or_default().pupil_sampling(self.pupil_sampling())
-    }
     fn zeroed_segment(&mut self, sid: usize, src: Option<SourceBuilder>) -> DataRef;
-    fn reset(&mut self);
+    // fn reset(&mut self);
     fn into_slopes(&self, data_ref: &DataRef) -> Slopes;
 }
 
-pub trait SegmentWiseSensorBuilder: Builder + Clone + Copy + Send + Sized + 'static {
+pub trait SegmentWiseSensorBuilder:
+    Builder + WavefrontSensorBuilder + Clone + Copy + Send + Sized + 'static
+{
+    fn pupil_sampling(&self) -> usize;
     fn calibrate(self, segment: SegmentCalibration, src: SourceBuilder) -> Calibration
     where
-        Self::Component: SegmentWiseSensor + Propagation,
+        Self::Component: SegmentWiseSensor,
     {
         let m = MultiProgress::new();
         let mut handle = vec![];

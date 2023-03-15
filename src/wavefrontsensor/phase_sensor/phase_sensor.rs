@@ -2,14 +2,14 @@ use std::ops::Mul;
 
 use crate::{
     wavefrontsensor::{data_processing::DataRef, Calibration, Slopes, SlopesArray},
-    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor,
+    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, WavefrontSensor,
 };
 
-use super::builder::PhaseSensorBuilder;
+pub use super::builder::PhaseSensorBuilder;
 
 #[derive(Debug, Default, Clone)]
 pub struct PhaseSensor {
-    data: Vec<f32>,
+    pub(super) data: Vec<f32>,
 }
 impl PhaseSensor {
     pub fn data(&self) -> Vec<f32> {
@@ -108,11 +108,6 @@ impl SegmentWiseSensor for PhaseSensor {
         self.reset();
         data_ref
     }
-
-    fn reset(&mut self) {
-        self.data.fill(0f32);
-    }
-
     fn into_slopes(&self, data_ref: &DataRef) -> Slopes {
         Slopes::from((data_ref, self))
     }

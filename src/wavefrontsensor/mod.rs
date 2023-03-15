@@ -37,9 +37,6 @@ pub use data_processing::{Calibration, Mirror, SegmentCalibration, Slopes, Slope
 mod segment_wise;
 pub use segment_wise::{SegmentWiseSensor, SegmentWiseSensorBuilder};
 
-mod phase_sensor;
-pub use phase_sensor::PhaseSensor;
-
 /// Shack-Hartmann model type: Geometric or Diffractive
 pub trait Model: Clone + Send {
     fn new() -> Self;
