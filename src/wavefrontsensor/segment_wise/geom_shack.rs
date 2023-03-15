@@ -1,11 +1,10 @@
-mod builder;
+pub mod builder;
 pub use builder::GeomShackBuilder;
 mod geom_shack;
 pub use geom_shack::GeomShack;
 
+pub use super::data_processing;
 use crate::{SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
-
-use super::Calibration;
 
 impl WavefrontSensorBuilder for GeomShackBuilder {
     fn guide_stars(&self, gs: Option<SourceBuilder>) -> SourceBuilder {
@@ -59,7 +58,7 @@ impl WavefrontSensor for GeomShack {
         todo!()
     }
 
-    fn left_multiply(&self, calibration: &Calibration) -> Option<Vec<f32>> {
+    fn left_multiply(&self, calibration: &super::Calibration) -> Option<Vec<f32>> {
         calibration * self
     }
 }

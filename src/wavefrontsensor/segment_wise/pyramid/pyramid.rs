@@ -2,35 +2,55 @@ use std::ops::Mul;
 
 use indicatif::ProgressBar;
 
+use crate::wavefrontsensor::LensletArray;
 use crate::{
-    cu::Single,
-    wavefrontsensor::{data_processing::DataRef, Calibration, LensletArray, Slopes, SlopesArray},
-    Builder, Cu, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder, WavefrontSensor,
+    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder, WavefrontSensor,
 };
 
-use super::GeomShackBuilder;
+use super::data_processing::{Calibration, DataRef, Slopes, SlopesArray};
+use super::{Modulation, PyramidBuilder};
 
-/// Wrapper to CEO geometric ShackHartmann
-pub struct GeomShack {
-    pub(super) _c_: ffi::geometricShackHartmann,
+type Mat = nalgebra::DMatrix<f32>;
+
+/// Wrapper to CEO pyramid
+pub struct Pyramid {
+    pub(super) _c_: ffi::pyramid,
     pub(super) lenslet_array: LensletArray,
-    pub(super) n_gs: usize,
+    pub(super) alpha: f32,
+    pub(super) modulation: Option<Modulation>,
 }
-impl Drop for GeomShack {
-    /// Frees CEO memory before dropping `GeomShack`
+impl Drop for Pyramid {
+    /// Frees CEO memory before dropping `Pyramid`
     fn drop(&mut self) {
         unsafe {
             self._c_.cleanup();
         }
     }
 }
-impl FromBuilder for GeomShack {
-    type ComponentBuilder = GeomShackBuilder;
+impl FromBuilder for Pyramid {
+    type ComponentBuilder = PyramidBuilder;
 }
-impl Propagation for GeomShack {
+impl Propagation for Pyramid {
     fn propagate(&mut self, src: &mut crate::Source) {
-        unsafe {
-            self._c_.propagate(src.as_raw_mut_ptr());
+        if let Some(Modulation {
+            amplitude,
+            sampling,
+        }) = self.modulation
+        {
+            unsafe {
+                self._c_.camera.propagateThroughModulatedPyramid(
+                    src.as_raw_mut_ptr(),
+                    amplitude,
+                    sampling,
+                    self.alpha,
+                )
+            }
+        } else {
+            unsafe {
+                self._c_
+                    .camera
+                    .propagateThroughPyramid(src.as_raw_mut_ptr(), self.alpha)
+            }
         }
     }
 
@@ -39,19 +59,48 @@ impl Propagation for GeomShack {
     }
 }
 
-impl GeomShack {
-    pub fn n_total_lenslet(&self) -> usize {
-        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
-        n_side_lenslet * n_side_lenslet * self.n_gs
+impl Pyramid {
+    pub fn frame(&self) -> Vec<f32> {
+        let n = self._c_.camera.N_PX_CAMERA.pow(2) * self._c_.camera.N_SOURCE;
+        let mut frame = vec![0f32; n as usize];
+        unsafe {
+            ffi::dev2host(frame.as_mut_ptr(), self._c_.camera.d__frame, n);
+        }
+        frame
     }
-    pub fn data(&self) -> Vec<f32> {
-        let mut data = Cu::<Single>::vector(self.n_total_lenslet() * 2);
-        data.from_ptr(self._c_.data_proc.d__c);
-        data.from_dev()
+
+    #[inline]
+    pub fn n_px_camera(&self) -> usize {
+        self._c_.camera.N_PX_CAMERA as usize
+    }
+    pub fn camera_resolution(&self) -> (usize, usize) {
+        (self.n_px_camera(), self.n_px_camera())
+    }
+    pub fn data(&mut self) -> (Mat, Mat) {
+        let (n, m) = self.camera_resolution();
+        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
+        let n0 = n_side_lenslet / 2;
+        let n1 = n0 + n / 2;
+        let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
+        let row_diff = mat.rows(n0, n_side_lenslet) - mat.rows(n1, n_side_lenslet);
+        let row_col_data =
+            row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet);
+        let col_diff = mat.columns(n0, n_side_lenslet) - mat.columns(n1, n_side_lenslet);
+        let col_row_data = col_diff.rows(n0, n_side_lenslet) + col_diff.rows(n1, n_side_lenslet);
+        (row_col_data, col_row_data)
+    }
+    pub fn add_quads(&mut self) -> Mat {
+        let (n, m) = self.camera_resolution();
+        let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
+        let n0 = n_side_lenslet / 2;
+        let n1 = n0 + n / 2;
+        let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
+        let row_diff = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
+        row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet)
     }
 }
 
-impl SegmentWiseSensor for GeomShack {
+impl SegmentWiseSensor for Pyramid {
     fn pupil_sampling(&self) -> usize {
         let LensletArray {
             n_side_lenslet,
@@ -62,7 +111,7 @@ impl SegmentWiseSensor for GeomShack {
     }
     fn zeroed_segment(&mut self, sid: usize, src_builder: Option<SourceBuilder>) -> DataRef {
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
-        // Setting the WFS mask restricted to the segment
+        // Setting the pyramid mask restricted to the segment
         let mut gmt = Gmt::builder().build().unwrap();
         gmt.keep(&[sid as i32]);
         let mut src = src_builder
@@ -76,11 +125,12 @@ impl SegmentWiseSensor for GeomShack {
         let pupil = nalgebra::DMatrix::<f32>::from_iterator(
             n_side_lenslet,
             n_side_lenslet,
-            src.amplitude().into_iter(),
+            src.amplitude().into_iter().rev(),
         );
 
         let mut data_ref = DataRef::new(pupil);
 
+        gmt.keep(&[sid as i32]);
         let mut src = src_builder
             .clone()
             .unwrap_or_default()
@@ -155,27 +205,42 @@ impl SegmentWiseSensor for GeomShack {
     }
 }
 
-impl From<(&DataRef, &GeomShack)> for Slopes {
+impl From<(&DataRef, &Pyramid)> for Slopes {
     /// Computes the pyramid measurements
     ///
     /// The pyramid detector frame is contained within [Pyramid] and [QuadCell] provides the
     /// optional frame mask  and measurements of reference
-    fn from((qc, wfs): (&DataRef, &GeomShack)) -> Self {
-        let data = wfs.data();
-        let (sx, sy) = data.split_at(wfs.lenslet_array.n_side_lenslet.pow(2));
-        let iter = sx.iter().zip(sy);
+    fn from((qc, pym): (&DataRef, &Pyramid)) -> Self {
+        let (sx, sy, a) = {
+            let (n, m) = pym.camera_resolution();
+            let LensletArray { n_side_lenslet, .. } = pym.lenslet_array;
+            let n0 = n_side_lenslet / 2;
+            let n1 = n0 + n / 2;
+            let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &pym.frame());
+            let row_diff = mat.rows(n0, n_side_lenslet) - mat.rows(n1, n_side_lenslet);
+            let sx = row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet);
+            let col_diff = mat.columns(n0, n_side_lenslet) - mat.columns(n1, n_side_lenslet);
+            let sy = col_diff.rows(n0, n_side_lenslet) + col_diff.rows(n1, n_side_lenslet);
+
+            let row_sum = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
+            let a = row_sum.columns(n0, n_side_lenslet) + row_sum.columns(n1, n_side_lenslet);
+            (sx, sy, a)
+        };
+
+        let iter = sx.into_iter().zip(sy.into_iter()).zip(&a);
         let mut sxy: Vec<_> = if let Some(mask) = qc.mask.as_ref() {
             iter.zip(mask)
                 .filter(|(_, &m)| m)
-                .flat_map(|((sx, sy), _)| vec![*sx, *sy])
+                .flat_map(|(((sx, sy), a), _)| vec![sx / a, sy / a])
                 .collect()
         } else {
-            iter.flat_map(|(sx, sy)| vec![*sx, *sy]).collect()
+            iter.flat_map(|((sx, sy), a)| vec![sx / a, sy / a])
+                .collect()
         };
         if let Some(Slopes(sxy0)) = qc.sxy0.as_ref() {
             sxy.iter_mut()
                 .zip(sxy0)
-                .for_each(|(sxy, sxy0)| *sxy -= *sxy0);
+                .for_each(|(sxy, sxy0)| *sxy -= sxy0);
         }
         Slopes(sxy)
     }
@@ -183,10 +248,10 @@ impl From<(&DataRef, &GeomShack)> for Slopes {
 
 type V = nalgebra::DVector<f32>;
 
-impl Mul<&GeomShack> for &SlopesArray {
+impl Mul<&Pyramid> for &SlopesArray {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
-    fn mul(self, pym: &GeomShack) -> Self::Output {
+    fn mul(self, pym: &Pyramid) -> Self::Output {
         let slopes = Slopes::from((&self.data_ref, pym));
         self.inverse
             .as_ref()
@@ -194,21 +259,10 @@ impl Mul<&GeomShack> for &SlopesArray {
             .map(|x| x.as_slice().to_vec())
     }
 }
-
-impl Mul<&GeomShack> for &Calibration {
+impl Mul<&Pyramid> for &Calibration {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
-    fn mul(self, wfs: &GeomShack) -> Self::Output {
+    fn mul(self, wfs: &Pyramid) -> Self::Output {
         Some(self.iter().flat_map(|x| x * wfs).flatten().collect())
     }
 }
-/* impl<'a, T> Mul<&'a Box<T>> for &'a Calibration
-where
-    &'a Calibration: Mul<&'a T>,
-{
-    type Output = Option<Vec<f32>>;
-
-    fn mul(self, rhs: &'a Box<T>) -> Self::Output {
-        self * (**rhs)
-    }
-} */

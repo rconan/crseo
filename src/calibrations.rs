@@ -1,6 +1,6 @@
 use super::{
-    cu::Double, wavefrontsensor::Geometric, Builder, Cu, Gmt, GmtBuilder, PistonSensor,
-    Propagation, ShackHartmann, Source, SourceBuilder, WavefrontSensor,
+    cu::Double, wavefrontsensor::Geometric, Builder, Cu, Gmt, GmtBuilder, Propagation,
+    ShackHartmann, Source, SourceBuilder, WavefrontSensor,
 };
 use log;
 use std::ops::Range;
@@ -276,7 +276,7 @@ impl<T: Clone + Builder<Component = ShackHartmann<Geometric>>>
         }
     */
 }
-impl<T: Clone + Builder<Component = PistonSensor>> Calibration<T, PistonSensor> {
+/* impl<T: Clone + Builder<Component = PistonSensor>> Calibration<T, PistonSensor> {
     /// Calibrates the given mirror and segment functions:
     ///
     /// * `mirror`: `Vec` of `Mirror` functions
@@ -329,7 +329,7 @@ impl<T: Clone + Builder<Component = PistonSensor>> Calibration<T, PistonSensor> 
         self.poke = Cu::array(self.n_data, self.n_mode);
         self.poke.to_dev(&mut calibration);
     }
-}
+} */
 /*
 /// reshapes vectors in matrices and stack the matrices together:
 ///

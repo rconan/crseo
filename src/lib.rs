@@ -32,7 +32,7 @@ pub mod lmmse;
 pub mod pssn;
 pub mod raytracing;
 //pub mod sensitivities;
-pub mod piston_sensor;
+// pub mod piston_sensor;
 pub mod source;
 pub mod wavefrontsensor;
 
@@ -58,8 +58,8 @@ pub use lmmse::{LinearMinimumMeanSquareError, LinearMinimumMeanSquareErrorBuilde
 pub use pssn::{PSSn, PSSnBuilder, PSSnEstimates};
 //#[doc(inline)]
 //pub use sensitivities::OpticalSensitivities;
-#[doc(inline)]
-pub use piston_sensor::{PistonSensor, PistonSensorBuilder};
+// #[doc(inline)]
+// pub use piston_sensor::{PistonSensor, PistonSensorBuilder};
 #[doc(inline)]
 pub use source::Propagation;
 #[doc(inline)]

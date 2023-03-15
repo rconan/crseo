@@ -1,27 +1,62 @@
 use std::ops::Mul;
 
-use crate::{
-    wavefrontsensor::{data_processing::DataRef, Calibration, Slopes, SlopesArray},
-    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, WavefrontSensor,
+use ffi::dev2host_int;
+
+use crate::{Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, WavefrontSensor};
+
+use super::{
+    data_processing::{Calibration, DataRef, Slopes, SlopesArray},
+    PistonSensorBuilder,
 };
 
-pub use super::builder::PhaseSensorBuilder;
-
 #[derive(Debug, Default, Clone)]
-pub struct PhaseSensor {
+pub struct PistonSensor {
     pub(super) data: Vec<f32>,
+    pub(super) pupil_sampling: usize,
 }
-impl PhaseSensor {
+impl PistonSensor {
     pub fn data(&self) -> Vec<f32> {
         self.data.clone()
     }
 }
-impl FromBuilder for PhaseSensor {
-    type ComponentBuilder = PhaseSensorBuilder;
+impl FromBuilder for PistonSensor {
+    type ComponentBuilder = PistonSensorBuilder;
 }
-impl Propagation for PhaseSensor {
+impl Propagation for PistonSensor {
     fn propagate(&mut self, src: &mut crate::Source) {
-        self.data = src.phase().clone()
+        let n_ray_total = src.as_raw_mut_ptr().rays.N_RAY_TOTAL as usize;
+        let n_ray = n_ray_total / src.size as usize;
+        let mut mask = vec![0i32; n_ray_total];
+        unsafe {
+            dev2host_int(
+                mask.as_mut_ptr(),
+                src.as_raw_mut_ptr().rays.d__piston_mask,
+                n_ray_total as i32,
+            );
+        }
+        src.phase();
+        self.data.fill(0f32);
+        for (mask, phase) in mask.chunks(n_ray).zip(src._phase.chunks(n_ray)) {
+            for k in 1..8 {
+                let segment_phase = mask
+                    .iter()
+                    .zip(phase)
+                    .filter_map(|(&mask, &phase)| (mask == k).then_some(phase))
+                    .collect::<Vec<f32>>();
+                let n = segment_phase.len();
+                if n > 0 {
+                    let mean = segment_phase.iter().sum::<f32>() / n as f32;
+                    self.data[k as usize - 1] = mean;
+                } /*                 let var = segment_phase
+                      .iter()
+                      .map(|x| (x - mean).powi(2))
+                      .sum::<f32>()
+                      / n;
+                  segment_wfe.push((mean as f64, var.sqrt() as f64)); */
+            }
+        }
+        // let p7 = self.data[6];
+        // self.data.iter_mut().for_each(|p| *p -= p7);
     }
 
     fn time_propagate(&mut self, _secs: f64, _src: &mut crate::Source) {
@@ -29,7 +64,7 @@ impl Propagation for PhaseSensor {
     }
 }
 
-impl SegmentWiseSensor for PhaseSensor {
+impl SegmentWiseSensor for PistonSensor {
     fn calibrate_segment(
         &mut self,
         src_builder: Option<crate::SourceBuilder>,
@@ -50,7 +85,8 @@ impl SegmentWiseSensor for PhaseSensor {
 
         let mut slopes = vec![];
         let o2p = (2. * std::f64::consts::PI / src.wavelength()) as f32;
-        for kl_mode in 1..n_mode {
+
+        for kl_mode in 0..n_mode {
             pb.as_ref().map(|pb| pb.inc(1));
             gmt.reset();
             let kl_a0 = 1e-6;
@@ -84,24 +120,33 @@ impl SegmentWiseSensor for PhaseSensor {
             // slopes.push(slopes_push / kl_coef);
         }
         pb.as_ref().map(|pb| pb.finish());
+
         (data_ref, slopes).into()
     }
 
     fn pupil_sampling(&self) -> usize {
-        todo!()
+        self.pupil_sampling
     }
 
     fn zeroed_segment(&mut self, sid: usize, src_builder: Option<crate::SourceBuilder>) -> DataRef {
         let mut gmt = Gmt::builder().build().unwrap();
         gmt.keep(&[sid as i32]);
-        let mut src = src_builder.clone().unwrap_or_default().build().unwrap();
-        src.through(&mut gmt).xpupil();
-        let n = src.pupil_sampling as usize;
-        let pupil = nalgebra::DMatrix::<f32>::from_iterator(n, n, src.amplitude().into_iter());
+
+        // let mut src = src_builder.clone().unwrap_or_default().build().unwrap();
+        // src.through(&mut gmt).xpupil();
+        // let n = src.pupil_sampling as usize;
+
+        let mut pupil = nalgebra::DMatrix::<f32>::zeros(7, 1);
+        pupil[(sid - 1, 0)] = 1f32;
 
         let mut data_ref = DataRef::new(pupil);
 
-        let mut src = src_builder.clone().unwrap_or_default().build().unwrap();
+        let mut src = src_builder
+            .clone()
+            .unwrap_or_default()
+            .pupil_sampling(self.pupil_sampling())
+            .build()
+            .unwrap();
         self.reset();
         src.through(&mut gmt).xpupil().through(self);
         data_ref.set_ref_with(Slopes::from((&data_ref, &*self)));
@@ -113,24 +158,33 @@ impl SegmentWiseSensor for PhaseSensor {
     }
 }
 
-impl From<(&DataRef, &PhaseSensor)> for Slopes {
-    fn from((data_ref, wfs): (&DataRef, &PhaseSensor)) -> Self {
-        let mut data = wfs.data();
+impl From<(&DataRef, &PistonSensor)> for Slopes {
+    fn from((data_ref, wfs): (&DataRef, &PistonSensor)) -> Self {
+        let data = wfs.data();
+        let mut sxy: Vec<_> = if let Some(mask) = data_ref.mask.as_ref() {
+            data.into_iter()
+                .zip(mask)
+                .filter(|(_, &m)| m)
+                .map(|(data, _)| data)
+                .collect()
+        } else {
+            data
+        };
         if let Some(Slopes(sxy0)) = data_ref.sxy0.as_ref() {
-            data.iter_mut()
+            sxy.iter_mut()
                 .zip(sxy0)
                 .for_each(|(sxy, sxy0)| *sxy -= *sxy0);
         }
-        Slopes(data)
+        Slopes(sxy)
     }
 }
 
 type V = nalgebra::DVector<f32>;
 
-impl Mul<&PhaseSensor> for &SlopesArray {
+impl Mul<&PistonSensor> for &SlopesArray {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
-    fn mul(self, wfs: &PhaseSensor) -> Self::Output {
+    fn mul(self, wfs: &PistonSensor) -> Self::Output {
         let slopes = Slopes::from((&self.data_ref, wfs));
         self.inverse
             .as_ref()
@@ -138,10 +192,10 @@ impl Mul<&PhaseSensor> for &SlopesArray {
             .map(|x| x.as_slice().to_vec())
     }
 }
-impl Mul<&PhaseSensor> for &Calibration {
+impl Mul<&PistonSensor> for &Calibration {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
-    fn mul(self, wfs: &PhaseSensor) -> Self::Output {
+    fn mul(self, wfs: &PistonSensor) -> Self::Output {
         Some(self.iter().flat_map(|x| x * wfs).flatten().collect())
     }
 }

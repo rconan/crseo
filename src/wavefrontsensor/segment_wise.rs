@@ -2,10 +2,11 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use crate::{Builder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
 
-use super::{
-    data_processing::{DataRef, SegmentCalibration},
-    Calibration, Slopes, SlopesArray,
-};
+pub mod data_processing;
+pub mod geom_shack;
+pub mod piston_sensor;
+pub mod pyramid;
+use data_processing::{Calibration, DataRef, SegmentCalibration, Slopes, SlopesArray};
 
 pub trait SegmentWiseSensor: WavefrontSensor {
     fn pupil_sampling(&self) -> usize;

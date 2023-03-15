@@ -3,6 +3,8 @@ pub use builder::PyramidBuilder;
 mod pyramid;
 pub use pyramid::Pyramid;
 
+pub use super::data_processing;
+
 use crate::{SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
 
 #[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]

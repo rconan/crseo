@@ -1,21 +1,23 @@
 use std::time::Instant;
 
 use crseo::{
-    wavefrontsensor::{PhaseSensor, SegmentCalibration},
+    wavefrontsensor::{PistonSensor, SegmentCalibration},
     Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor, SegmentWiseSensorBuilder, Source,
     WavefrontSensor,
 };
 
 fn main() -> anyhow::Result<()> {
-    let n_mode = 350;
+    let n_mode = 1;
 
-    let builder = PhaseSensor::builder();
+    let builder = PistonSensor::builder().pupil_sampling(401);
     let mut wfs = builder.clone().build().unwrap();
     let src_builder = Source::builder().pupil_sampling(92);
 
+    dbg!(&builder);
+
     let now = Instant::now();
     let mut slopes_mat = builder.calibrate(
-        SegmentCalibration::modes("Karhunen-Loeve", 1..n_mode, "M2"),
+        SegmentCalibration::modes("Karhunen-Loeve", 0..n_mode, "M2"),
         src_builder.clone(),
     );
     println!(
@@ -33,7 +35,7 @@ fn main() -> anyhow::Result<()> {
     let mut buffer = vec![0f64; 7 * n_mode];
     let gain = 0.5;
 
-    for i in 0..100 {
+    for i in 0..10 {
         wfs.reset();
         src.through(&mut gmt)
             .xpupil()
@@ -50,14 +52,9 @@ fn main() -> anyhow::Result<()> {
         // dbg!(&coefs);
 
         buffer
-            .chunks_mut(n_mode)
-            .zip(coefs.chunks(n_mode - 1))
-            .for_each(|(b, c)| {
-                b.iter_mut()
-                    .skip(1)
-                    .zip(c)
-                    .for_each(|(b, c)| *b -= gain * *c as f64)
-            });
+            .iter_mut()
+            .zip(coefs)
+            .for_each(|(b, c)| *b -= gain * c as f64);
         // dbg!(&buffer);
         gmt.m2_modes(&buffer);
     }

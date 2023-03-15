@@ -1,12 +1,14 @@
 mod builder;
-mod phase_sensor;
-pub use phase_sensor::{PhaseSensor, PhaseSensorBuilder};
+pub use builder::PistonSensorBuilder;
+mod piston_sensor;
+pub use piston_sensor::PistonSensor;
 
+pub use super::data_processing;
 use crate::{WavefrontSensor, WavefrontSensorBuilder};
 
-impl WavefrontSensorBuilder for PhaseSensorBuilder {}
+impl WavefrontSensorBuilder for PistonSensorBuilder {}
 
-impl WavefrontSensor for PhaseSensor {
+impl WavefrontSensor for PistonSensor {
     fn calibrate(&mut self, _src: &mut crate::Source, _threshold: f64) {
         todo!()
     }
@@ -45,5 +47,9 @@ impl WavefrontSensor for PhaseSensor {
 
     fn n_valid_lenslet(&mut self) -> Vec<usize> {
         todo!()
+    }
+
+    fn left_multiply(&self, calibration: &super::Calibration) -> Option<Vec<f32>> {
+        calibration * self
     }
 }

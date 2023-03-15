@@ -23,19 +23,18 @@ mod sh48;
 pub use sh48::SH48;
 mod sh24;
 pub use sh24::SH24;
-mod pyramid;
-pub use pyramid::{Pyramid, PyramidBuilder};
-mod geom_shack;
-pub use geom_shack::{GeomShack, GeomShackBuilder};
+
+mod segment_wise;
+pub use segment_wise::{
+    data_processing::{Calibration, Mirror, SegmentCalibration, Slopes, SlopesArray, DOF, RBM},
+    geom_shack::{GeomShack, GeomShackBuilder},
+    piston_sensor::{PistonSensor, PistonSensorBuilder},
+    pyramid::{Pyramid, PyramidBuilder},
+    SegmentWiseSensor, SegmentWiseSensorBuilder,
+};
 
 pub type Geometric = geometricShackHartmann;
 pub type Diffractive = shackHartmann;
-
-mod data_processing;
-pub use data_processing::{Calibration, Mirror, SegmentCalibration, Slopes, SlopesArray, DOF, RBM};
-
-mod segment_wise;
-pub use segment_wise::{SegmentWiseSensor, SegmentWiseSensorBuilder};
 
 /// Shack-Hartmann model type: Geometric or Diffractive
 pub trait Model: Clone + Send {
