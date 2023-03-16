@@ -4,6 +4,7 @@ use crate::{Builder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
 
 pub mod data_processing;
 pub mod geom_shack;
+pub mod phase_sensor;
 pub mod piston_sensor;
 pub mod pyramid;
 use data_processing::{Calibration, DataRef, SegmentCalibration, Slopes, SlopesArray};
@@ -28,6 +29,9 @@ pub trait SegmentWiseSensor: WavefrontSensor {
     fn zeroed_segment(&mut self, sid: usize, src: Option<SourceBuilder>) -> DataRef;
     // fn reset(&mut self);
     fn into_slopes(&self, data_ref: &DataRef) -> Slopes;
+    fn transform(&self, calib: &Calibration) -> Option<Vec<f32>> {
+        todo!()
+    }
 }
 
 pub trait SegmentWiseSensorBuilder:

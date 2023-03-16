@@ -187,7 +187,7 @@ type V = nalgebra::DVector<f32>;
 
 impl Mul<&GeomShack> for &SlopesArray {
     type Output = Option<Vec<f32>>;
-    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [GeomShack] measurements
     fn mul(self, pym: &GeomShack) -> Self::Output {
         let slopes = Slopes::from((&self.data_ref, pym));
         self.inverse
@@ -199,18 +199,8 @@ impl Mul<&GeomShack> for &SlopesArray {
 
 impl Mul<&GeomShack> for &Calibration {
     type Output = Option<Vec<f32>>;
-    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [GeomShack] measurements
     fn mul(self, wfs: &GeomShack) -> Self::Output {
         Some(self.iter().flat_map(|x| x * wfs).flatten().collect())
     }
 }
-/* impl<'a, T> Mul<&'a Box<T>> for &'a Calibration
-where
-    &'a Calibration: Mul<&'a T>,
-{
-    type Output = Option<Vec<f32>>;
-
-    fn mul(self, rhs: &'a Box<T>) -> Self::Output {
-        self * (**rhs)
-    }
-} */

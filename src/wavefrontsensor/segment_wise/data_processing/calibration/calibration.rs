@@ -1,6 +1,6 @@
 use std::{
     error::Error,
-    ops::{Deref, DerefMut},
+    ops::{Add, Deref, DerefMut},
 };
 
 use serde::Serialize;
@@ -41,5 +41,17 @@ impl Calibration {
             .map(|x| x.pseudo_inverse())
             .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
         Ok(self)
+    }
+    /// Returns the length of the vector of [SlopesArray]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl Add for Calibration {
+    type Output = Calibration;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Calibration(self.0.into_iter().chain(rhs.0.into_iter()).collect())
     }
 }

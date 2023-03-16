@@ -55,6 +55,15 @@ impl From<Range<usize>> for DOF {
     }
 }
 impl DOF {
+    pub fn split_at(self, idx: usize) -> (DOF, DOF) {
+        match self {
+            DOF::Modes(val) => {
+                let (left, right) = val.split_at(idx);
+                (DOF::Modes(left.to_vec()), DOF::Modes(right.to_vec()))
+            }
+            DOF::Range(val) => (DOF::Range(val.start..idx), DOF::Range(idx..val.end)),
+        }
+    }
     pub fn modes(&self) -> Vec<usize> {
         match self {
             DOF::Modes(value) => value.clone(),
@@ -106,6 +115,22 @@ pub enum SegmentCalibration {
     },
 }
 impl SegmentCalibration {
+    pub fn slip_at(self, idx: usize) -> Option<(SegmentCalibration, SegmentCalibration)> {
+        let SegmentCalibration::Modes { name, dof, mirror } = self else {return None};
+        let (left, right) = dof.split_at(idx);
+        Some((
+            SegmentCalibration::Modes {
+                name: name.clone(),
+                dof: left,
+                mirror: mirror.clone(),
+            },
+            SegmentCalibration::Modes {
+                name,
+                dof: right,
+                mirror,
+            },
+        ))
+    }
     pub fn modes<S, D, M>(name: S, dof: D, mirror: M) -> Self
     where
         S: Into<String>,

@@ -28,6 +28,7 @@ mod segment_wise;
 pub use segment_wise::{
     data_processing::{Calibration, Mirror, SegmentCalibration, Slopes, SlopesArray, DOF, RBM},
     geom_shack::{GeomShack, GeomShackBuilder},
+    phase_sensor::{PhaseSensor, PhaseSensorBuilder},
     piston_sensor::{PistonSensor, PistonSensorBuilder},
     pyramid::{Pyramid, PyramidBuilder},
     SegmentWiseSensor, SegmentWiseSensorBuilder,
