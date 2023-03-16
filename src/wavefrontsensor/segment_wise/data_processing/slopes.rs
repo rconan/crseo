@@ -20,6 +20,11 @@ impl From<Slopes> for V {
         V::from_column_slice(&value.0)
     }
 }
+impl From<Slopes> for Vec<f32> {
+    fn from(value: Slopes) -> Self {
+        value.0
+    }
+}
 
 impl Div<f32> for Slopes {
     type Output = Slopes;

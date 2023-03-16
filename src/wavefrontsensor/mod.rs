@@ -26,7 +26,9 @@ pub use sh24::SH24;
 
 mod segment_wise;
 pub use segment_wise::{
-    data_processing::{Calibration, Mirror, SegmentCalibration, Slopes, SlopesArray, DOF, RBM},
+    data_processing::{
+        Calibration, DataRef, Mirror, SegmentCalibration, Slopes, SlopesArray, DOF, RBM,
+    },
     geom_shack::{GeomShack, GeomShackBuilder},
     phase_sensor::{PhaseSensor, PhaseSensorBuilder},
     piston_sensor::{PistonSensor, PistonSensorBuilder},

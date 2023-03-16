@@ -10,7 +10,7 @@ type Mat = nalgebra::DMatrix<f32>;
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
 pub struct SlopesArray {
     pub(crate) slopes: Vec<Slopes>,
-    pub(crate) data_ref: DataRef,
+    pub data_ref: DataRef,
     #[serde(skip)]
     pub(crate) inverse: Option<Mat>,
 }

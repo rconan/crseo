@@ -183,7 +183,7 @@ type V = nalgebra::DVector<f32>;
 
 impl Mul<&PistonSensor> for &SlopesArray {
     type Output = Option<Vec<f32>>;
-    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [PistonSensor] measurements
     fn mul(self, wfs: &PistonSensor) -> Self::Output {
         let slopes = Slopes::from((&self.data_ref, wfs));
         self.inverse
@@ -194,7 +194,7 @@ impl Mul<&PistonSensor> for &SlopesArray {
 }
 impl Mul<&PistonSensor> for &Calibration {
     type Output = Option<Vec<f32>>;
-    /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
+    /// Multiplies the pseudo-inverse of the calibration matrix with the [PistonSensor] measurements
     fn mul(self, wfs: &PistonSensor) -> Self::Output {
         Some(self.iter().flat_map(|x| x * wfs).flatten().collect())
     }
