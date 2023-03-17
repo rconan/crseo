@@ -51,6 +51,9 @@ impl GeomShack {
         data.from_ptr(self._c_.data_proc.d__c);
         data.from_dev()
     }
+    pub fn n_frame(&self) -> usize {
+        self._c_.N_FRAME as usize
+    }
 }
 
 impl SegmentWiseSensor for GeomShack {
@@ -163,7 +166,11 @@ impl From<(&DataRef, &GeomShack)> for Slopes {
     /// The pyramid detector frame is contained within [Pyramid] and [QuadCell] provides the
     /// optional frame mask  and measurements of reference
     fn from((qc, wfs): (&DataRef, &GeomShack)) -> Self {
-        let data = wfs.data();
+        let data = wfs
+            .data()
+            .into_iter()
+            .map(|x| x / wfs.n_frame() as f32)
+            .collect::<Vec<f32>>();
         let (sx, sy) = data.split_at(wfs.lenslet_array.n_side_lenslet.pow(2));
         let iter = sx.iter().zip(sy);
         let mut sxy: Vec<_> = if let Some(mask) = qc.mask.as_ref() {

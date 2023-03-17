@@ -54,23 +54,6 @@ impl SegmentWiseSensor for PhaseSensor {
     fn into_slopes(&self, _data_ref: &DataRef) -> Slopes {
         todo!()
     }
-
-    fn transform(&self, calib: &Calibration) -> Option<Vec<f32>> {
-        Some(
-            calib
-                .iter()
-                .take(calib.len() / 2)
-                .map(|c| (c * &self.piston_sensor).unwrap())
-                .zip(
-                    calib
-                        .iter()
-                        .skip(calib.len() / 2)
-                        .map(|c| (c * &self.geom_shack).unwrap()),
-                )
-                .flat_map(|(p, a)| p.into_iter().chain(a.into_iter()).collect::<Vec<f32>>())
-                .collect(),
-        )
-    }
 }
 
 impl Mul<&PhaseSensor> for &Calibration {

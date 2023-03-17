@@ -13,6 +13,8 @@ use super::{
 pub struct PistonSensor {
     pub(super) data: Vec<f32>,
     pub(super) pupil_sampling: usize,
+    pub(super) wrapping: Option<f64>,
+    pub(super) n_frame: usize,
 }
 impl PistonSensor {
     pub fn data(&self) -> Vec<f32> {
@@ -35,7 +37,6 @@ impl Propagation for PistonSensor {
             );
         }
         src.phase();
-        self.data.fill(0f32);
         for (mask, phase) in mask.chunks(n_ray).zip(src._phase.chunks(n_ray)) {
             for k in 1..8 {
                 let segment_phase = mask
@@ -46,7 +47,11 @@ impl Propagation for PistonSensor {
                 let n = segment_phase.len();
                 if n > 0 {
                     let mean = segment_phase.iter().sum::<f32>() / n as f32;
-                    self.data[k as usize - 1] = mean;
+                    if let Some(lim) = self.wrapping {
+                        self.data[k as usize - 1] += mean % lim as f32;
+                    } else {
+                        self.data[k as usize - 1] += mean;
+                    }
                 } /*                 let var = segment_phase
                       .iter()
                       .map(|x| (x - mean).powi(2))
@@ -55,6 +60,7 @@ impl Propagation for PistonSensor {
                   segment_wfe.push((mean as f64, var.sqrt() as f64)); */
             }
         }
+        self.n_frame += 1;
         // let p7 = self.data[6];
         // self.data.iter_mut().for_each(|p| *p -= p7);
     }
@@ -160,7 +166,17 @@ impl SegmentWiseSensor for PistonSensor {
 
 impl From<(&DataRef, &PistonSensor)> for Slopes {
     fn from((data_ref, wfs): (&DataRef, &PistonSensor)) -> Self {
-        let data = wfs.data();
+        let data = wfs
+            .data()
+            .into_iter()
+            .map(|x| {
+                if wfs.n_frame > 0 {
+                    x / wfs.n_frame as f32
+                } else {
+                    x
+                }
+            })
+            .collect::<Vec<f32>>();
         let mut sxy: Vec<_> = if let Some(mask) = data_ref.mask.as_ref() {
             data.into_iter()
                 .zip(mask)

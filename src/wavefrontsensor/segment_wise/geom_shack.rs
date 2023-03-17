@@ -32,7 +32,7 @@ impl WavefrontSensor for GeomShack {
     }
 
     fn data(&mut self) -> Vec<f64> {
-        GeomShack::data(&self)
+        GeomShack::data(self)
             .into_iter()
             .map(|x| x as f64)
             .collect()

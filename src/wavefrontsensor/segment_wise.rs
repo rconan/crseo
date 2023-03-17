@@ -29,9 +29,6 @@ pub trait SegmentWiseSensor: WavefrontSensor {
     fn zeroed_segment(&mut self, sid: usize, src: Option<SourceBuilder>) -> DataRef;
     // fn reset(&mut self);
     fn into_slopes(&self, data_ref: &DataRef) -> Slopes;
-    fn transform(&self, calib: &Calibration) -> Option<Vec<f32>> {
-        todo!()
-    }
 }
 
 pub trait SegmentWiseSensorBuilder:

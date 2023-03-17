@@ -15,6 +15,7 @@ impl WavefrontSensor for PistonSensor {
 
     fn reset(&mut self) {
         self.data.fill(0f32);
+        self.n_frame = 0;
     }
 
     fn process(&mut self) {

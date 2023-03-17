@@ -12,7 +12,7 @@ use crate::{
 impl WavefrontSensorBuilder for PhaseSensorBuilder {
     fn guide_stars(&self, gs: Option<SourceBuilder>) -> SourceBuilder {
         gs.unwrap_or_default()
-            .pupil_sampling(self.0.pupil_sampling())
+            .pupil_sampling(self.geom_shack_builder.pupil_sampling())
     }
 }
 
