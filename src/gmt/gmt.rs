@@ -357,21 +357,16 @@ impl Gmt {
         unsafe {
             self._c_m2.BS.update(self.a2.as_mut_ptr());
         }
-        /*
-        if self.m2_n_mode > a.len() {
-            unsafe {
-                self._c_m2.BS.update(
-                    [a, &self.a2[self.m2_n_mode - a.len()..]]
-                        .concat()
-                        .as_mut_ptr(),
-                );
-            }
-        } else {
-            unsafe {
-                self._c_m2.BS.update(a.as_mut_ptr());
-            }
+    }
+    pub fn m2_segment_modes(&mut self, sid: u8, a: &[f64]) {
+        self.a2
+            .chunks_mut(self.m2_n_mode)
+            .skip(sid as usize - 1)
+            .take(1)
+            .for_each(|a2| a2.iter_mut().zip(a).for_each(|(a2, a)| *a2 = *a));
+        unsafe {
+            self._c_m2.BS.update(self.a2.as_mut_ptr());
         }
-        */
     }
     pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
         let mut a = vec![0f64; 7 * self.m2_n_mode];

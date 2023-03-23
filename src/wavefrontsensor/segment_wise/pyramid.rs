@@ -71,13 +71,12 @@ impl WavefrontSensor for Pyramid {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{
-        wavefrontsensor::{data_processing::DataRef, Slopes},
-        Builder, FromBuilder, Gmt, SegmentWiseSensor, Source,
-    };
+    use data_processing::{DataRef, Slopes};
 
-    #[test]
+    use super::*;
+    use crate::{Builder, FromBuilder, Gmt, SegmentWiseSensor, Source};
+
+/*     #[test]
     fn calibrate() {
         let n_lenslet = 90;
         let sid = 2;
@@ -110,7 +109,7 @@ mod tests {
         // let slopes = Slopes::from((&quad_cell, &pym));
         let coefs = &slopes_mat * &pym;
         dbg!(coefs);
-    }
+    } */
 
     #[test]
     fn calibrate_segment() {

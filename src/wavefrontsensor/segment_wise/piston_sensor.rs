@@ -54,3 +54,30 @@ impl WavefrontSensor for PistonSensor {
         calibration * self
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use crate::{wavefrontsensor::SegmentCalibration, Builder, FromBuilder};
+
+    use super::*;
+
+    #[test]
+    fn calibrate_kl() {
+        let builder = PistonSensor::builder().pupil_sampling(92 * 4);
+        let src_builder = builder.guide_stars(None);
+        let mut wfs = builder.build().unwrap();
+        let seg = SegmentCalibration::modes("Karhunen-Loeve", 0..1, "M2");
+        let c = seg.calibrate(1, &mut wfs, src_builder, None);
+        dbg!(&c);
+    }
+
+    #[test]
+    fn calibrate_okl() {
+        let builder = PistonSensor::builder().pupil_sampling(92 * 4);
+        let src_builder = builder.guide_stars(None);
+        let mut wfs = builder.build().unwrap();
+        let seg = SegmentCalibration::modes("M2_OrthoNorm_KarhunenLoeveModes", 0..1, "M2");
+        let c = seg.calibrate(1, &mut wfs, src_builder, None);
+        dbg!(&c);
+    }
+}

@@ -546,6 +546,22 @@ impl Source {
         }
         segment_wfe
     }
+    /// Adds a piston on each segment
+    pub fn add_piston<T: Into<f32> + Copy>(&mut self, piston: &[T]) {
+        let n_ray_total = self._c_.rays.N_RAY_TOTAL as usize;
+        let n_ray = n_ray_total / self.size as usize;
+        let mask = self.segment_mask();
+        let mut opd = vec![0f32; n_ray_total];
+        for (mask, opd) in mask.chunks(n_ray).zip(opd.chunks_mut(n_ray)) {
+            for k in 1..8 {
+                mask.iter()
+                    .zip(&mut *opd)
+                    .filter_map(|(&mask, opd)| (mask == k).then_some(opd))
+                    .for_each(|opd| *opd = piston[k as usize - 1].into())
+            }
+        }
+        self.add(&opd);
+    }
     /// Returns the segment standard deviation
     pub fn segment_wfe_rms(&mut self) -> Vec<f64> {
         self.segment_wfe().into_iter().map(|(_, s)| s).collect()

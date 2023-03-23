@@ -42,6 +42,17 @@ impl Calibration {
             .collect::<Result<Vec<_>, Box<dyn Error>>>()?;
         Ok(self)
     }
+    /// Concatenates the pseudo-inverse of each slope arrays in a [Vec]
+    ///
+    /// The matrix are flatten column-wise.
+    pub fn concat_pinv(&self) -> Vec<f64> {
+        self.iter()
+            .filter_map(|x| x.inverse.as_ref().map(|x| x.as_slice().to_vec()))
+            .flatten()
+            .map(|x| x as f64)
+            .collect()
+    }
+
     /// Returns the length of the vector of [SlopesArray]
     pub fn len(&self) -> usize {
         self.0.len()

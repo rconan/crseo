@@ -37,6 +37,7 @@ impl Propagation for PistonSensor {
             );
         }
         src.phase();
+        let _w = src.wavelength();
         for (mask, phase) in mask.chunks(n_ray).zip(src._phase.chunks(n_ray)) {
             for k in 1..8 {
                 let segment_phase = mask
@@ -49,6 +50,7 @@ impl Propagation for PistonSensor {
                     let mean = segment_phase.iter().sum::<f32>() / n as f32;
                     if let Some(lim) = self.wrapping {
                         self.data[k as usize - 1] += mean % lim as f32;
+                        // (2f32 * PI * mean / w as f32).sin() * lim as f32;
                     } else {
                         self.data[k as usize - 1] += mean;
                     }
@@ -73,12 +75,12 @@ impl Propagation for PistonSensor {
 impl SegmentWiseSensor for PistonSensor {
     fn calibrate_segment(
         &mut self,
-        src_builder: Option<crate::SourceBuilder>,
-        sid: usize,
-        n_mode: usize,
-        pb: Option<indicatif::ProgressBar>,
+        _src_builder: Option<crate::SourceBuilder>,
+        _sid: usize,
+        _n_mode: usize,
+        _pb: Option<indicatif::ProgressBar>,
     ) -> SlopesArray {
-        let data_ref = self.zeroed_segment(sid, src_builder.clone());
+        /*  let data_ref = self.zeroed_segment(sid, src_builder.clone());
 
         let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
         gmt.keep(&[sid as i32]);
@@ -127,7 +129,8 @@ impl SegmentWiseSensor for PistonSensor {
         }
         pb.as_ref().map(|pb| pb.finish());
 
-        (data_ref, slopes).into()
+        (data_ref, slopes).into() */
+        todo!()
     }
 
     fn pupil_sampling(&self) -> usize {
@@ -213,5 +216,65 @@ impl Mul<&PistonSensor> for &Calibration {
     /// Multiplies the pseudo-inverse of the calibration matrix with the [PistonSensor] measurements
     fn mul(self, wfs: &PistonSensor) -> Self::Output {
         Some(self.iter().flat_map(|x| x * wfs).flatten().collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Source;
+
+    use super::*;
+
+    #[test]
+    fn piston() {
+        let mut gmt = Gmt::builder().build().unwrap();
+        let mut sensor = PistonSensor::builder().pupil_sampling(401).build().unwrap();
+        let mut src = Source::builder().pupil_sampling(401).build().unwrap();
+
+        let sensor_zero: Vec<_> = (1..=7).map(|i| sensor.zeroed_segment(i, None)).collect();
+
+        src.through(&mut gmt).xpupil();
+        let piston: Vec<_> = (1..=7).map(|i| (i as f32) * 1e-7).collect();
+        src.add_piston(&piston);
+
+        let pe = src.segment_piston();
+        dbg!(pe);
+
+        src.through(&mut sensor);
+        let data: Vec<_> = sensor_zero
+            .iter()
+            .map(|sz| Slopes::from((sz, &sensor)))
+            .flat_map(|s| Vec::<f32>::from(s))
+            .map(|x| x * 1e7)
+            .collect();
+        dbg!(data);
+    }
+
+    #[test]
+    fn wrapping() {
+        let mut gmt = Gmt::builder().build().unwrap();
+        gmt.keep(&[1i32]);
+        let mut src = Source::builder().pupil_sampling(401).build().unwrap();
+        let w = src.wavelength() as f32;
+
+        let mut sensor = PistonSensor::builder()
+            .pupil_sampling(401)
+            .wrapping(0.5 * w as f64)
+            .build()
+            .unwrap();
+        let sensor_zero = sensor.zeroed_segment(1, None);
+
+        let mut piston = vec![0f32; 7];
+        let mut ramp = vec![];
+        for k in 0..10 {
+            src.through(&mut gmt).xpupil();
+            piston[0] = 0.1 * w * k as f32;
+            src.add_piston(&piston);
+            sensor.reset();
+            src.through(&mut sensor);
+            let data: Vec<f32> = Slopes::from((&sensor_zero, &sensor)).into();
+            ramp.push(data[0] / w);
+        }
+        dbg!(ramp);
     }
 }

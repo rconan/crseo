@@ -148,12 +148,12 @@ impl SegmentWiseSensor for Pyramid {
     }
     fn calibrate_segment(
         &mut self,
-        src_builder: Option<SourceBuilder>,
-        sid: usize,
-        n_mode: usize,
-        pb: Option<ProgressBar>,
+        _src_builder: Option<SourceBuilder>,
+        _sid: usize,
+        _n_mode: usize,
+        _pb: Option<ProgressBar>,
     ) -> SlopesArray {
-        let quad_cell = self.zeroed_segment(sid, src_builder.clone());
+        /* let quad_cell = self.zeroed_segment(sid, src_builder.clone());
 
         let mut gmt = Gmt::builder().m2("Karhunen-Loeve", n_mode).build().unwrap();
         gmt.keep(&[sid as i32]);
@@ -201,7 +201,8 @@ impl SegmentWiseSensor for Pyramid {
             // slopes.push(slopes_push / kl_coef);
         }
         pb.as_ref().map(|pb| pb.finish());
-        (quad_cell, slopes).into()
+        (quad_cell, slopes).into()*/
+        todo!()
     }
 }
 
