@@ -8,7 +8,9 @@ use crate::{SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontS
 
 impl WavefrontSensorBuilder for GeomShackBuilder {
     fn guide_stars(&self, gs: Option<SourceBuilder>) -> SourceBuilder {
-        gs.unwrap_or_default().pupil_sampling(self.pupil_sampling())
+        gs.unwrap_or_default()
+            .size(self.n_gs as usize)
+            .pupil_sampling(self.pupil_sampling())
     }
 }
 
@@ -129,5 +131,16 @@ mod tests {
         )
         .unwrap();
         // assert_eq!(calib, calib2);
+    }
+
+    #[test]
+    fn calibrate_rbm() {
+        let builder = GeomShack::builder().size(2).lenslet(48, 8);
+        let src_builder = builder.guide_stars(Some(Source::builder()));
+        let mut wfs = builder.build().unwrap();
+        let seg = SegmentCalibration::rbm("TRxyz", "M1");
+        let mut c = seg.calibrate(1, &mut wfs, src_builder, None);
+        println!("{}", c.interaction_matrix());
+        c.pseudo_inverse().unwrap();
     }
 }

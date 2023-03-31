@@ -3,6 +3,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use crate::{Builder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
 
 pub mod data_processing;
+pub mod differential_piston_sensor;
 pub mod geom_shack;
 pub mod phase_sensor;
 pub mod piston_sensor;

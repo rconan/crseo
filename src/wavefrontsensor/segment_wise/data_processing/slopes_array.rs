@@ -1,5 +1,6 @@
 use std::{error::Error, fmt::Display, ops::Mul};
 
+use nalgebra::DMatrix;
 use serde::Serialize;
 
 use super::{DataRef, Slopes};
@@ -51,13 +52,17 @@ impl SlopesArray {
     pub fn ncols(&self) -> usize {
         self.slopes.len()
     }
-    /// Compute the slopes array pseudo-inverse
-    pub fn pseudo_inverse(&mut self) -> Result<&mut Self, Box<dyn Error>> {
-        let mat = Mat::from_iterator(
+    /// Returns the interaction matrix
+    pub fn interaction_matrix(&self) -> DMatrix<f32> {
+        Mat::from_iterator(
             self.nrows(),
             self.ncols(),
             self.slopes.iter().flat_map(|x| x.0.clone()),
-        );
+        )
+    }
+    /// Computes the slopes array pseudo-inverse
+    pub fn pseudo_inverse(&mut self) -> Result<&mut Self, Box<dyn Error>> {
+        let mat = self.interaction_matrix();
         let mat_svd = mat.svd(true, true);
         // dbg!(&mat_svd.singular_values);
         self.inverse = Some(mat_svd.pseudo_inverse(0.)?);

@@ -3,12 +3,13 @@ use std::{
     ops::{Add, Deref, DerefMut},
 };
 
+use nalgebra::DMatrix;
 use serde::Serialize;
 
 use crate::wavefrontsensor::SlopesArray;
 
 /// A collection of [SlopesArray]
-#[derive(Default, Debug, Serialize)]
+#[derive(Clone, Default, Debug, Serialize)]
 pub struct Calibration(Vec<SlopesArray>);
 impl Deref for Calibration {
     type Target = Vec<SlopesArray>;
@@ -56,6 +57,10 @@ impl Calibration {
     /// Returns the length of the vector of [SlopesArray]
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+    /// Returns the interaction matrices 
+    pub fn interaction_matrices(&self) -> Vec<DMatrix<f32>> {
+        self.iter().map(|s| s.interaction_matrix()).collect()
     }
 }
 

@@ -80,9 +80,10 @@ impl SegmentWiseSensor for GeomShack {
 
         let pupil = nalgebra::DMatrix::<f32>::from_iterator(
             n_side_lenslet,
-            n_side_lenslet,
+            n_side_lenslet * src.size as usize,
             src.amplitude().into_iter(),
         );
+        // println!("{}", pupil);
 
         let mut data_ref = DataRef::new(pupil);
 

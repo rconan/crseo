@@ -1,4 +1,4 @@
-use std::ops::{Div, DivAssign, Sub};
+use std::ops::{Div, DivAssign, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
@@ -51,5 +51,14 @@ impl Sub for Slopes {
                 .map(|(x, y)| x - y)
                 .collect(),
         )
+    }
+}
+
+impl SubAssign<Slopes> for &mut Slopes {
+    fn sub_assign(&mut self, rhs: Slopes) {
+        self.0
+            .iter_mut()
+            .zip(rhs.0.into_iter())
+            .for_each(|(x, y)| *x -= y);
     }
 }

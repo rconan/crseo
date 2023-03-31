@@ -10,7 +10,7 @@ use super::GeomShack;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GeomShackBuilder {
     lenslet_array: LensletArray,
-    n_gs: i32,
+    pub(super) n_gs: i32,
 }
 impl Default for GeomShackBuilder {
     fn default() -> Self {
@@ -27,6 +27,10 @@ impl GeomShackBuilder {
             n_px_lenslet,
             d: 25.5 / n_side_lenslet as f64,
         };
+        self
+    }
+    pub fn size(mut self, n: usize) -> Self {
+        self.n_gs = n as i32;
         self
     }
 }

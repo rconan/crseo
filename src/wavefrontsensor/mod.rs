@@ -29,6 +29,7 @@ pub use segment_wise::{
     data_processing::{
         Calibration, DataRef, Mirror, SegmentCalibration, Slopes, SlopesArray, DOF, RBM,
     },
+    differential_piston_sensor::{DifferentialPistonSensor, DifferentialPistonSensorBuilder},
     geom_shack::{GeomShack, GeomShackBuilder},
     phase_sensor::{PhaseSensor, PhaseSensorBuilder},
     piston_sensor::{PistonSensor, PistonSensorBuilder},

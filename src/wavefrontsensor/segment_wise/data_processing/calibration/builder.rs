@@ -269,37 +269,28 @@ impl SegmentCalibration {
 
                     let mut tr = [0f64; 6];
 
-                    match rbm {
-                        RBM::Txyz(_) => tr[i] = *stroke,
-                        RBM::Rxyz(_) => tr[i + 3] = *stroke,
-                        RBM::TRxyz => tr[i] = *stroke,
+                    for s in [1f64, -1f64] {
+                        match rbm {
+                            RBM::Txyz(_) => tr[i] = *stroke * s,
+                            RBM::Rxyz(_) => tr[i + 3] = *stroke * s,
+                            RBM::TRxyz => tr[i] = *stroke * s,
+                        }
+
+                        match mirror {
+                            Mirror::M1 => gmt.m1_segment_state(sid as i32, &tr[..3], &tr[3..]),
+                            Mirror::M2 => gmt.m2_segment_state(sid as i32, &tr[..3], &tr[3..]),
+                        };
+                        src.through(&mut gmt).xpupil().through(wfs);
+                        // let slopes_push = Slopes::from((&data_ref, &*wfs));
+                        if s > 0f64 {
+                            slopes.push(wfs.into_slopes(&data_ref));
+                        } else {
+                            slopes
+                                .last_mut()
+                                .map(|mut s| s -= wfs.into_slopes(&data_ref));
+                        }
+                        wfs.reset();
                     }
-
-                    match mirror {
-                        Mirror::M1 => gmt.m1_segment_state(sid as i32, &tr[..3], &tr[3..]),
-                        Mirror::M2 => gmt.m2_segment_state(sid as i32, &tr[..3], &tr[3..]),
-                    };
-                    src.through(&mut gmt).xpupil().through(wfs);
-                    // let slopes_push = Slopes::from((&data_ref, &*wfs));
-                    let slopes_push: Slopes = wfs.into_slopes(&data_ref);
-                    wfs.reset();
-
-                    match rbm {
-                        RBM::Txyz(_) => tr[i] = *stroke,
-                        RBM::Rxyz(_) => tr[i + 3] = *stroke,
-                        RBM::TRxyz => tr[i] = *stroke,
-                    }
-
-                    match mirror {
-                        Mirror::M1 => gmt.m1_segment_state(sid as i32, &tr[..3], &tr[3..]),
-                        Mirror::M2 => gmt.m2_segment_state(sid as i32, &tr[..3], &tr[3..]),
-                    };
-                    src.through(&mut gmt).xpupil().through(wfs);
-                    // let slopes_pull = Slopes::from((&data_ref, wfs));
-                    let slopes_pull = wfs.into_slopes(&data_ref);
-                    wfs.reset();
-
-                    slopes.push((slopes_push - slopes_pull) / (2. * *stroke as f32));
                 }
                 pb.as_ref().map(|pb| pb.finish());
                 slopes
