@@ -76,7 +76,7 @@ mod tests {
     use super::*;
     use crate::{Builder, FromBuilder, Gmt, SegmentWiseSensor, Source};
 
-/*     #[test]
+    /*     #[test]
     fn calibrate() {
         let n_lenslet = 90;
         let sid = 2;
@@ -122,7 +122,7 @@ mod tests {
             .unwrap();
         let mut slopes_mat = pym.calibrate_segment(None, sid, 15, None);
         dbg!(slopes_mat.shape());
-        slopes_mat.pseudo_inverse().unwrap();
+        slopes_mat.pseudo_inverse(None).unwrap();
 
         let mut gmt = Gmt::builder().m2("Karhunen-Loeve", 100).build().unwrap();
         // gmt.keep(&[sid as i32]);

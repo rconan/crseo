@@ -120,6 +120,7 @@ mod tests {
             name: "Karhunen-Loeve".to_string(),
             dof: DOF::Range(1..15),
             mirror: Mirror::M2,
+            keep: true,
         };
 
         let calib2 = sc.calibrate(1, &mut wfs, Source::builder(), None);
@@ -141,6 +142,6 @@ mod tests {
         let seg = SegmentCalibration::rbm("TRxyz", "M1");
         let mut c = seg.calibrate(1, &mut wfs, src_builder, None);
         println!("{}", c.interaction_matrix());
-        c.pseudo_inverse().unwrap();
+        c.pseudo_inverse(None).unwrap();
     }
 }

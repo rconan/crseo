@@ -37,8 +37,7 @@ impl Propagation for DifferentialPistonSensor {
             );
         }
         src.phase();
-        let _w = src.wavelength();
-        let mut data = vec![0f32; 7];
+        let mut piston = vec![];
         for (mask, phase) in mask.chunks(n_ray).zip(src._phase.chunks(n_ray)) {
             for k in 1..8 {
                 let segment_phase = mask
@@ -47,17 +46,25 @@ impl Propagation for DifferentialPistonSensor {
                     .filter_map(|(&mask, &phase)| (mask == k).then_some(phase))
                     .collect::<Vec<f32>>();
                 let n = segment_phase.len();
-                if n > 0 {
-                    let mean = segment_phase.iter().sum::<f32>() / n as f32;
-                    if let Some(lim) = self.wrapping {
-                        data[k as usize - 1] += mean % lim as f32;
-                    } else {
-                        data[k as usize - 1] += mean;
-                    }
-                }
+                let mean = segment_phase.iter().sum::<f32>() / n as f32;
+                piston.push(mean);
             }
         }
-        let p7 = data[6];
+
+        for (piston, data) in piston.chunks(7).zip(self.data.chunks_mut(12)) {
+            let p7 = piston[6];
+            data.iter_mut()
+                .zip(piston.iter().take(6))
+                .for_each(|(d, &p)| *d += p7 - p);
+            data.iter_mut()
+                .skip(6)
+                .take(5)
+                .zip(piston.windows(2))
+                .for_each(|(d, p)| *d += p[0] - p[1]);
+            data[11] += piston[5] - piston[0];
+        }
+
+        /*         let p7 = data[6];
         self.data
             .iter_mut()
             .zip(data.iter().take(6))
@@ -68,7 +75,7 @@ impl Propagation for DifferentialPistonSensor {
             .take(5)
             .zip(data.windows(2))
             .for_each(|(d, p)| *d = p[0] - p[1]);
-        self.data[11] = data[5] - data[0];
+        self.data[11] = data[5] - data[0]; */
         self.n_frame += 1;
     }
 
@@ -142,16 +149,21 @@ impl SegmentWiseSensor for DifferentialPistonSensor {
         self.pupil_sampling
     }
 
-    fn zeroed_segment(&mut self, sid: usize, src_builder: Option<crate::SourceBuilder>) -> DataRef {
+    fn zeroed_segment(
+        &mut self,
+        _sid: usize,
+        src_builder: Option<crate::SourceBuilder>,
+    ) -> DataRef {
         let mut gmt = Gmt::builder().build().unwrap();
-        gmt.keep(&[sid as i32]);
+        // gmt.keep(&[sid as i32]);
 
         // let mut src = src_builder.clone().unwrap_or_default().build().unwrap();
         // src.through(&mut gmt).xpupil();
         // let n = src.pupil_sampling as usize;
 
         let mut pupil = nalgebra::DMatrix::<f32>::zeros(7, 1);
-        pupil[(sid - 1, 0)] = 1f32;
+        pupil.fill(1f32);
+        // pupil[(sid - 1, 0)] = 1f32;
 
         let mut data_ref = DataRef::new(pupil);
 
@@ -227,22 +239,32 @@ impl Mul<&DifferentialPistonSensor> for &Calibration {
 
 #[cfg(test)]
 mod tests {
-    use crate::{wavefrontsensor::SegmentCalibration, Source, WavefrontSensorBuilder};
+    use crate::{
+        wavefrontsensor::SegmentCalibration, SegmentWiseSensorBuilder, Source,
+        WavefrontSensorBuilder,
+    };
 
     use super::*;
 
     #[test]
     fn piston() {
         let mut gmt = Gmt::builder().build().unwrap();
+        let n_gs = 3;
         let mut sensor = DifferentialPistonSensor::builder()
+            .size(n_gs)
             .pupil_sampling(401)
             .build()
             .unwrap();
-        let mut src = Source::builder().pupil_sampling(401).build().unwrap();
+        let mut src = Source::builder()
+            .pupil_sampling(401)
+            .size(n_gs)
+            .build()
+            .unwrap();
 
-        let sensor_zero: Vec<_> = (1..=7).map(|i| sensor.zeroed_segment(i, None)).collect();
+        let sensor_zero =
+            sensor.zeroed_segment(0, Some(Source::builder().pupil_sampling(401).size(n_gs)));
 
-        dbg!(&sensor_zero[0]);
+        dbg!(&sensor_zero);
 
         src.through(&mut gmt).xpupil();
         let piston: Vec<_> = (1..=7).map(|i| (i as f32) * 1e-7).collect();
@@ -254,23 +276,41 @@ mod tests {
         src.through(&mut sensor);
         dbg!(sensor.data());
 
-        let data: Vec<_> = sensor_zero
-            .iter()
-            .map(|sz| Slopes::from((sz, &sensor)))
-            .flat_map(|s| Vec::<f32>::from(s))
-            .map(|x| x * 1e7)
-            .collect();
+        let data: Vec<_> = Slopes::from((&sensor_zero, &sensor)).into();
+        dbg!(&data);
+    }
+
+    #[test]
+    fn calibrate_segment_rbm() {
+        let builder = DifferentialPistonSensor::builder().pupil_sampling(48 * 8);
+        let src_builder = builder.guide_stars(Some(Source::builder()));
+        let mut wfs = builder.build().unwrap();
+        let seg = SegmentCalibration::rbm("TRxyz", "M1").keep_all();
+        let mut c = seg.calibrate(3, &mut wfs, src_builder, None);
+        dbg!(&c);
+        println!("{:.6}", c.interaction_matrix());
+        c.pseudo_inverse(None).unwrap();
     }
 
     #[test]
     fn calibrate_rbm() {
         let builder = DifferentialPistonSensor::builder().pupil_sampling(48 * 8);
         let src_builder = builder.guide_stars(Some(Source::builder()));
-        let mut wfs = builder.build().unwrap();
-        let seg = SegmentCalibration::rbm("TRxyz", "M1");
-        let mut c = seg.calibrate(5, &mut wfs, src_builder, None);
-        println!("{}", c.interaction_matrix());
-        c.pseudo_inverse().unwrap();
+        let mut dfs_calibration = builder
+            .calibrate(
+                SegmentCalibration::rbm("TRxyz", "M1").keep_all(),
+                src_builder,
+            )
+            .flatten()
+            .unwrap();
+        println!("{:.1}", dfs_calibration.interaction_matrices()[0]);
+
+        // dbg!(&dfs_calibration);
+        /*         dfs_calibration
+        .interaction_matrices()
+        .iter()
+        .enumerate()
+        .for_each(|(k, c)| println!("Segment #{:}{:.6}", k + 1, c)); */
     }
 
     #[test]

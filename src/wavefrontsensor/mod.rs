@@ -27,7 +27,8 @@ pub use sh24::SH24;
 mod segment_wise;
 pub use segment_wise::{
     data_processing::{
-        Calibration, DataRef, Mirror, SegmentCalibration, Slopes, SlopesArray, DOF, RBM,
+        Calibration, DataRef, Mirror, SegmentCalibration, Slopes, SlopesArray,
+        TruncatedPseudoInverse, DOF, RBM,
     },
     differential_piston_sensor::{DifferentialPistonSensor, DifferentialPistonSensorBuilder},
     geom_shack::{GeomShack, GeomShackBuilder},

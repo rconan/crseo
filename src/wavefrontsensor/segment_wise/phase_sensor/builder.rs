@@ -41,12 +41,16 @@ impl SegmentWiseSensorBuilder for PhaseSensorBuilder {
     where
         Self::Component: crate::SegmentWiseSensor,
     {
-        let (segment_piston, segment_slopes) = segment.slip_at(1).unwrap();
         let piston_sensor = self
             .piston_sensor_builder
             .pupil_sampling(self.geom_shack_builder.pupil_sampling());
-        let piston_calibration = piston_sensor.calibrate(segment_piston, src.clone());
-        let slopes_calibration = self.geom_shack_builder.calibrate(segment_slopes, src);
+        if let Some((segment_piston, segment_slopes)) = segment.slip_at(1) {
+            let piston_calibration = piston_sensor.calibrate(segment_piston, src.clone());
+            let slopes_calibration = self.geom_shack_builder.calibrate(segment_slopes, src);
+            return piston_calibration + slopes_calibration;
+        }
+        let piston_calibration = piston_sensor.calibrate(segment.clone(), src.clone());
+        let slopes_calibration = self.geom_shack_builder.calibrate(segment, src);
         piston_calibration + slopes_calibration
     }
 }

@@ -1,4 +1,4 @@
-use std::ops::{Div, DivAssign, Sub, SubAssign};
+use std::ops::{Div, DivAssign, MulAssign, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
@@ -23,6 +23,11 @@ impl From<Slopes> for V {
 impl From<Slopes> for Vec<f32> {
     fn from(value: Slopes) -> Self {
         value.0
+    }
+}
+impl From<Vec<f32>> for Slopes {
+    fn from(value: Vec<f32>) -> Self {
+        Self(value)
     }
 }
 
@@ -60,5 +65,11 @@ impl SubAssign<Slopes> for &mut Slopes {
             .iter_mut()
             .zip(rhs.0.into_iter())
             .for_each(|(x, y)| *x -= y);
+    }
+}
+
+impl MulAssign<f32> for &mut Slopes {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.0.iter_mut().for_each(|x| *x *= rhs);
     }
 }

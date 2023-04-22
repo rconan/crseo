@@ -55,7 +55,7 @@ impl From<Range<usize>> for DOF {
     }
 }
 impl DOF {
-    pub fn split_at(self, idx: usize) -> (DOF, DOF) {
+    pub fn split_at(&self, idx: usize) -> (DOF, DOF) {
         match self {
             DOF::Modes(val) => {
                 let (left, right) = val.split_at(idx);
@@ -107,27 +107,31 @@ pub enum SegmentCalibration {
         name: String,
         dof: DOF,
         mirror: Mirror,
+        keep: bool,
     },
     RBM {
         stroke: f64,
         rbm: RBM,
         mirror: Mirror,
+        keep: bool,
     },
 }
 impl SegmentCalibration {
-    pub fn slip_at(self, idx: usize) -> Option<(SegmentCalibration, SegmentCalibration)> {
-        let SegmentCalibration::Modes { name, dof, mirror } = self else {return None};
+    pub fn slip_at(&self, idx: usize) -> Option<(SegmentCalibration, SegmentCalibration)> {
+        let SegmentCalibration::Modes { name, dof, mirror, keep } = self else {return None};
         let (left, right) = dof.split_at(idx);
         Some((
             SegmentCalibration::Modes {
                 name: name.clone(),
                 dof: left,
-                mirror: mirror.clone(),
+                mirror: *mirror,
+                keep: *keep,
             },
             SegmentCalibration::Modes {
-                name,
+                name: name.into(),
                 dof: right,
-                mirror,
+                mirror: *mirror,
+                keep: *keep,
             },
         ))
     }
@@ -141,6 +145,7 @@ impl SegmentCalibration {
             name: name.into(),
             dof: dof.into(),
             mirror: mirror.into(),
+            keep: true,
         }
     }
     pub fn rbm<R, M>(rbm: R, mirror: M) -> Self
@@ -152,11 +157,35 @@ impl SegmentCalibration {
             stroke: 1e-6,
             rbm: rbm.into(),
             mirror: mirror.into(),
+            keep: true,
+        }
+    }
+    pub fn keep_all(self) -> Self {
+        match self {
+            SegmentCalibration::Modes {
+                name, dof, mirror, ..
+            } => SegmentCalibration::Modes {
+                name,
+                dof,
+                mirror,
+                keep: false,
+            },
+            SegmentCalibration::RBM {
+                stroke,
+                rbm,
+                mirror,
+                ..
+            } => SegmentCalibration::RBM {
+                stroke,
+                rbm,
+                mirror,
+                keep: false,
+            },
         }
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum Mirror {
     M1,
     M2,
@@ -187,7 +216,12 @@ impl SegmentCalibration {
         let mut src = src_builder.build().unwrap();
         let mut slopes = vec![];
         let slopes = match self {
-            SegmentCalibration::Modes { name, dof, mirror } => {
+            SegmentCalibration::Modes {
+                name,
+                dof,
+                mirror,
+                keep,
+            } => {
                 let l = 1 + dof
                     .clone()
                     .into_iter()
@@ -199,9 +233,9 @@ impl SegmentCalibration {
                 }
                 .build()
                 .unwrap();
-
-                gmt.keep(&[sid as i32]);
-
+                if *keep {
+                    gmt.keep(&[sid as i32]);
+                }
                 let o2p = (2. * std::f64::consts::PI / src.wavelength()) as f32;
 
                 for kl_mode in dof.clone() {
@@ -254,9 +288,12 @@ impl SegmentCalibration {
                 stroke,
                 rbm,
                 mirror,
+                keep,
             } => {
                 let mut gmt = Gmt::builder().build().unwrap();
-                gmt.keep(&[sid as i32]);
+                if *keep {
+                    gmt.keep(&[sid as i32]);
+                };
                 let dof = match rbm {
                     RBM::Txyz(dof) | RBM::Rxyz(dof) => {
                         dof.clone().unwrap_or(DOF::Range(0..3)).into_iter()
@@ -285,9 +322,10 @@ impl SegmentCalibration {
                         if s > 0f64 {
                             slopes.push(wfs.into_slopes(&data_ref));
                         } else {
-                            slopes
-                                .last_mut()
-                                .map(|mut s| s -= wfs.into_slopes(&data_ref));
+                            slopes.last_mut().map(|mut s| {
+                                s -= wfs.into_slopes(&data_ref);
+                                s *= 0.5 / *stroke as f32
+                            });
                         }
                         wfs.reset();
                     }
