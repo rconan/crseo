@@ -35,7 +35,7 @@ impl WavefrontSensor for DifferentialPistonSensor {
     }
 
     fn n_frame(&self) -> usize {
-        todo!()
+        self.n_frame
     }
 
     fn valid_lenslet_from(&mut self, _wfs: &mut dyn WavefrontSensor) {

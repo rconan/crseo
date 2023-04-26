@@ -60,11 +60,21 @@ pub struct SlopesArray {
 }
 
 impl From<(DataRef, Vec<Slopes>)> for SlopesArray {
-    /// Convert a vector of measurements and the associated [QuadCell] into a [SlopesArray]
+    /// Convert a vector of measurements and the associated [DataRef] into a [SlopesArray]
     fn from((data_ref, slopes): (DataRef, Vec<Slopes>)) -> Self {
         Self {
             slopes,
             data_ref,
+            ..Default::default()
+        }
+    }
+}
+
+impl From<Vec<Slopes>> for SlopesArray {
+    /// Convert a vector of measurements into a [SlopesArray]
+    fn from(slopes: Vec<Slopes>) -> Self {
+        Self {
+            slopes,
             ..Default::default()
         }
     }
@@ -80,6 +90,16 @@ impl From<DMatrix<f32>> for SlopesArray {
             slopes,
             ..Default::default()
         }
+    }
+}
+
+impl From<(DMatrix<f32>, SlopesArray)> for SlopesArray {
+    fn from((value, sa): (DMatrix<f32>, SlopesArray)) -> Self {
+        let slopes: Vec<_> = value
+            .column_iter()
+            .map(|row| Slopes::from(row.as_slice().to_vec()))
+            .collect();
+        Self { slopes, ..sa }
     }
 }
 
@@ -189,6 +209,11 @@ impl SlopesArray {
             count += 1;
         }
     }
+    pub fn insert_rows(&mut self, rows: Vec<usize>) {
+        if let Some(inverse) = self.inverse.take() {
+            self.inverse = Some(rows.into_iter().fold(inverse, |a, i| a.insert_row(i, 0f32)));
+        }
+    }
 }
 
 impl Mul<Slopes> for &mut SlopesArray {
@@ -207,5 +232,18 @@ impl Mul<Slopes> for &SlopesArray {
             .as_ref()
             .map(|pinv| pinv * V::from(rhs))
             .map(|x| x.as_slice().to_vec())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn insert_rows() {
+        let mut mat = nalgebra::DMatrix::<f32>::zeros(40, 3);
+        println!("{}", mat);
+        let mat = mat.insert_row(38, 1f32);
+        let mat = mat.insert_row(41, 1f32);
+        println!("{}", mat);
     }
 }

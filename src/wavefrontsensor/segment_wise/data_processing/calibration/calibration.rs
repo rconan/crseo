@@ -60,6 +60,14 @@ impl DerefMut for Calibration {
         &mut self.0
     }
 }
+
+impl From<(DMatrix<f32>, Calibration)> for Calibration {
+    fn from((value, mut cal): (DMatrix<f32>, Calibration)) -> Self {
+        assert_eq!(cal.0.len(), 1);
+        let sa = cal.0.pop().unwrap();
+        Self(vec![(value, sa).into()])
+    }
+}
 impl Calibration {
     /// Returns the number of rows and columns of the calibration matrix
     pub fn shape(&self) -> (usize, usize) {
@@ -147,6 +155,11 @@ impl Calibration {
             data_ref,
             inverse: None,
         }]))
+    }
+    pub fn insert_rows(&mut self, indices: Vec<(usize, Vec<usize>)>) {
+        for (sa_idx, rows) in indices.into_iter() {
+            self.0.get_mut(sa_idx).map(|sa| sa.insert_rows(rows));
+        }
     }
 }
 

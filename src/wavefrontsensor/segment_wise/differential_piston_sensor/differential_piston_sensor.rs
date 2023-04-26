@@ -13,6 +13,7 @@ use super::{
 pub struct DifferentialPistonSensor {
     pub(super) data: Vec<f32>,
     pub(super) pupil_sampling: usize,
+    #[allow(dead_code)]
     pub(super) wrapping: Option<f64>,
     pub(super) n_frame: usize,
 }

@@ -30,7 +30,11 @@ impl From<Vec<f32>> for Slopes {
         Self(value)
     }
 }
-
+impl<'a> From<&'a [f32]> for Slopes {
+    fn from(value: &'a [f32]) -> Self {
+        Self(value.to_vec())
+    }
+}
 impl Div<f32> for Slopes {
     type Output = Slopes;
 

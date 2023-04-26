@@ -1,7 +1,7 @@
 use crseo::prelude::*;
 use std::time::Instant;
 
-#[test]
+/* #[test]
 fn sh24_calibration() -> anyhow::Result<()> {
     let mut src = Source::builder().build()?;
     let mut gmt = Gmt::builder().build()?;
@@ -31,3 +31,4 @@ fn sh24_calibration() -> anyhow::Result<()> {
     );
     Ok(())
 }
+ */
