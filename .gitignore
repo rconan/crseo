@@ -10,3 +10,5 @@ Cargo.lock
 /data
 /sys/target
 /nat
+*.ipynb
+*.mat
