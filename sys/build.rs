@@ -4,7 +4,14 @@ fn main() {
     if std::env::var("DOCS_RS").is_ok() {
         return;
     }
-    println!("cargo:rustc-link-search=/usr/local/lib");
+
+    let out = cmake::Config::new("CEO").build();
+
+    println!(
+        "cargo:rustc-link-search={}",
+        dbg!(out.join("lib").display())
+    );
+    // println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-lib=static=ceo");
     println!("cargo:rustc-link-lib=static=jsmn");
     println!("cargo:rustc-link-lib=curl");
