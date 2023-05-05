@@ -1,11 +1,9 @@
-#include <ceo/utilities.h>
-#include <ceo/source.h>
-#include <ceo/rayTracing.h>
-#include <ceo/imaging.h>
-#include <ceo/shackHartmann.h>
-#include <ceo/gmtMirrors.h>
-#include <ceo/atmosphere.h>
-#include <ceo/LMMSE.h>
-#include <ceo/pyramid.h>
-
-
+#include <utilities.h>
+#include <source.h>
+#include <rayTracing.h>
+#include <imaging.h>
+#include <shackHartmann.h>
+#include <gmtMirrors.h>
+#include <atmosphere.h>
+#include <LMMSE.h>
+#include <pyramid.h>

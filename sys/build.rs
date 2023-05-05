@@ -13,8 +13,8 @@ fn main() {
     );
     // println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-lib=static=ceo");
-    println!("cargo:rustc-link-lib=static=jsmn");
-    println!("cargo:rustc-link-lib=curl");
+    // println!("cargo:rustc-link-lib=static=jsmn");
+    // println!("cargo:rustc-link-lib=curl");
     println!("cargo:rustc-link-search=/usr/local/cuda/lib64");
     println!("cargo:rustc-link-lib=cudart");
     println!("cargo:rustc-link-lib=cudadevrt");
@@ -27,7 +27,10 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
+        .clang_arg(&format!("-I{}", dbg!(out.join("include").display())))
         .clang_arg("-I/usr/local/cuda/include")
+        .clang_arg("-I/usr/include/c++/9")
+        .clang_arg("-I/usr/include/x86_64-linux-gnu/c++/9")
         .clang_arg("-v")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .allowlist_type("gpu_float")
