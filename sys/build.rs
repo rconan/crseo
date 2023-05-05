@@ -1,5 +1,3 @@
-use std::path::Path;
-
 fn main() {
     if std::env::var("DOCS_RS").is_ok() {
         return;
@@ -11,11 +9,9 @@ fn main() {
         "cargo:rustc-link-search={}",
         dbg!(out.join("lib").display())
     );
-    // println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-lib=static=ceo");
-    // println!("cargo:rustc-link-lib=static=jsmn");
-    // println!("cargo:rustc-link-lib=curl");
     println!("cargo:rustc-link-search=/usr/local/cuda/lib64");
+    println!("cargo:rustc-link-lib=stdc++");
     println!("cargo:rustc-link-lib=cudart");
     println!("cargo:rustc-link-lib=cudadevrt");
     println!("cargo:rustc-link-lib=cublas");
@@ -29,8 +25,6 @@ fn main() {
         .header("wrapper.hpp")
         .clang_arg(&format!("-I{}", dbg!(out.join("include").display())))
         .clang_arg("-I/usr/local/cuda/include")
-        .clang_arg("-I/usr/include/c++/9")
-        .clang_arg("-I/usr/include/x86_64-linux-gnu/c++/9")
         .clang_arg("-v")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .allowlist_type("gpu_float")
@@ -65,7 +59,7 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings");
 
-    let out_path = Path::new("src");
+    let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
