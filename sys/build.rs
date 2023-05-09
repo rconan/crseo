@@ -1,13 +1,9 @@
 fn main() {
-    if std::env::var("DOCS_RS").is_ok() {
-        return;
-    }
-
     let out = cmake::Config::new("CEO").build();
 
     println!(
-        "cargo:rustc-link-search={}",
-        dbg!(out.join("lib").display())
+        "cargo:rustc-link-search=native={}",
+        out.join("lib").display()
     );
     println!("cargo:rustc-link-lib=static=ceo");
     println!("cargo:rustc-link-search=/usr/local/cuda/lib64");
@@ -23,7 +19,7 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
-        .clang_arg(&format!("-I{}", dbg!(out.join("include").display())))
+        .clang_arg(&format!("-I{}", out.join("include").display()))
         .clang_arg("-I/usr/local/cuda/include")
         .clang_arg("-v")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))

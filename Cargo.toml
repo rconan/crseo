@@ -1,6 +1,6 @@
 [package]
 name = "crseo"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
 license = "MIT"
@@ -12,7 +12,7 @@ categories = ["api-bindings", "science", "simulation"]
 keywords = ["telescope", "astronomy"]
 
 [dependencies]
-ffi = { version = "0.2.0", path = "sys", package = "crseo-sys" }
+ffi = { version = "1.0.0", path = "sys", package = "crseo-sys" }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde-pickle = "0.6"
