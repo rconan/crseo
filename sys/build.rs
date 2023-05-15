@@ -1,4 +1,8 @@
 fn main() {
+    if std::env::var("DOCS_RS").is_ok() {
+        return;
+    }
+
     let out = cmake::Config::new("CEO").build();
 
     println!(
@@ -55,8 +59,8 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings");
 
-    let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let binding_path = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     bindings
-        .write_to_file(out_path.join("bindings.rs"))
+        .write_to_file(binding_path.join("src").join("bindings.rs"))
         .expect("Couldn't write bindings!");
 }
