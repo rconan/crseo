@@ -163,7 +163,7 @@ impl Centroiding {
         unsafe {
             host2dev_char(
                 self._c_.lenslet_mask,
-                self.valid_lenslets.as_mut_ptr(),
+                self.valid_lenslets.as_mut_ptr() as *mut _,
                 self.n_lenslet_total as i32,
             );
             self._c_mask_.reset();
