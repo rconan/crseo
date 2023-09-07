@@ -1,4 +1,4 @@
-use crate::{Builder, CrseoError, FromBuilder, Propagation, Result, Source};
+use crate::{Builder, CrseoError, FromBuilder, Propagation, Source};
 use ffi::{gmt_m1, gmt_m2, vector};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -140,19 +140,27 @@ impl GmtBuilder {
         self
     }
 }
+
+#[derive(Debug, thiserror::Error)]
+pub enum GmtModesError {
+    #[error("the mirror modes file ({0}) does not exist")]
+    Path(String),
+    #[error(r#"the environment variable "GMT_MODES_PATH" is not set"#)]
+    EnvVar(#[from] std::env::VarError),
+}
+
 impl Mirror {
-    fn mode_path(&self) -> Result<String> {
+    fn mode_path(&self) -> std::result::Result<String, GmtModesError> {
         let mode_type = Path::new(&self.mode_type).with_extension("ceo");
         if mode_type.is_file() {
             Ok(mode_type.to_str().unwrap().to_owned())
         } else {
-            let env_path =
-                env::var("GMT_MODES_PATH").unwrap_or_else(|_| String::from("CEO/gmtMirrors"));
+            let env_path = env::var("GMT_MODES_PATH")?;
             let path = Path::new(&env_path).join(mode_type);
             if path.is_file() {
                 Ok(path.to_str().unwrap().to_owned())
             } else {
-                Err(CrseoError::GmtModesPath(path))
+                Err(GmtModesError::Path(path.to_str().unwrap().to_string()))
             }
         }
     }
@@ -160,6 +168,11 @@ impl Mirror {
 impl Builder for GmtBuilder {
     type Component = Gmt;
     fn build(self) -> std::result::Result<Gmt, CrseoError> {
+        let m1_mode_type =
+            CString::new(self.m1.mode_path().map_err(|e| super::GmtError::from(e))?)?;
+        let m2_mode_type =
+            CString::new(self.m2.mode_path().map_err(|e| super::GmtError::from(e))?)?;
+
         let mut gmt = Gmt {
             _c_m1: Default::default(),
             _c_m2: Default::default(),
@@ -170,13 +183,13 @@ impl Builder for GmtBuilder {
             a2: self.m2.a.clone(),
             pointing_error: self.pointing_error,
         };
-        let m1_mode_type = CString::new(self.m1.mode_path()?)?;
+
         gmt.m1_n_mode = self.m1.n_mode;
         unsafe {
             gmt._c_m1
                 .setup1(m1_mode_type.into_raw(), 7, gmt.m1_n_mode as i32);
         }
-        let m2_mode_type = CString::new(self.m2.mode_path()?)?;
+
         gmt.m2_n_mode = self.m2.n_mode;
         unsafe {
             gmt._c_m2

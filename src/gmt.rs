@@ -22,7 +22,7 @@ use std::f64::consts::PI;
 use std::fmt::Display;
 
 mod gmt;
-pub use gmt::{Gmt, GmtBuilder};
+pub use gmt::{Gmt, GmtBuilder, GmtModesError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum GmtError {
@@ -35,6 +35,8 @@ pub enum GmtError {
     GmtDofMatch,
     #[error("invalid SegmentDof pattern")]
     SegmentDof,
+    #[error("mirror modes file not found")]
+    Modes(#[from] GmtModesError),
 }
 pub type GmtResult<T> = std::result::Result<T, GmtError>;
 
