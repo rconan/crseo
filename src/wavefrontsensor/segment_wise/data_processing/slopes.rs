@@ -1,4 +1,7 @@
-use std::ops::{Div, DivAssign, MulAssign, Sub, SubAssign};
+use std::{
+    fmt::Display,
+    ops::{Div, DivAssign, MulAssign, Sub, SubAssign},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +14,11 @@ impl Slopes {
     /// Returns the length of the measurements vector
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+}
+impl Display for Slopes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "#{} slopes", self.len())
     }
 }
 type V = nalgebra::DVector<f32>;

@@ -60,7 +60,15 @@ impl DerefMut for Calibration {
         &mut self.0
     }
 }
-
+impl Display for Calibration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        println!("Calibration:");
+        for s in self.iter() {
+            s.fmt(f)?;
+        }
+        Ok(())
+    }
+}
 impl From<(DMatrix<f32>, Calibration)> for Calibration {
     fn from((value, mut cal): (DMatrix<f32>, Calibration)) -> Self {
         assert_eq!(cal.0.len(), 1);

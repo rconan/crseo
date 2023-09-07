@@ -46,6 +46,7 @@ impl GeomShack {
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
         n_side_lenslet * n_side_lenslet * self.n_gs
     }
+    /// Centroids as `[[cx,cy]_1,...,[cx,cy]_i,...,[cx,cy]_n]` where `n` is the number of guide stars
     pub fn data(&self) -> Vec<f32> {
         let mut data = Cu::<Single>::vector(self.n_total_lenslet() * 2);
         data.from_ptr(self._c_.data_proc.d__c);
@@ -95,7 +96,8 @@ impl SegmentWiseSensor for GeomShack {
             .unwrap();
         self.reset();
         src.through(&mut gmt).xpupil().through(self);
-        data_ref.set_ref_with(Slopes::from((&data_ref, &*self)));
+        let s = Slopes::from((&data_ref, &*self));
+        data_ref.set_ref_with(s);
         self.reset();
         data_ref
     }
@@ -163,26 +165,34 @@ impl SegmentWiseSensor for GeomShack {
 }
 
 impl From<(&DataRef, &GeomShack)> for Slopes {
-    /// Computes the pyramid measurements
-    ///
-    /// The pyramid detector frame is contained within [Pyramid] and [QuadCell] provides the
-    /// optional frame mask  and measurements of reference
+    /// Computes the  measurements
     fn from((qc, wfs): (&DataRef, &GeomShack)) -> Self {
-        let data = wfs
+        let mut data = wfs
             .data()
             .into_iter()
             .map(|x| x / wfs.n_frame() as f32)
             .collect::<Vec<f32>>();
-        let (sx, sy) = data.split_at(wfs.lenslet_array.n_side_lenslet.pow(2));
-        let iter = sx.iter().zip(sy);
-        let mut sxy: Vec<_> = if let Some(mask) = qc.mask.as_ref() {
-            iter.zip(mask)
-                .filter(|(_, &m)| m)
-                .flat_map(|((sx, sy), _)| vec![*sx, *sy])
-                .collect()
-        } else {
-            iter.flat_map(|(sx, sy)| vec![*sx, *sy]).collect()
-        };
+        let LensletArray { n_side_lenslet, .. } = wfs.lenslet_array;
+        let n_slope = n_side_lenslet * n_side_lenslet * 2;
+        let mut sxy = vec![];
+        for i in 0..wfs.n_gs {
+            let sxy_i: Vec<_> = data.drain(..n_slope).collect();
+            let (sx, sy) = sxy_i.split_at(n_slope / 2);
+            sxy.append(&mut if let Some(mask) = qc.mask.as_ref() {
+                let mi = mask.columns(i * n_side_lenslet, n_side_lenslet);
+                sx.iter()
+                    .zip(sy)
+                    .zip(mi.iter())
+                    .filter_map(|((sx, sy), &m)| if m { Some(vec![*sx, *sy]) } else { None })
+                    .flatten()
+                    .collect()
+            } else {
+                sx.iter()
+                    .zip(sy)
+                    .flat_map(|(sx, sy)| vec![*sx, *sy])
+                    .collect()
+            });
+        }
         if let Some(Slopes(sxy0)) = qc.sxy0.as_ref() {
             sxy.iter_mut()
                 .zip(sxy0)

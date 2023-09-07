@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::Serialize;
 
 use super::Slopes;
@@ -59,5 +61,39 @@ impl DataRef {
                 }
             }),
         ))
+    }
+}
+
+impl Display for DataRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match (self.mask.as_ref(), self.sxy0.as_ref()) {
+            (None, None) => writeln!(f, "Empty DataRef"),
+            (None, Some(sxy0)) => writeln!(f, "DataRef with no mask and {} slopes", sxy0.len()),
+            (Some(mask), None) => {
+                writeln!(
+                    f,
+                    "DataRef with no slopes and a {:?} mask(nnz={})",
+                    mask.shape(),
+                    mask.iter()
+                        .filter(|&&x| x)
+                        .enumerate()
+                        .last()
+                        .map(|(l, _)| l + 1)
+                        .unwrap()
+                )
+            }
+            (Some(mask), Some(sxy0)) => writeln!(
+                f,
+                "DataRef with {} slopes and a {:?} mask(nnz={})",
+                sxy0.len(),
+                mask.shape(),
+                mask.iter()
+                    .filter(|&&x| x)
+                    .enumerate()
+                    .last()
+                    .map(|(l, _)| l + 1)
+                    .unwrap()
+            ),
+        }
     }
 }
