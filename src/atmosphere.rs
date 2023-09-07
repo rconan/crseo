@@ -1,11 +1,23 @@
 use log;
 use serde::{Deserialize, Serialize};
-use std::ffi::CString;
-use std::ops::Mul;
-use std::{f32, ops::Div};
+use std::{
+    f32,
+    ffi::CString,
+    fs::File,
+    io::{Read, Write},
+    ops::{Div, Mul},
+    path::Path,
+};
 
-use super::{Builder, Cu, FromBuilder, Propagation, Result, Single, Source};
+use super::{Builder, CrseoError, Cu, FromBuilder, Propagation, Single, Source};
 use ffi::atmosphere;
+
+#[derive(Debug, thiserror::Error)]
+pub enum AtmosphereError {
+    #[error("cannot create `::crseo::AtmosphereBuilder`")]
+    Builder(#[from] AtmosphereBuilderError),
+}
+pub type Result<T> = std::result::Result<T, AtmosphereError>;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
@@ -56,6 +68,63 @@ pub struct RayTracing {
     pub filepath: Option<String>,
     pub n_duration: Option<i32>,
 }
+/// Default properties:
+///  * width        : 25.5m
+///  * width_px     : 512px
+///  * field_size   : 0rd
+///  * duration     : 1s
+///  * filepath     : None
+///  * n_duration   : None
+impl Default for RayTracing {
+    fn default() -> Self {
+        Self {
+            width: 25.5,
+            n_width_px: 512,
+            field_size: 0.0,
+            duration: 1.0,
+            filepath: None,
+            n_duration: None,
+        }
+    }
+}
+impl RayTracing {
+    /// Size in meters of the phase screen at altitude 0m
+    pub fn width(mut self, width: f64) -> Self {
+        self.width = width as f32;
+        self
+    }
+    /// Size in pixels of the phase screen at altitude 0m
+    pub fn n_width_px(mut self, n_width_px: usize) -> Self {
+        self.n_width_px = n_width_px as i32;
+        self
+    }
+    /// Field-of-view in radians
+    pub fn field_size(mut self, field_size: f64) -> Self {
+        self.field_size = field_size as f32;
+        self
+    }
+    /// Phase screen minimum time length in seconds
+    ///
+    /// Phase screens of that time length must fit with the GPU memory
+    pub fn duration(mut self, duration: f64) -> Self {
+        self.duration = duration as f32;
+        self
+    }
+    /// Path where to write the phase screens data file
+    pub fn filepath<P: AsRef<Path>>(mut self, filepath: P) -> Self {
+        let path = filepath.as_ref();
+        self.filepath = Some(path.to_str().unwrap().to_string());
+        self
+    }
+    /// Total number of durations
+    ///
+    /// The total time length of the phase screens is `n_duration X duration` seconds
+    pub fn n_duration(mut self, n_duration: u64) -> Self {
+        self.n_duration = Some(n_duration as i32);
+        self
+    }
+}
+
 /// [`CEO`](../struct.CEO.html#impl-6) [`Atmosphere`](../struct.Atmosphere.html) builder type
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AtmosphereBuilder {
@@ -87,8 +156,34 @@ impl Default for AtmosphereBuilder {
         }
     }
 }
+
+#[derive(Debug, thiserror::Error)]
+pub enum AtmosphereBuilderError {
+    #[error("cannot load/save `::crseo::AtmosphereBuilder`")]
+    IO(#[from] std::io::Error),
+    #[error("cannot deserialize `::crseo::AtmosphereBuilder` from toml")]
+    Load(#[from] toml::de::Error),
+    #[error("cannot serialize `::crseo::AtmosphereBuilder` into toml")]
+    Save(#[from] toml::ser::Error),
+}
+
 /// ## `Atmosphere` builder
 impl AtmosphereBuilder {
+    /// Load the atmospheric builder from a toml
+    pub fn load<P: AsRef<Path>>(path: P) -> std::result::Result<Self, AtmosphereBuilderError> {
+        let mut file = File::open(path)?;
+        let mut toml = String::new();
+        file.read_to_string(&mut toml)?;
+        let builder: AtmosphereBuilder = toml::from_str(&toml)?;
+        Ok(builder)
+    }
+    /// Save the atmospheric builder from a toml
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> std::result::Result<(), AtmosphereBuilderError> {
+        let toml = toml::to_string(self)?;
+        let mut file = File::create(path)?;
+        write!(file, "# ::crseo::AtmosphereBuilder\n\n{}", toml)?;
+        Ok(())
+    }
     /// Set r0 value taken at pointing the zenith in meters
     pub fn r0_at_zenith(self, r0_at_zenith: f64) -> Self {
         Self {
@@ -140,24 +235,9 @@ impl AtmosphereBuilder {
         Self { turbulence, ..self }
     }
     /// Set parameters for atmosphere ray tracing
-    pub fn ray_tracing(
-        self,
-        width: f32,
-        n_width_px: i32,
-        field_size: f32,
-        duration: f32,
-        filepath: Option<String>,
-        n_duration: Option<i32>,
-    ) -> Self {
+    pub fn ray_tracing(self, ray_tracing: RayTracing) -> Self {
         Self {
-            ray_tracing: Some(RayTracing {
-                width,
-                n_width_px,
-                field_size,
-                duration,
-                filepath,
-                n_duration,
-            }),
+            ray_tracing: Some(ray_tracing),
             ..self
         }
     }
@@ -165,7 +245,7 @@ impl AtmosphereBuilder {
 impl Builder for AtmosphereBuilder {
     type Component = Atmosphere;
     /// Build the `Atmosphere`
-    fn build(self) -> Result<Atmosphere> {
+    fn build(self) -> std::result::Result<Atmosphere, CrseoError> {
         let mut atm = Atmosphere {
             _c_: Default::default(),
             r0_at_zenith: self.r0_at_zenith,
@@ -195,8 +275,8 @@ impl Builder for AtmosphereBuilder {
             .iter()
             .map(|x| *x as f32 / secz as f32)
             .collect::<Vec<f32>>();
-        let mut xi0 = self.turbulence.xi0;
-        let mut wind_direction = self.turbulence.wind_direction;
+        let mut xi0 = self.turbulence.xi0.clone();
+        let mut wind_direction = self.turbulence.wind_direction.clone();
         match &self.ray_tracing {
             None => unsafe {
                 atm._c_.setup(
@@ -217,6 +297,17 @@ impl Builder for AtmosphereBuilder {
             },
             Some(rtc) => match &rtc.filepath {
                 Some(file) => unsafe {
+                    let path = Path::new(file).with_extension("").with_extension("toml");
+                    if let Ok(builder) = Self::load(&path) {
+                        if builder != self {
+                            panic!(
+                                "{:?} does not match the definition of the AtmosphereBuilder",
+                                path
+                            );
+                        }
+                    } else {
+                        self.save(&path).map_err(|e| AtmosphereError::from(e))?;
+                    }
                     log::info!("Looking up phase screen from file {}", file);
                     atm._c_.setup2(
                         r0 as f32,
@@ -494,8 +585,32 @@ impl Propagation for Atmosphere {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::{Read, Write};
+
+    // cargo test --release --package crseo --lib  -- atmosphere::tests::atmosphere_new --exact --nocapture
     #[test]
     fn atmosphere_new() {
         crate::ceo!(AtmosphereBuilder);
+    }
+
+    // cargo test --release --package crseo --lib  -- atmosphere::tests::dump_toml --exact --nocapture
+    #[test]
+    fn dump_toml() {
+        let builder = AtmosphereBuilder::default().ray_tracing(Default::default());
+        let toml = toml::to_string(&builder).unwrap();
+        let mut file = File::create("atm_builder.toml").unwrap();
+        write!(file, "#CRSEO AtmosphereBuilder\n\n{}", toml).unwrap();
+    }
+
+    // cargo test --release --package crseo --lib  -- atmosphere::tests::load_toml --exact --nocapture
+    #[test]
+    fn load_toml() {
+        let mut file = File::open("atm_builder.toml").unwrap();
+        let mut toml = String::new();
+        file.read_to_string(&mut toml).unwrap();
+        let builder: AtmosphereBuilder = toml::from_str(&toml).unwrap();
+        dbg!(&builder);
     }
 }
