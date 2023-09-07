@@ -6,7 +6,7 @@ use std::{
     fs::File,
     io::{Read, Write},
     ops::{Div, Mul},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use super::{Builder, CrseoError, Cu, FromBuilder, Propagation, Single, Source};
@@ -159,8 +159,14 @@ impl Default for AtmosphereBuilder {
 
 #[derive(Debug, thiserror::Error)]
 pub enum AtmosphereBuilderError {
-    #[error("cannot load/save `::crseo::AtmosphereBuilder`")]
-    IO(#[from] std::io::Error),
+    #[error("cannot open`::crseo::AtmosphereBuilder` toml file: {1}")]
+    Open(#[source] std::io::Error, PathBuf),
+    #[error("cannot create `::crseo::AtmosphereBuilder` toml file: {1}")]
+    Create(#[source] std::io::Error, PathBuf),
+    #[error("cannot read `::crseo::AtmosphereBuilder` toml file: {1}")]
+    Read(#[source] std::io::Error, PathBuf),
+    #[error("cannot write `::crseo::AtmosphereBuilder` toml file: {1}")]
+    Write(#[source] std::io::Error, PathBuf),
     #[error("cannot deserialize `::crseo::AtmosphereBuilder` from toml")]
     Load(#[from] toml::de::Error),
     #[error("cannot serialize `::crseo::AtmosphereBuilder` into toml")]
@@ -171,17 +177,21 @@ pub enum AtmosphereBuilderError {
 impl AtmosphereBuilder {
     /// Load the atmospheric builder from a toml
     pub fn load<P: AsRef<Path>>(path: P) -> std::result::Result<Self, AtmosphereBuilderError> {
-        let mut file = File::open(path)?;
+        let mut file = File::open(&path)
+            .map_err(|e| AtmosphereBuilderError::Open(e, path.as_ref().to_path_buf()))?;
         let mut toml = String::new();
-        file.read_to_string(&mut toml)?;
+        file.read_to_string(&mut toml)
+            .map_err(|e| AtmosphereBuilderError::Read(e, path.as_ref().to_path_buf()))?;
         let builder: AtmosphereBuilder = toml::from_str(&toml)?;
         Ok(builder)
     }
     /// Save the atmospheric builder from a toml
     pub fn save<P: AsRef<Path>>(&self, path: P) -> std::result::Result<(), AtmosphereBuilderError> {
-        let toml = toml::to_string(self)?;
-        let mut file = File::create(path)?;
-        write!(file, "# ::crseo::AtmosphereBuilder\n\n{}", toml)?;
+        let toml = toml::to_string_pretty(self)?;
+        let mut file = File::create(&path)
+            .map_err(|e| AtmosphereBuilderError::Create(e, path.as_ref().to_path_buf()))?;
+        write!(file, "# ::crseo::AtmosphereBuilder\n\n{}", toml)
+            .map_err(|e| AtmosphereBuilderError::Write(e, path.as_ref().to_path_buf()))?;
         Ok(())
     }
     /// Set r0 value taken at pointing the zenith in meters
@@ -586,8 +596,6 @@ impl Propagation for Atmosphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::File;
-    use std::io::{Read, Write};
 
     // cargo test --release --package crseo --lib  -- atmosphere::tests::atmosphere_new --exact --nocapture
     #[test]
@@ -597,20 +605,17 @@ mod tests {
 
     // cargo test --release --package crseo --lib  -- atmosphere::tests::dump_toml --exact --nocapture
     #[test]
-    fn dump_toml() {
+    fn dump_toml() -> anyhow::Result<()> {
         let builder = AtmosphereBuilder::default().ray_tracing(Default::default());
-        let toml = toml::to_string(&builder).unwrap();
-        let mut file = File::create("atm_builder.toml").unwrap();
-        write!(file, "#CRSEO AtmosphereBuilder\n\n{}", toml).unwrap();
+        builder.save("atm_builder.toml")?;
+        Ok(())
     }
 
     // cargo test --release --package crseo --lib  -- atmosphere::tests::load_toml --exact --nocapture
     #[test]
-    fn load_toml() {
-        let mut file = File::open("atm_builder.toml").unwrap();
-        let mut toml = String::new();
-        file.read_to_string(&mut toml).unwrap();
-        let builder: AtmosphereBuilder = toml::from_str(&toml).unwrap();
+    fn load_toml() -> anyhow::Result<()> {
+        let builder = AtmosphereBuilder::load("atm_builder.toml")?;
         dbg!(&builder);
+        Ok(())
     }
 }

@@ -21,7 +21,7 @@ roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
 nalgebra = { version = "0.32", features = ["serde-serialize"] }
-thiserror = "1.0.30"
+thiserror = "1.0.48"
 skyangle = "0.1.0"
 indicatif = "0.17.3"
 toml = "0.7.6"
