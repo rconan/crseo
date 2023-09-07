@@ -1,6 +1,6 @@
 [package]
 name = "crseo"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
 license = "MIT"
@@ -23,8 +23,9 @@ log = "0.4.11"
 nalgebra = { version = "0.32", features = ["serde-serialize"] }
 thiserror = "1.0.30"
 skyangle = "0.1.0"
-dosio = { version = "0.1.2", optional = true }
+# dosio = { version = "0.1.2", optional = true }
 indicatif = "0.17.3"
+toml = "0.7.6"
 
 [dev-dependencies]
 simple_logger = "1.11.0"
@@ -35,6 +36,9 @@ env_logger = "0.9.0"
 anyhow = "1.0.57"
 zernike = "0.2.1"
 complot = { version = "0.3.1", features = ["png"] }
+
+[features]
+analytic = []
 
 [[bench]]
 name = "ceo_benchmark"

@@ -1,15 +1,20 @@
-use std::{ffi, fmt};
-
+#[derive(Debug, thiserror::Error)]
 pub enum CrseoError {
-    GmtModesPath(std::path::PathBuf),
-    FFI(ffi::NulError),
+    #[error("The path {0} does not exist, set the environment variable GMT_MODES_PATH to the path to the directory that contains the files with the modes.")]
+    GmtModesPath(String),
+    #[error("FFI null panic")]
+    FFI(#[from] std::ffi::NulError),
+    #[error("cannot build `::crseo::Atmosphere`")]
+    Atmosphere(#[from] crate::AtmosphereError),
+    #[error("cannot build `::crseo::Gmt`")]
+    Gmt(#[from] crate::GmtError),
 }
 
-impl fmt::Display for CrseoError {
+/* impl fmt::Display for CrseoError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Self::GmtModesPath(p) => write!(f, "The path {:?} does not exist, set the environment variable GMT_MODES_PATH to the path to the directory that contains the files with the modes.",p),
-	    Self::FFI(e) => e.fmt(f)
+        Self::FFI(e) => e.fmt(f)
         }
     }
 }
@@ -32,3 +37,4 @@ impl From<ffi::NulError> for CrseoError {
         CrseoError::FFI(e)
     }
 }
+ */

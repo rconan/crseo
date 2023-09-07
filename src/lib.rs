@@ -37,7 +37,7 @@ pub mod source;
 pub mod wavefrontsensor;
 
 #[doc(inline)]
-pub use atmosphere::{Atmosphere, AtmosphereBuilder};
+pub use atmosphere::{Atmosphere, AtmosphereBuilder, AtmosphereError};
 #[doc(inline)]
 pub use calibrations::Calibration;
 #[doc(inline)]
@@ -49,7 +49,7 @@ pub use error::CrseoError;
 #[doc(inline)]
 pub use fwhm::Fwhm;
 #[doc(inline)]
-pub use gmt::{Gmt, GmtBuilder};
+pub use gmt::{Gmt, GmtBuilder, GmtError};
 #[doc(inline)]
 pub use imaging::Imaging;
 #[doc(inline)]
