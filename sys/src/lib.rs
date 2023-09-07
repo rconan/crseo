@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 #![allow(improper_ctypes)]
 
-include!("bindings.rs");
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 use std::ptr;
 

@@ -1,5 +1,7 @@
+use std::{env, path::PathBuf};
+
 fn main() {
-    if std::env::var("DOCS_RS").is_ok() {
+    if env::var("DOCS_RS").is_ok() {
         return;
     }
 
@@ -59,8 +61,8 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings");
 
-    let binding_path = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
-        .write_to_file(binding_path.join("src").join("bindings.rs"))
+        .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
 }
