@@ -5,7 +5,7 @@ use std::{
 };
 
 use nalgebra::DMatrix;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use super::{DataRef, Slopes};
 
@@ -51,7 +51,7 @@ impl Display for NalgebraErrorKind {
 impl Error for NalgebraErrorKind {}
 
 /// A collection of pyramid measurements
-#[derive(Debug, Clone, Default, Serialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct SlopesArray {
     pub(crate) slopes: Vec<Slopes>,
     pub data_ref: DataRef,
@@ -105,7 +105,17 @@ impl From<(DMatrix<f32>, SlopesArray)> for SlopesArray {
 
 impl Display for SlopesArray {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "SlopesArray: {:?}", self.shape())
+        writeln!(f, "SlopesArray: {:?}", self.shape())?;
+        writeln!(
+            f,
+            " * slopes: {:?}",
+            self.slopes.iter().map(|s| s.len()).collect::<Vec<_>>()
+        )?;
+        writeln!(f, " * data ref.: {:}", self.data_ref)?;
+        if let Some(mat) = &self.inverse {
+            writeln!(f, " * inverse: {:?}", mat.shape())?;
+        }
+        Ok(())
     }
 }
 
@@ -152,6 +162,14 @@ impl SlopesArray {
     pub fn ncols(&self) -> usize {
         self.slopes.len()
     }
+    /// Returns the slope mask
+    pub fn mask<'a>(&'a self) -> Option<&'a nalgebra::DMatrix<bool>> {
+        self.data_ref.mask()
+    }
+    /// Returns the reference slopes
+    pub fn reference_slopes(&self) -> Option<&Vec<f32>> {
+        self.data_ref.sxy0.as_ref().map(|sxy0| &sxy0.0)
+    }
     /// Returns the interaction matrix
     pub fn interaction_matrix(&self) -> DMatrix<f32> {
         Mat::from_iterator(
@@ -166,8 +184,14 @@ impl SlopesArray {
         truncation: Option<TruncatedPseudoInverse>,
     ) -> Result<&mut Self, SlopesArrayError> {
         let mat = self.interaction_matrix();
+        let n = mat.nrows();
         let mat_svd = mat.svd(true, true);
         // dbg!(&mat_svd.singular_values);
+        log::info!(
+            "Calibration singular values range: [{:e},{:e}]",
+            mat_svd.singular_values[n],
+            mat_svd.singular_values[0]
+        );
 
         if let Some(truncation) = truncation {
             match truncation {

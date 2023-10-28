@@ -2,7 +2,6 @@ use std::ops::Range;
 
 use indicatif::ProgressBar;
 // use serde::{Deserialize, Serialize};
-
 use crate::{
     wavefrontsensor::{Slopes, SlopesArray},
     Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
@@ -101,9 +100,38 @@ impl<S: Into<String>> From<S> for RBM {
     }
 }
 
+#[derive(Clone, Debug, Copy)]
+pub enum Stroke {
+    Scalar(f64),
+    RadialOrder(f64),
+}
+
+impl Stroke {
+    pub fn value(&self, i: usize) -> f64 {
+        match *self {
+            Stroke::Scalar(value) => value,
+            Stroke::RadialOrder(value) => {
+                let r = if i == 0 {
+                    1_f64
+                } else {
+                    (((8. * (i + 1) as f64 - 7.).sqrt() - 1.) * 0.5).floor()
+                };
+                value / r.sqrt()
+            }
+        }
+    }
+}
+
+impl From<f64> for Stroke {
+    fn from(value: f64) -> Self {
+        Self::Scalar(value)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum SegmentCalibration {
     Modes {
+        stroke: Stroke,
         name: String,
         dof: DOF,
         mirror: Mirror,
@@ -118,30 +146,43 @@ pub enum SegmentCalibration {
 }
 impl SegmentCalibration {
     pub fn slip_at(&self, idx: usize) -> Option<(SegmentCalibration, SegmentCalibration)> {
-        let SegmentCalibration::Modes { name, dof, mirror, keep } = self else {return None};
+        let SegmentCalibration::Modes {
+            stroke,
+            ref name,
+            ref dof,
+            mirror,
+            keep,
+        } = *self
+        else {
+            return None;
+        };
         let (left, right) = dof.split_at(idx);
         Some((
             SegmentCalibration::Modes {
+                stroke,
                 name: name.clone(),
                 dof: left,
-                mirror: *mirror,
-                keep: *keep,
+                mirror,
+                keep,
             },
             SegmentCalibration::Modes {
+                stroke,
                 name: name.into(),
                 dof: right,
-                mirror: *mirror,
-                keep: *keep,
+                mirror,
+                keep,
             },
         ))
     }
-    pub fn modes<S, D, M>(name: S, dof: D, mirror: M) -> Self
+    pub fn modes<S, D, M, T>(name: S, dof: D, mirror: M, stroke: T) -> Self
     where
         S: Into<String>,
         D: Into<DOF>,
         M: Into<Mirror>,
+        T: Into<Stroke>,
     {
         SegmentCalibration::Modes {
+            stroke: stroke.into(),
             name: name.into(),
             dof: dof.into(),
             mirror: mirror.into(),
@@ -163,8 +204,13 @@ impl SegmentCalibration {
     pub fn keep_all(self) -> Self {
         match self {
             SegmentCalibration::Modes {
-                name, dof, mirror, ..
+                stroke,
+                name,
+                dof,
+                mirror,
+                ..
             } => SegmentCalibration::Modes {
+                stroke,
                 name,
                 dof,
                 mirror,
@@ -217,6 +263,7 @@ impl SegmentCalibration {
         let mut slopes = vec![];
         let slopes = match self {
             SegmentCalibration::Modes {
+                stroke,
                 name,
                 dof,
                 mirror,
@@ -236,12 +283,12 @@ impl SegmentCalibration {
                 if *keep {
                     gmt.keep(&[sid as i32]);
                 }
-                let o2p = (2. * std::f64::consts::PI / src.wavelength()) as f32;
+                // let o2p = (2. * std::f64::consts::PI / src.wavelength()) as f32;
 
                 for kl_mode in dof.clone() {
                     pb.as_ref().map(|pb| pb.inc(1));
                     gmt.reset();
-                    let kl_a0 = 1e-6;
+                    /*                     let kl_a0 = 1e-6;
                     match mirror {
                         Mirror::M1 => gmt.m1_modes_ij(sid - 1, kl_mode, kl_a0),
                         Mirror::M2 => gmt.m2_modes_ij(sid - 1, kl_mode, kl_a0),
@@ -256,14 +303,14 @@ impl SegmentCalibration {
                                     if *value > max { *value } else { max },
                                 )
                             });
-                    let phase_minmax = (o2p * opd_minmax.0, o2p * opd_minmax.1);
+                    let phase_minmax = (o2p * opd_minmax.0, o2p * opd_minmax.1); */
                     // println!("𝜑 minmax: {:?}", phase_minmax);
-                    let kl_coef = 1e-2 * kl_a0 as f32 / phase_minmax.0.abs().max(phase_minmax.1);
-                    // println!("KL coef.:{:e}", kl_coef);
+                    let kl_coef = stroke.value(kl_mode); // 1e-2 * kl_a0 as f32 / phase_minmax.0.abs().max(phase_minmax.1);
+                                                         // println!("KL coef.:{:e}", kl_coef);
 
                     match mirror {
-                        Mirror::M1 => gmt.m1_modes_ij(sid - 1, kl_mode, kl_coef as f64),
-                        Mirror::M2 => gmt.m2_modes_ij(sid - 1, kl_mode, kl_coef as f64),
+                        Mirror::M1 => gmt.m1_modes_ij(sid - 1, kl_mode, kl_coef),
+                        Mirror::M2 => gmt.m2_modes_ij(sid - 1, kl_mode, kl_coef),
                     };
                     src.through(&mut gmt).xpupil().through(wfs);
                     // let slopes_push = Slopes::from((&data_ref, &*wfs));
@@ -271,15 +318,15 @@ impl SegmentCalibration {
                     wfs.reset();
 
                     match mirror {
-                        Mirror::M1 => gmt.m1_modes_ij(sid - 1, kl_mode, -kl_coef as f64),
-                        Mirror::M2 => gmt.m2_modes_ij(sid - 1, kl_mode, -kl_coef as f64),
+                        Mirror::M1 => gmt.m1_modes_ij(sid - 1, kl_mode, -kl_coef),
+                        Mirror::M2 => gmt.m2_modes_ij(sid - 1, kl_mode, -kl_coef),
                     };
                     src.through(&mut gmt).xpupil().through(wfs);
                     // let slopes_pull = Slopes::from((&data_ref, wfs));
                     let slopes_pull = wfs.into_slopes(&data_ref);
                     wfs.reset();
 
-                    slopes.push((slopes_push - slopes_pull) / (2. * kl_coef));
+                    slopes.push((slopes_push - slopes_pull) / (2. * kl_coef as f32));
                 }
                 pb.as_ref().map(|pb| pb.finish());
                 slopes

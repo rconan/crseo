@@ -35,6 +35,10 @@ impl PyramidBuilder {
         self.lenslet_array.n_side_lenslet = n_lenslet;
         self
     }
+    pub fn lenslet_array(mut self, lenslet_array: LensletArray) -> Self {
+        self.lenslet_array = lenslet_array;
+        self
+    }
     pub fn modulation(mut self, amplitude: f32, sampling: i32) -> Self {
         self.modulation = Some(Modulation {
             amplitude,

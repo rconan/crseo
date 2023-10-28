@@ -67,7 +67,7 @@ pub use source::{Source, SourceBuilder};
 #[doc(inline)]
 pub use wavefrontsensor::{
     Diffractive, Geometric, SegmentWiseSensor, SegmentWiseSensorBuilder, ShackHartmann,
-    ShackHartmannBuilder, SH24, SH48,
+    ShackHartmannBuilder, Stroke, SH24, SH48,
 };
 
 pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;

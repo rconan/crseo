@@ -371,6 +371,7 @@ impl Gmt {
             self._c_m2.BS.update(self.a2.as_mut_ptr());
         }
     }
+    /// Sets M2 modal coefficients for segment #`sid` (0 < `sid` < 8)
     pub fn m2_segment_modes(&mut self, sid: u8, a: &[f64]) {
         self.a2
             .chunks_mut(self.m2_n_mode)
@@ -381,6 +382,7 @@ impl Gmt {
             self._c_m2.BS.update(self.a2.as_mut_ptr());
         }
     }
+    /// Reset the segment modes to 0 and sets M2 modal coefficient #`j` for segment #`i`
     pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
         let mut a = vec![0f64; 7 * self.m2_n_mode];
         a[i * self.m2_n_mode + j] = value;

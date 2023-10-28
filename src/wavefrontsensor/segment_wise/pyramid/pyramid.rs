@@ -15,7 +15,7 @@ type Mat = nalgebra::DMatrix<f32>;
 /// Wrapper to CEO pyramid
 pub struct Pyramid {
     pub(super) _c_: ffi::pyramid,
-    pub(super) lenslet_array: LensletArray,
+    pub lenslet_array: LensletArray,
     pub(super) alpha: f32,
     pub(super) modulation: Option<Modulation>,
 }
@@ -87,7 +87,20 @@ impl Pyramid {
             row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet);
         let col_diff = mat.columns(n0, n_side_lenslet) - mat.columns(n1, n_side_lenslet);
         let col_row_data = col_diff.rows(n0, n_side_lenslet) + col_diff.rows(n1, n_side_lenslet);
-        (row_col_data, col_row_data)
+
+        let row_sum = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
+        let a = row_sum.columns(n0, n_side_lenslet) + row_sum.columns(n1, n_side_lenslet);
+        let mut flux = a.as_slice().to_vec();
+        flux.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let med_flux = match flux.len() {
+            n if n % 2 == 0 => 0.5 * (flux[n / 2] + flux[1 + n / 2]),
+            n => flux[(n + 1) / 2],
+        };
+
+        (
+            row_col_data.map(|v| v / med_flux),
+            col_row_data.map(|v| v / med_flux),
+        )
     }
     pub fn add_quads(&mut self) -> Mat {
         let (n, m) = self.camera_resolution();
@@ -107,16 +120,17 @@ impl SegmentWiseSensor for Pyramid {
             n_px_lenslet,
             ..
         } = self.lenslet_array;
-        n_side_lenslet * n_px_lenslet + 1
+        n_side_lenslet * n_px_lenslet
     }
     fn zeroed_segment(&mut self, sid: usize, src_builder: Option<SourceBuilder>) -> DataRef {
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
         // Setting the pyramid mask restricted to the segment
         let mut gmt = Gmt::builder().build().unwrap();
         gmt.keep(&[sid as i32]);
+
         let mut src = src_builder
             .clone()
-            .unwrap_or_default()
+            .unwrap()
             .pupil_sampling(n_side_lenslet)
             .build()
             .unwrap();
@@ -133,11 +147,12 @@ impl SegmentWiseSensor for Pyramid {
         gmt.keep(&[sid as i32]);
         let mut src = src_builder
             .clone()
-            .unwrap_or_default()
+            .unwrap()
             .pupil_sampling(self.pupil_sampling())
             .build()
             .unwrap();
         self.reset();
+
         src.through(&mut gmt).xpupil().through(self);
         data_ref.set_ref_with(Slopes::from((&data_ref, &*self)));
         self.reset();

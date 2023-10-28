@@ -5,7 +5,7 @@ use std::{
 };
 
 use nalgebra::DMatrix;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use slopes::Slopes;
 
 use crate::wavefrontsensor::{
@@ -46,7 +46,7 @@ impl From<SlopesArrayError> for CalibrationError {
 }
 
 /// A collection of [SlopesArray]
-#[derive(Clone, Default, Debug, Serialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Calibration(Vec<SlopesArray>);
 impl Deref for Calibration {
     type Target = Vec<SlopesArray>;
@@ -92,6 +92,14 @@ impl Calibration {
     /// Returns the number of sub-matrices
     pub fn size(&self) -> usize {
         self.0.len()
+    }
+    /// Returns the slope masks
+    pub fn masks<'a>(&'a self) -> impl Iterator<Item = Option<&'a nalgebra::DMatrix<bool>>> {
+        self.0.iter().map(|s| s.data_ref.mask())
+    }
+    /// Returns the reference slopes
+    pub fn reference_slopes(&self) -> Vec<Option<&Vec<f32>>> {
+        self.0.iter().map(|sa| sa.reference_slopes()).collect()
     }
     /// Compute the pseudo-inverse of each slope array
     pub fn pseudo_inverse(

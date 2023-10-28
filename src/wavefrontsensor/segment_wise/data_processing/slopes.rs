@@ -18,7 +18,7 @@ impl Slopes {
 }
 impl Display for Slopes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "#{} slopes", self.len())
+        write!(f, "#{} slopes", self.len())
     }
 }
 type V = nalgebra::DVector<f32>;

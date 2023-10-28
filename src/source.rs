@@ -546,8 +546,14 @@ impl Source {
         }
         segment_wfe
     }
+    pub fn segment_wfe_10e(&mut self, exp: i32) -> Vec<(f64, f64)> {
+        self.segment_wfe()
+            .into_iter()
+            .map(|(p, s)| (p * 10_f64.powi(-exp), s * 10_f64.powi(-exp)))
+            .collect()
+    }
     /// Adds a piston on each segment
-    pub fn add_piston<T: Into<f32> + Copy>(&mut self, piston: &[T]) {
+    pub fn add_piston<T: Into<f32> + Copy>(&mut self, piston: &[T]) -> &mut Self {
         let n_ray_total = self._c_.rays.N_RAY_TOTAL as usize;
         let n_ray = n_ray_total / self.size as usize;
         let mask = self.segment_mask();
@@ -561,6 +567,7 @@ impl Source {
             }
         }
         self.add(&opd);
+        self
     }
     /// Returns the segment standard deviation
     pub fn segment_wfe_rms(&mut self) -> Vec<f64> {
