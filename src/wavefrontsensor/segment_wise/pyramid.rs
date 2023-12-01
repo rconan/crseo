@@ -1,7 +1,8 @@
 mod builder;
 pub use builder::PyramidBuilder;
 mod pyramid;
-pub use pyramid::Pyramid;
+pub use pyramid::{Pyramid, PyramidCalibration};
+mod piston_sensor;
 
 pub use super::data_processing;
 

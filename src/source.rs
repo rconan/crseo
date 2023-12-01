@@ -31,6 +31,8 @@ use std::{
     usize,
 };
 
+const PHOTOMETRY: [&str; 6] = ["V", "R", "I", "J", "H", "K"];
+
 /// A system that mutates `Source` arguments should implement the `Propagation` trait
 pub trait Propagation {
     fn propagate(&mut self, src: &mut Source);
@@ -73,7 +75,7 @@ impl PupilSampling {
 ///  - size             : 1
 ///  - pupil size       : 25.5m
 ///  - pupil sampling   : 512px
-///  - photometric band : Vs (500nm)
+///  - photometric band : V (550nm)
 ///  - zenith           : 0degree
 ///  - azimuth          : 0degree
 ///  - magnitude        : 0
@@ -115,7 +117,7 @@ impl Default for SourceBuilder {
                 size: Some(25.5),
                 resolution: 512,
             },
-            band: "Vs".into(),
+            band: "V".into(),
             zenith: vec![0f32],
             azimuth: vec![0f32],
             magnitude: vec![0f32],
@@ -146,6 +148,13 @@ impl SourceBuilder {
     }
     /// Set the photometric band
     pub fn band(self, band: &str) -> Self {
+        assert!(
+            PHOTOMETRY
+                .iter()
+                .find(|photometry| band == **photometry)
+                .is_some(),
+            "found photometric band {band}, expected V, R, I, J, H or K"
+        );
         Self {
             band: band.to_owned(),
             ..self
@@ -207,7 +216,7 @@ impl SourceBuilder {
         let Field {
             zenith_arcmin,
             azimuth_degree,
-        } = pickle::from_slice(include_bytes!("fielddelaunay21.pkl"))
+        } = pickle::from_slice(include_bytes!("fielddelaunay21.pkl"), Default::default())
             .expect("fielddelaunay21.pkl loading failed!");
         let n_src = zenith_arcmin.len();
         Self {
@@ -552,8 +561,15 @@ impl Source {
             .map(|(p, s)| (p * 10_f64.powi(-exp), s * 10_f64.powi(-exp)))
             .collect()
     }
+    pub fn segment_dwfe_10e(&mut self, exp: i32) -> Vec<(f64, f64)> {
+        let data = self.segment_wfe();
+        let p7 = data[6].0;
+        data.into_iter()
+            .map(|(p, s)| ((p - p7) * 10_f64.powi(-exp), s * 10_f64.powi(-exp)))
+            .collect()
+    }
     /// Adds a piston on each segment
-    pub fn add_piston<T: Into<f32> + Copy>(&mut self, piston: &[T]) -> &mut Self {
+    pub fn add_piston(&mut self, piston: &[f64]) -> &mut Self {
         let n_ray_total = self._c_.rays.N_RAY_TOTAL as usize;
         let n_ray = n_ray_total / self.size as usize;
         let mask = self.segment_mask();
@@ -563,7 +579,7 @@ impl Source {
                 mask.iter()
                     .zip(&mut *opd)
                     .filter_map(|(&mask, opd)| (mask == k).then_some(opd))
-                    .for_each(|opd| *opd = piston[k as usize - 1].into())
+                    .for_each(|opd| *opd = piston[k as usize - 1] as f32)
             }
         }
         self.add(&opd);

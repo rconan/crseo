@@ -1,6 +1,6 @@
 [package]
 name = "crseo"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
 license = "MIT"
@@ -15,16 +15,16 @@ keywords = ["telescope", "astronomy"]
 ffi = { version = "1.1.0", path = "sys", package = "crseo-sys" }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
-serde-pickle = "0.6"
 libm = "0.2.1"
 roots = "0.0.6"
 rayon = "1.4"
 log = "0.4.11"
-nalgebra = { version = "0.32", features = ["serde-serialize"] }
 thiserror = "1.0.48"
 skyangle = "0.1.0"
 indicatif = "0.17.3"
 toml = "0.7.6"
+serde-pickle = "1.1.1"
+nalgebra = { version = "0.32.3", features = ["serde-serialize"] }
 
 [dev-dependencies]
 simple_logger = "1.11.0"

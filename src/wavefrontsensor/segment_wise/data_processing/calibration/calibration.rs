@@ -8,11 +8,14 @@ use nalgebra::DMatrix;
 use serde::{Deserialize, Serialize};
 use slopes::Slopes;
 
-use crate::wavefrontsensor::{
-    segment_wise::data_processing::{
-        slopes, slopes_array::SlopesArrayError, TruncatedPseudoInverse,
+use crate::{
+    wavefrontsensor::{
+        segment_wise::data_processing::{
+            slopes, slopes_array::SlopesArrayError, TruncatedPseudoInverse,
+        },
+        SlopesArray,
     },
-    SlopesArray,
+    SourceBuilder,
 };
 
 #[derive(Debug)]
@@ -47,17 +50,20 @@ impl From<SlopesArrayError> for CalibrationError {
 
 /// A collection of [SlopesArray]
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
-pub struct Calibration(Vec<SlopesArray>);
+pub struct Calibration {
+    pub(crate) data: Vec<SlopesArray>,
+    pub(crate) src: SourceBuilder,
+}
 impl Deref for Calibration {
     type Target = Vec<SlopesArray>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.data
     }
 }
 impl DerefMut for Calibration {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        &mut self.data
     }
 }
 impl Display for Calibration {
@@ -71,9 +77,12 @@ impl Display for Calibration {
 }
 impl From<(DMatrix<f32>, Calibration)> for Calibration {
     fn from((value, mut cal): (DMatrix<f32>, Calibration)) -> Self {
-        assert_eq!(cal.0.len(), 1);
-        let sa = cal.0.pop().unwrap();
-        Self(vec![(value, sa).into()])
+        assert_eq!(cal.data.len(), 1);
+        let sa = cal.data.pop().unwrap();
+        Self {
+            data: vec![(value, sa).into()],
+            ..Default::default()
+        }
     }
 }
 impl Calibration {
@@ -91,15 +100,26 @@ impl Calibration {
     }
     /// Returns the number of sub-matrices
     pub fn size(&self) -> usize {
-        self.0.len()
+        self.data.len()
     }
     /// Returns the slope masks
     pub fn masks<'a>(&'a self) -> impl Iterator<Item = Option<&'a nalgebra::DMatrix<bool>>> {
-        self.0.iter().map(|s| s.data_ref.mask())
+        self.data.iter().map(|s| s.data_ref.mask())
     }
     /// Returns the reference slopes
     pub fn reference_slopes(&self) -> Vec<Option<&Vec<f32>>> {
-        self.0.iter().map(|sa| sa.reference_slopes()).collect()
+        self.data.iter().map(|sa| sa.reference_slopes()).collect()
+    }
+    /// Return the condition number of the interaction matrices
+    pub fn condition_number(&self, lasts: Option<Vec<Option<usize>>>) -> Vec<f32> {
+        match lasts {
+            Some(lasts) => self
+                .iter()
+                .zip(lasts.into_iter())
+                .map(|(x, last)| x.condition_number(last))
+                .collect(),
+            None => self.iter().map(|x| x.condition_number(None)).collect(),
+        }
     }
     /// Compute the pseudo-inverse of each slope array
     pub fn pseudo_inverse(
@@ -126,7 +146,7 @@ impl Calibration {
 
     /// Returns the length of the vector of [SlopesArray]
     pub fn len(&self) -> usize {
-        self.0.len()
+        self.data.len()
     }
     /// Returns the interaction matrices
     pub fn interaction_matrices(&self) -> Vec<DMatrix<f32>> {
@@ -141,9 +161,9 @@ impl Calibration {
         for (idx, maybe_idx) in indices.into_iter() {
             let i = idx - count;
             if let Some(idxs) = maybe_idx {
-                self.0.get_mut(i).map(|sa| sa.trim(idxs));
+                self.data.get_mut(i).map(|sa| sa.trim(idxs));
             } else {
-                self.0.remove(i);
+                self.data.remove(i);
                 count += 1;
             }
         }
@@ -153,7 +173,7 @@ impl Calibration {
     ///
     /// Failed if all the [DataRef] do not match
     pub fn flatten(self) -> Result<Self, CalibrationError> {
-        let mut sa_iter = self.0.into_iter();
+        let mut sa_iter = self.data.into_iter();
         let SlopesArray {
             mut slopes,
             data_ref,
@@ -166,15 +186,18 @@ impl Calibration {
                 return Err(CalibrationError::Collect);
             }
         }
-        Ok(Self(vec![SlopesArray {
-            slopes,
-            data_ref,
-            inverse: None,
-        }]))
+        Ok(Self {
+            data: vec![SlopesArray {
+                slopes,
+                data_ref,
+                inverse: None,
+            }],
+            ..Default::default()
+        })
     }
     pub fn insert_rows(&mut self, indices: Vec<(usize, Vec<usize>)>) {
         for (sa_idx, rows) in indices.into_iter() {
-            self.0.get_mut(sa_idx).map(|sa| sa.insert_rows(rows));
+            self.data.get_mut(sa_idx).map(|sa| sa.insert_rows(rows));
         }
     }
 }
@@ -183,7 +206,10 @@ impl Add for Calibration {
     type Output = Calibration;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Calibration(self.0.into_iter().chain(rhs.0.into_iter()).collect())
+        Calibration {
+            data: self.data.into_iter().chain(rhs.data.into_iter()).collect(),
+            ..Default::default()
+        }
     }
 }
 
@@ -191,14 +217,16 @@ impl Mul for Calibration {
     type Output = Calibration;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        Self(
-            self.interaction_matrices()
+        Self {
+            data: self
+                .interaction_matrices()
                 .into_iter()
                 .zip(rhs.interaction_matrices())
                 .map(|(a, b)| a * b)
                 .map(|c| SlopesArray::from(c))
                 .collect(),
-        )
+            ..Default::default()
+        }
     }
 }
 
@@ -215,13 +243,16 @@ impl Div for Calibration {
             let c = a * b.pseudo_inverse(0.)?;
             slopes_array.push(SlopesArray::from(c));
         }
-        Ok(Self(slopes_array))
+        Ok(Self {
+            data: slopes_array,
+            ..Default::default()
+        })
     }
 }
 
 impl SubAssign for Calibration {
     fn sub_assign(&mut self, rhs: Self) {
-        self.0
+        self.data
             .iter_mut()
             .zip(rhs.interaction_matrices())
             .for_each(|(sa, b)| {

@@ -2,18 +2,21 @@ use ffi::pyramid;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    wavefrontsensor::{LensletArray, SegmentWiseSensorBuilder},
-    Builder,
+    wavefrontsensor::{
+        segment_wise::GmtSegmentation, Calibration, LensletArray, SegmentWiseSensorBuilder,
+    },
+    Builder, CrseoError, SourceBuilder,
 };
 
-use super::{Modulation, Pyramid};
+use super::{piston_sensor::PistonSensor, Modulation, Pyramid};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PyramidBuilder {
-    lenslet_array: LensletArray,
+    pub lenslet_array: LensletArray,
     modulation: Option<Modulation>,
     alpha: f32,
     n_gs: i32,
+    pub piston_sensor: Option<PistonSensor>,
 }
 impl Default for PyramidBuilder {
     fn default() -> Self {
@@ -26,6 +29,7 @@ impl Default for PyramidBuilder {
             modulation: None::<Modulation>,
             alpha: 0.5f32,
             n_gs: 1,
+            piston_sensor: None,
         }
     }
 }
@@ -45,6 +49,29 @@ impl PyramidBuilder {
             sampling,
         });
         self
+    }
+    pub fn piston_sensor<G: Into<GmtSegmentation>>(
+        &mut self,
+        calibration: &Calibration,
+        gmt_segmentation: G,
+    ) -> Result<(), CrseoError> {
+        self.piston_sensor = Some(PistonSensor::new(
+            self,
+            calibration.masks(),
+            gmt_segmentation.into(),
+            calibration.src.clone(),
+        )?);
+        Ok(())
+    }
+
+    pub fn piston_mask<'a>(
+        &self,
+        masks: impl Iterator<Item = Option<&'a nalgebra::DMatrix<bool>>>,
+        segmentation: GmtSegmentation,
+        gs: SourceBuilder,
+    ) -> Result<(Vec<bool>, Vec<bool>), CrseoError> {
+        let piston_sensor = PistonSensor::new(&self, masks, segmentation, gs)?;
+        Ok(piston_sensor.mask)
     }
 }
 
@@ -68,6 +95,7 @@ impl Builder for PyramidBuilder {
             lenslet_array: self.lenslet_array,
             alpha: self.alpha,
             modulation: self.modulation,
+            piston_sensor: self.piston_sensor,
         };
         let LensletArray {
             n_side_lenslet,

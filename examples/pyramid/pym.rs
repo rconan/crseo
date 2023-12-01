@@ -33,7 +33,7 @@ impl PyramidPiston {
         );
 
         src.through(&mut gmt).xpupil().through(&mut pym);
-        let (sx0, sy0) = pym.data();
+        let (sx0, sy0) = pym.processing();
         pym.reset();
 
         let mut stdout = io::stdout().lock();
@@ -52,13 +52,13 @@ impl PyramidPiston {
             gmt.m2_segment_modes(sid, &m2_segment_coefs);
             pym.reset();
             src.through(&mut gmt).xpupil().through(&mut pym);
-            let (mut sx, mut sy) = pym.data();
+            let (mut sx, mut sy) = pym.processing();
 
             m2_segment_coefs[0] = -stroke0;
             gmt.m2_segment_modes(sid, &m2_segment_coefs);
             pym.reset();
             src.through(&mut gmt).xpupil().through(&mut pym);
-            let (_sx, _sy) = pym.data();
+            let (_sx, _sy) = pym.processing();
 
             let q = (0.5 / stroke0) as f32;
             sx -= _sx;
@@ -159,7 +159,7 @@ impl PyramidPiston {
     }
 
     pub fn piston(&self, pym: &mut Pyramid) -> Vec<f32> {
-        let sxy = pym.data();
+        let sxy = pym.processing();
         let data = sxy
             .0
             .into_iter()

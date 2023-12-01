@@ -180,11 +180,12 @@ impl From<(&DataRef, &PistonSensor)> for Slopes {
                 }
             })
             .collect::<Vec<f32>>();
+        let data_7 = data[6];
         let mut sxy: Vec<_> = if let Some(mask) = data_ref.mask.as_ref() {
             data.into_iter()
                 .zip(mask)
                 .filter(|(_, &m)| m)
-                .map(|(data, _)| data)
+                .map(|(data, _)| data - data_7)
                 .collect()
         } else {
             data

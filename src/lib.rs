@@ -66,7 +66,7 @@ pub use source::Propagation;
 pub use source::{Source, SourceBuilder};
 #[doc(inline)]
 pub use wavefrontsensor::{
-    Diffractive, Geometric, SegmentWiseSensor, SegmentWiseSensorBuilder, ShackHartmann,
+    Diffractive, Frame, Geometric, SegmentWiseSensor, SegmentWiseSensorBuilder, ShackHartmann,
     ShackHartmannBuilder, Stroke, SH24, SH48,
 };
 

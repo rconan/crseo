@@ -178,18 +178,24 @@ impl SlopesArray {
             self.slopes.iter().flat_map(|x| x.0.clone()),
         )
     }
+    /// Return the condition number of the interaction matrix
+    pub fn condition_number(&self, last: Option<usize>) -> f32 {
+        let mat = self.interaction_matrix();
+        let n = mat.ncols() - 1 - last.unwrap_or_default();
+        let mat_svd = mat.svd(false, false);
+        mat_svd.singular_values[n] / mat_svd.singular_values[0]
+    }
     /// Computes the slopes array pseudo-inverse
     pub fn pseudo_inverse(
         &mut self,
         truncation: Option<TruncatedPseudoInverse>,
     ) -> Result<&mut Self, SlopesArrayError> {
         let mat = self.interaction_matrix();
-        let n = mat.nrows();
         let mat_svd = mat.svd(true, true);
         // dbg!(&mat_svd.singular_values);
         log::info!(
             "Calibration singular values range: [{:e},{:e}]",
-            mat_svd.singular_values[n],
+            mat_svd.singular_values.as_slice().last().unwrap(),
             mat_svd.singular_values[0]
         );
 

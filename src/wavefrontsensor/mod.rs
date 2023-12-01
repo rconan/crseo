@@ -34,8 +34,8 @@ pub use segment_wise::{
     geom_shack::{GeomShack, GeomShackBuilder},
     phase_sensor::{PhaseSensor, PhaseSensorBuilder},
     piston_sensor::{PistonSensor, PistonSensorBuilder},
-    pyramid::{Pyramid, PyramidBuilder},
-    SegmentWiseSensor, SegmentWiseSensorBuilder,
+    pyramid::{Pyramid, PyramidBuilder, PyramidCalibration},
+    Frame, GmtSegmentation, SegmentWiseSensor, SegmentWiseSensorBuilder,
 };
 
 pub type Geometric = geometricShackHartmann;
