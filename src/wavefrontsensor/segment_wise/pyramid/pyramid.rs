@@ -1,13 +1,20 @@
+use std::error::Error;
+use std::fmt::Display;
+use std::fs::File;
 use std::ops::Mul;
+use std::path::PathBuf;
 
 use indicatif::ProgressBar;
+use nalgebra::{DMatrix, DVector};
 
 use crate::wavefrontsensor::LensletArray;
 use crate::{
-    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder, WavefrontSensor,
+    Builder, Frame, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
+    WavefrontSensor,
 };
 
 use super::data_processing::{Calibration, DataRef, Slopes, SlopesArray};
+use super::piston_sensor::PistonSensor;
 use super::{Modulation, PyramidBuilder};
 
 type Mat = nalgebra::DMatrix<f32>;
@@ -18,6 +25,7 @@ pub struct Pyramid {
     pub lenslet_array: LensletArray,
     pub(super) alpha: f32,
     pub(super) modulation: Option<Modulation>,
+    pub(super) piston_sensor: Option<PistonSensor>,
 }
 impl Drop for Pyramid {
     /// Frees CEO memory before dropping `Pyramid`
@@ -76,7 +84,7 @@ impl Pyramid {
     pub fn camera_resolution(&self) -> (usize, usize) {
         (self.n_px_camera(), self.n_px_camera())
     }
-    pub fn data(&mut self) -> (Mat, Mat) {
+    pub fn processing(&self) -> (Mat, Mat) {
         let (n, m) = self.camera_resolution();
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
         let n0 = n_side_lenslet / 2;
@@ -110,6 +118,31 @@ impl Pyramid {
         let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
         let row_diff = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
         row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet)
+    }
+    pub fn piston(&self) -> Option<Vec<f32>> {
+        if self.piston_sensor.is_none() {
+            return None;
+        };
+        let sxy = self.processing();
+        let piston_sensor = self.piston_sensor.as_ref().unwrap();
+        let data = sxy
+            .0
+            .into_iter()
+            .zip(&piston_sensor.mask.0)
+            .filter_map(|(v, m)| if *m { Some(*v) } else { None })
+            .zip(&piston_sensor.sxy0.0)
+            .map(|(s, s0)| s - s0)
+            .chain(
+                sxy.1
+                    .into_iter()
+                    .zip(&piston_sensor.mask.1)
+                    .filter_map(|(v, m)| if *m { Some(*v) } else { None })
+                    .zip(&piston_sensor.sxy0.1)
+                    .map(|(s, s0)| s - s0),
+            );
+        let piston = &piston_sensor.pseudo_inverse
+            * nalgebra::DVector::from_iterator(piston_sensor.calibration.nrows(), data);
+        Some(piston.as_slice().to_vec())
     }
 }
 
@@ -219,6 +252,12 @@ impl SegmentWiseSensor for Pyramid {
         (quad_cell, slopes).into()*/
         todo!()
     }
+    fn frame(&self) -> Frame<f32> {
+        Frame {
+            resolution: self.camera_resolution(),
+            value: self.frame(),
+        }
+    }
 }
 
 impl From<(&DataRef, &Pyramid)> for Slopes {
@@ -279,6 +318,159 @@ impl Mul<&Pyramid> for &Calibration {
     type Output = Option<Vec<f32>>;
     /// Multiplies the pseudo-inverse of the calibration matrix with the [Pyramid] measurements
     fn mul(self, wfs: &Pyramid) -> Self::Output {
-        Some(self.iter().flat_map(|x| x * wfs).flatten().collect())
+        // let modes: Vec<_> = self.iter().flat_map(|x| x * wfs).flatten().collect();
+        let modes = wfs
+            .piston_sensor
+            .as_ref()
+            .map(|piston_sensor| piston_sensor.piston(wfs))
+            .map_or_else(
+                || {
+                    self.iter()
+                        .flat_map(|x| x * wfs)
+                        .flat_map(|mut x| {
+                            x.insert(0, 0f32);
+                            x
+                        })
+                        .collect()
+                },
+                |piston| {
+                    piston
+                        .into_iter()
+                        .chain(Some(0f32))
+                        .zip(self.iter().flat_map(|x| x * wfs))
+                        .flat_map(|(piston, modes)| {
+                            let mut piston_modes = vec![piston];
+                            piston_modes.extend_from_slice(&modes);
+                            piston_modes
+                        })
+                        .collect::<Vec<f32>>()
+                },
+            );
+        Some(modes)
+    }
+}
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Segment {
+    sid: u8,
+    n_mode: usize,
+    mask: DMatrix<bool>,
+    calibration: DMatrix<f32>,
+}
+impl Display for Segment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Segment #{} with {} modes, calibration: {:?}, mask: {:?}",
+            self.sid,
+            self.n_mode,
+            self.calibration.shape(),
+            self.mask.shape(),
+        )
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Mirror {
+    segments: Vec<Segment>,
+    piston_mask: (Vec<bool>, Vec<bool>),
+}
+impl Display for Mirror {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for segment in &self.segments {
+            writeln!(f, "{segment}")?;
+        }
+        writeln!(
+            f,
+            "Piston mask: [{},{}]",
+            self.piston_mask.0.len(),
+            self.piston_mask.1.len()
+        )
+    }
+}
+
+pub struct PyramidCalibration {
+    h_filter: Vec<bool>,
+    p_filter: Vec<bool>,
+    offset: Vec<f32>,
+    estimator: DMatrix<f32>,
+}
+impl PyramidCalibration {
+    pub fn new(
+        (sx0, sy0): (DMatrix<f32>, DMatrix<f32>),
+        calibration: PathBuf,
+        estimation: PathBuf,
+    ) -> Result<Self, Box<dyn Error>> {
+        let mirror: Mirror =
+            serde_pickle::from_reader(&File::open(calibration)?, Default::default())?;
+
+        let cum_mask = mirror.segments.iter().skip(1).fold(
+            mirror.segments[0].mask.clone_owned(),
+            |mut mask, segment| {
+                mask.iter_mut()
+                    .zip(segment.mask.iter())
+                    .for_each(|(m1, mi)| *m1 = *m1 || *mi);
+                mask
+            },
+        );
+        let h_filter: Vec<_> = cum_mask.into_iter().cloned().collect();
+        let p_filter: Vec<_> = mirror
+            .piston_mask
+            .0
+            .iter()
+            .chain(mirror.piston_mask.1.iter())
+            .cloned()
+            .collect();
+
+        let offset: Vec<_> = sx0
+            .iter()
+            .chain(sy0.iter())
+            .zip(h_filter.iter().cycle())
+            .filter_map(|(s, f)| f.then_some(*s))
+            .chain(
+                sx0.iter()
+                    .chain(sy0.iter())
+                    .zip(p_filter.iter())
+                    .filter_map(|(s, f)| f.then_some(*s)),
+            )
+            .collect();
+
+        let estimator: DMatrix<f32> =
+            serde_pickle::from_reader(&File::open(estimation)?, Default::default())?;
+
+        Ok(Self {
+            h_filter,
+            p_filter,
+            offset,
+            estimator,
+        })
+    }
+}
+
+impl Mul<&Pyramid> for &PyramidCalibration {
+    type Output = Option<Vec<f32>>;
+
+    fn mul(self, pym: &Pyramid) -> Self::Output {
+        let (sx, sy) = pym.processing();
+        let sxy: Vec<_> = sx
+            .iter()
+            .chain(sy.iter())
+            .zip(self.h_filter.iter().cycle())
+            .filter_map(|(s, f)| f.then_some(*s))
+            .chain(
+                sx.iter()
+                    .chain(sy.iter())
+                    .zip(&self.p_filter)
+                    .filter_map(|(s, f)| f.then_some(*s)),
+            )
+            .zip(&self.offset)
+            .map(|(s, s0)| s - *s0)
+            .collect();
+        let c = (&self.estimator * DVector::from_column_slice(&sxy))
+            .as_slice()
+            .to_vec();
+        Some(c)
     }
 }

@@ -12,3 +12,6 @@ Cargo.lock
 /nat
 *.ipynb
 *.mat
+.idea/
+.vscode/
+pyramid/

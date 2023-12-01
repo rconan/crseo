@@ -1,24 +1,31 @@
-use crseo::{
+use crate::wavefrontsensor::segment_wise::GmtSegmentation;
+use crate::{
     wavefrontsensor::{LensletArray, Pyramid, PyramidBuilder},
     Builder, FromBuilder, Gmt, WavefrontSensor, WavefrontSensorBuilder,
 };
+use crate::{CrseoError, SourceBuilder};
+use serde::{Deserialize, Serialize};
 use std::io::{self, Write};
 
-pub struct PyramidPiston {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PistonSensor {
     pub mask: (Vec<bool>, Vec<bool>),
-    sxy0: (Vec<f32>, Vec<f32>),
-    calibration: nalgebra::DMatrix<f32>,
-    pseudo_inverse: nalgebra::DMatrix<f32>,
+    pub segmentation: GmtSegmentation,
+    pub(super) sxy0: (Vec<f32>, Vec<f32>),
+    pub calibration: nalgebra::DMatrix<f32>,
+    pub(super) pseudo_inverse: nalgebra::DMatrix<f32>,
 }
 
-impl PyramidPiston {
+impl PistonSensor {
     pub fn new<'a>(
-        pym: PyramidBuilder,
+        pym: &PyramidBuilder,
         masks: impl Iterator<Item = Option<&'a nalgebra::DMatrix<bool>>>,
-    ) -> anyhow::Result<Self> {
+        segmentation: GmtSegmentation,
+        gs: SourceBuilder,
+    ) -> Result<Self, CrseoError> {
         let mut gmt = Gmt::builder().m2("ASM_DDKLs_S7OC04184_675kls", 1).build()?;
-        let mut src = pym.guide_stars(None).build()?;
-        let mut pym = pym.build()?;
+        let mut src = pym.guide_stars(Some(gs)).build()?;
+        let mut pym = pym.clone().build()?;
 
         let LensletArray { n_side_lenslet, .. } = pym.lenslet_array;
 
@@ -41,12 +48,12 @@ impl PyramidPiston {
         let stroke0 = 25e-9;
         let mut m2_segment_coefs = vec![0f64; 1];
 
-        let n_segment = 6;
+        let n_segment = segmentation.n_segment();
 
         print!("Piston calibration: ");
-        for sid in 1..=n_segment {
-            stdout.write(format!("{sid} ").as_bytes())?;
-            stdout.flush()?;
+        for sid in segmentation.iter() {
+            stdout.write(format!("{sid} ").as_bytes()).unwrap();
+            stdout.flush().unwrap();
 
             m2_segment_coefs[0] = stroke0;
             gmt.m2_segment_modes(sid, &m2_segment_coefs);
@@ -146,11 +153,18 @@ impl PyramidPiston {
         );
 
         let svd = mat.clone().svd(false, false);
-        dbg!(&svd.singular_values);
 
-        let pseudo_inverse = mat.clone().pseudo_inverse(0.).unwrap();
+        let pseudo_inverse = match segmentation {
+            GmtSegmentation::Complete => mat
+                .clone()
+                .pseudo_inverse(*svd.singular_values.as_slice().last().unwrap())
+                .unwrap(),
+            GmtSegmentation::Outers => mat.clone().pseudo_inverse(0.).unwrap(),
+            _ => unimplemented!("Piston sensor needs all or the 6 outer segment"),
+        };
 
         Ok(Self {
+            segmentation,
             mask: (sx_mask, sy_mask),
             sxy0: (sx0, sy0),
             calibration: mat,
@@ -158,7 +172,7 @@ impl PyramidPiston {
         })
     }
 
-    pub fn piston(&self, pym: &mut Pyramid) -> Vec<f32> {
+    pub fn piston(&self, pym: &Pyramid) -> Vec<f32> {
         let sxy = pym.processing();
         let data = sxy
             .0
