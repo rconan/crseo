@@ -73,6 +73,7 @@ pub struct GmtBuilder {
     pub m1: Mirror,
     pub m2: Mirror,
     pub pointing_error: Option<(f64, f64)>,
+    pub m1_truss_projection: bool,
 }
 impl Default for GmtBuilder {
     fn default() -> Self {
@@ -86,6 +87,7 @@ impl Default for GmtBuilder {
                 ..Default::default()
             },
             pointing_error: None,
+            m1_truss_projection: true,
         }
     }
 }
@@ -103,6 +105,11 @@ impl GmtBuilder {
             m1: self.m1.n_mode(n_mode),
             ..self
         }
+    }
+    /// Turns the truss projection on M1 on (`true`) or off (`false`)
+    pub fn m1_truss_projection(mut self, m1_truss_projection: bool) -> Self {
+        self.m1_truss_projection = m1_truss_projection;
+        self
     }
     /// Set the default M1 modal coefficients
     pub fn m1_default_state(self, a: Vec<f64>) -> Self {
@@ -182,6 +189,7 @@ impl Builder for GmtBuilder {
             a1: self.m1.a.clone(),
             a2: self.m2.a.clone(),
             pointing_error: self.pointing_error,
+            m1_truss_projection: self.m1_truss_projection,
         };
 
         gmt.m1_n_mode = self.m1.n_mode;
@@ -205,6 +213,7 @@ impl From<&Gmt> for GmtBuilder {
             m1: gmt.get_m1(),
             m2: gmt.get_m2(),
             pointing_error: gmt.pointing_error,
+            m1_truss_projection: gmt.m1_truss_projection,
         }
     }
 }
@@ -225,6 +234,7 @@ pub struct Gmt {
     pub a2: Vec<f64>,
     // pointing error
     pub pointing_error: Option<(f64, f64)>,
+    m1_truss_projection: bool,
 }
 impl FromBuilder for Gmt {
     type ComponentBuilder = GmtBuilder;
@@ -521,7 +531,9 @@ impl Propagation for Gmt {
                 let rays = &mut src.as_raw_mut_ptr().rays;
                 self._c_m2.blocking(rays);
                 self._c_m1.trace(rays);
-                // rays.gmt_truss_onaxis();
+                if self.m1_truss_projection {
+                    rays.gmt_truss_onaxis();
+                }
                 rays.gmt_m2_baffle();
                 self._c_m2.trace(rays);
                 rays.to_sphere1(-5.830, 2.197173);
@@ -536,7 +548,9 @@ impl Propagation for Gmt {
                 let rays = &mut src.as_raw_mut_ptr().rays;
                 self._c_m2.blocking(rays);
                 self._c_m1.trace(rays);
-                // rays.gmt_truss_onaxis();
+                if self.m1_truss_projection {
+                    rays.gmt_truss_onaxis();
+                }
                 rays.gmt_m2_baffle();
                 self._c_m2.trace(rays);
                 rays.to_sphere1(-5.830, 2.197173);

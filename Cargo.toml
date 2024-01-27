@@ -1,6 +1,6 @@
 [package]
 name = "crseo"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
 license = "MIT"
@@ -16,22 +16,22 @@ ffi = { version = "1.1.0", path = "sys", package = "crseo-sys" }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 libm = "0.2.1"
-roots = "0.0.6"
+roots = "0.0.8"
 rayon = "1.4"
 log = "0.4.11"
 thiserror = "1.0.48"
-skyangle = "0.1.0"
+skyangle = "0.2.2"
 indicatif = "0.17.3"
-toml = "0.7.6"
+toml = "0.8.8"
 serde-pickle = "1.1.1"
 nalgebra = { version = "0.32.3", features = ["serde-serialize"] }
 
 [dev-dependencies]
-simple_logger = "1.11.0"
+simple_logger = "4.3.3"
 bincode = "1.3.2"
-gnuplot = "0.0.37"
+gnuplot = "0.0.41"
 plotters = "0.3.1"
-env_logger = "0.9.0"
+env_logger = "0.11.1"
 anyhow = "1.0.57"
 zernike = "0.2.1"
 complot = { version = "0.3.1", features = ["png"] }
