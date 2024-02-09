@@ -263,7 +263,7 @@ impl SegmentWiseSensor for Pyramid {
 impl From<(&DataRef, &Pyramid)> for Slopes {
     /// Computes the pyramid measurements
     ///
-    /// The pyramid detector frame is contained within [Pyramid] and [QuadCell] provides the
+    /// The pyramid detector frame is contained within [Pyramid] and [DataRef] provides the
     /// optional frame mask  and measurements of reference
     fn from((qc, pym): (&DataRef, &Pyramid)) -> Self {
         let (sx, sy, a) = {

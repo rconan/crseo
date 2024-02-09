@@ -171,7 +171,7 @@ impl Calibration {
     }
     /// Concatenates all the slopes array into a single one
     ///
-    /// Failed if all the [DataRef] do not match
+    /// Failed if all the `DataRef` do not match
     pub fn flatten(self) -> Result<Self, CalibrationError> {
         let mut sa_iter = self.data.into_iter();
         let SlopesArray {

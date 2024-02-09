@@ -2,6 +2,7 @@ use std::{env, path::PathBuf};
 
 fn main() {
     if env::var("DOCS_RS").is_ok() {
+        println!("cargo:rustc-cfg=docs_rs");
         return;
     }
 
@@ -22,6 +23,7 @@ fn main() {
     println!("cargo:rustc-link-lib=curand");
     println!("cargo:rustc-link-lib=cusolver");
     println!("cargo:rerun-if-changed=wrapper.hpp");
+    println!("cargo:rustc-cfg=bindings");
 
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
