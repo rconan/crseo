@@ -7,9 +7,9 @@
 //! # Examples
 //!
 //! ```
-//! use ceo::ceo;
-//! // Creates a gmt instance with default parameters
-//! let mut wfs = ceo!(SHACKHARTMANN:Geometric);
+//! use crseo::ceo;
+//! // Creates a geometric Shack-Hartmann instance with default parameters
+//! let mut wfs = ceo!(ShackHartmann<Geometric>);
 //! ```
 
 use super::{imaging::NoiseDataSheet, Cu, Mask, Single, Source};

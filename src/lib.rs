@@ -6,9 +6,9 @@
 //!
 //! For example, the default CEO elements `Gmt` and `Source` are built with:
 //! ```rust
-//! use ceo::ceo;
-//! let mut gmt = ceo!(GMT);
-//! let mut src = ceo!(SOURCE);
+//! use crseo::ceo;
+//! let mut gmt = ceo!(Gmt);
+//! let mut src = ceo!(Source);
 //! src.through(&mut gmt).xpupil();
 //! println!("WFE RMS: {:?}nm",src.wfe_rms_10e(-9));
 //! ```
@@ -89,21 +89,21 @@ pub mod prelude {
 ///  * GMT
 ///
 /// ```
-/// use ceo::ceo;
-/// let gmt = ceo!(GMT, set_m1_n_mode = [27], set_m2_n_mode = [123]);
+/// use crseo::ceo;
+/// let gmt = ceo!(Gmt, m1_n_mode = [27], m2_n_mode = [123]);
 /// ```
 ///
 ///  * Geometric Shack-Hartmann
 ///
 /// ```
-/// use ceo::ceo;
+/// use crseo::ceo;
 /// let mut wfs = ceo!(
-///     SHACKHARTMANN:Geometric,
+///     ShackHartmann:Geometric,
 ///     n_sensor = [1],
 ///     lenslet_array = [48, 16, 25.5 / 48f64]
 /// );
-/// let mut src = ceo!(SOURCE, pupil_sampling = [48 * 16 + 1]);
-/// let mut gmt = ceo!(GMT);
+/// let mut src = ceo!(Source, pupil_sampling = [48 * 16 + 1]);
+/// let mut gmt = ceo!(Gmt);
 /// src.through(&mut gmt).xpupil().through(&mut wfs);
 /// println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
 /// ```
@@ -111,31 +111,37 @@ pub mod prelude {
 ///  * Diffractive Shack-Hartmann
 ///
 /// ```
-/// use ceo::ceo;
+/// use crseo::ceo;
 /// let mut wfs = ceo!(
-///     SHACKHARTMANN<Diffractive>,
+///     ShackHartmann<Diffractive>,
 ///     n_sensor = [1],
 ///     lenslet_array = [48, 16, 25.5 / 48f64],
-///     detector = [8, Some(24), None]
+///     detector = [8, Some(24), None, None]
 /// );
-/// let mut src = ceo!(SOURCE, pupil_sampling = [48 * 16 + 1]);
-/// let mut gmt = ceo!(GMT);
+/// let mut src = ceo!(Source, pupil_sampling = [48 * 16 + 1]);
+/// let mut gmt = ceo!(Gmt);
 /// src.through(&mut gmt).xpupil().through(&mut wfs);
 /// println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
 /// ```
 #[macro_export]
 macro_rules! ceo {
     ($element:ident) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()).unwrap()
+        $crate::Builder::build(<$crate::$element as $crate::FromBuilder>::builder()).unwrap()
+    };
+    ($element:ident<$gen:ident>) => {
+        $crate::Builder::build(<$crate::$element<$crate::$gen> as $crate::FromBuilder>::builder()).unwrap()
     };
     ($element:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
+        $crate::Builder::build(<$crate::$element as $crate::FromBuilder>::builder()$(.$arg($($val),*))*).unwrap()
+    };
+    ($element:ident<$gen:ident>, $($arg:ident = [$($val:expr),*]),*) => {
+        $crate::Builder::build(<$crate::$element<$crate::$gen> as $crate::FromBuilder>::builder()$(.$arg($($val),*))*).unwrap()
     };
     ($element:ident:$model:ident) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()).unwrap()
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::FromBuilder>::builder()).unwrap()
     };
     ($element:ident:$model:ident, $($arg:ident = [$($val:expr),*]),*) => {
-        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::Builder>::new()$(.$arg($($val),*))*).unwrap()
+        $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::FromBuilder>::builder()$(.$arg($($val),*))*).unwrap()
     };
 }
 /*

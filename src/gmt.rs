@@ -7,15 +7,15 @@
 //! # Examples
 //!
 //! ```
-//! use ceo::ceo;
+//! use crseo::{ceo, Gmt};
 //! // Creates a gmt instance with default parameters
-//! let mut src = ceo!(GMT);
+//! let mut src = ceo!(Gmt);
 //! ```
 //!
 //! ```
-//! use ceo::ceo;
+//! use crseo::{ceo, Gmt};
 //! // Creates a gmt instance with 27 M1 bending modes
-//! let mut gmt = ceo!(GMT, m1_n_mode = [27]);
+//! let mut gmt = ceo!(Gmt, m1_n_mode = [27]);
 //! ```
 
 use std::f64::consts::PI;

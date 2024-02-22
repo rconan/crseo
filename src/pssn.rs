@@ -93,7 +93,7 @@ impl<T: PSSnErrors> Builder for PSSnBuilder<T> {
             mode: std::marker::PhantomData,
             otf: Vec::new(),
         };
-        let mut gmt = super::ceo!(GmtBuilder);
+        let mut gmt = super::ceo!(Gmt);
         src.through(&mut gmt).xpupil();
         unsafe {
             pssn._c_.setup(src.as_raw_mut_ptr(), pssn.r0(), pssn.oscale);

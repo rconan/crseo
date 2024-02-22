@@ -60,13 +60,13 @@ impl Mirror {
 /// # Examples
 ///
 /// ```
-/// use ceo::{Builder, GMT};
-/// let mut src = GMT::new().build();
+/// use crseo::{FromBuilder, Builder, Gmt};
+/// let mut src = Gmt::builder().build();
 /// ```
 ///
 /// ```
-/// use ceo::{Builder, GMT};
-/// let mut gmt = GMT::new().m1_n_mode(27).build();
+/// use crseo::{FromBuilder, Builder, Gmt};
+/// let mut gmt = Gmt::builder().m1_n_mode(27).build();
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GmtBuilder {

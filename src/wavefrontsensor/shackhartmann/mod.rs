@@ -23,8 +23,8 @@ use serde::{Deserialize, Serialize};
 /// # Examples
 ///
 /// ```
-/// use ceo::{Builder,  SHACKHARTMANN, Geometric};
-/// let mut wfs = SHACKHARTMANN::<Geometric>::new().build();
+/// use crseo::{Builder, FromBuilder,  ShackHartmann, Geometric};
+/// let mut wfs = ShackHartmann::<Geometric>::builder().build();
 /// ```
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ShackHartmannBuilder<T: Model> {

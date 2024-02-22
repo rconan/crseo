@@ -9,16 +9,17 @@
 //! - on-axis source with default parameters
 //!
 //! ```
-//! use ceo::ceo;
+//! use crseo::ceo;
 //! // Creates a source with default parameters
-//! let mut src = ceo!(SOURCE);
+//! let mut src = ceo!(Source);
 //! ```
 //!
 //! - 3 sources evenly spread on a ring with a 8 arcminute radius
 //!
 //! ```
-//! use ceo::{ceo, Conversion};
-//! let mut src = ceo!(SOURCE, size = [3] , on_ring = [8f32.from_arcmin()]);
+//! use crseo::ceo;
+//! use skyangle::Conversion;
+//! let mut src = ceo!(Source, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
 use super::{cu::Double, cu::Single, Builder, Centroiding, Cu, FromBuilder, Result};
@@ -85,15 +86,16 @@ impl PupilSampling {
 /// - on-axis source with default parameters
 ///
 /// ```
-/// use ceo::{Builder, SOURCE};
-/// let mut src = SOURCE::new().build();
+/// use crseo::{Builder, FromBuilder, Source};
+/// let mut src = Source::builder().build();
 /// ```
 ///
 /// - 3 sources evenly spread on a ring with a 8 arcminute radius
 ///
 /// ```
-/// use ceo::{Builder, SOURCE, Conversion};
-/// let mut src = SOURCE::new().size(3).on_ring(8f32.from_arcmin()).build();
+/// use crseo::{Builder, FromBuilder, Source};
+/// use skyangle::Conversion;
+/// let mut src = Source::builder().size(3).on_ring(8f32.from_arcmin()).build();
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SourceBuilder {

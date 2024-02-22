@@ -15,13 +15,6 @@ use crate::{Builder, ShackHartmannBuilder};
 ///    - n_px_framelet: 8px
 ///    - n_px_imagelet: Some(24px)
 ///    - osf: Some(2)
-///
-/// # Examples
-///
-/// ```
-/// use ceo::{Builder, SH48, Geometric};
-/// let mut wfs = SH48::<Geometric>::new().build();
-/// ```
 #[derive(Debug, Clone)]
 pub struct SH48<T: Model>(ShackHartmannBuilder<T>);
 
