@@ -37,7 +37,7 @@ pub mod source;
 pub mod wavefrontsensor;
 
 #[doc(inline)]
-pub use atmosphere::{Atmosphere, AtmosphereBuilder, AtmosphereError};
+pub use atmosphere::{Atmosphere, AtmosphereBuilder, AtmosphereError, RayTracing};
 #[doc(inline)]
 pub use calibrations::Calibration;
 #[doc(inline)]
@@ -66,8 +66,8 @@ pub use source::Propagation;
 pub use source::{Source, SourceBuilder};
 #[doc(inline)]
 pub use wavefrontsensor::{
-    Diffractive, Frame, Geometric, SegmentWiseSensor, SegmentWiseSensorBuilder, ShackHartmann,
-    ShackHartmannBuilder, Stroke, SH24, SH48,
+    Diffractive, Frame, Geometric, LensletArray, Pyramid, PyramidBuilder, SegmentWiseSensor,
+    SegmentWiseSensorBuilder, ShackHartmann, ShackHartmannBuilder, Stroke, SH24, SH48,
 };
 
 pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;

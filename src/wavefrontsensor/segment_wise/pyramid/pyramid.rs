@@ -20,6 +20,13 @@ use super::{Modulation, PyramidBuilder};
 type Mat = nalgebra::DMatrix<f32>;
 
 /// Wrapper to CEO pyramid
+/// # Examples
+///
+/// ```
+/// use crseo::{ceo, Pyramid};
+/// // Creates a pyramid instance with default parameters
+/// let mut src = ceo!(Pyramid);
+/// ```
 pub struct Pyramid {
     pub(super) _c_: ffi::pyramid,
     pub lenslet_array: LensletArray,
@@ -68,6 +75,7 @@ impl Propagation for Pyramid {
 }
 
 impl Pyramid {
+    /// Returns the  detector frame
     pub fn frame(&self) -> Vec<f32> {
         let n = self._c_.camera.N_PX_CAMERA.pow(2) * self._c_.camera.N_SOURCE;
         let mut frame = vec![0f32; n as usize];
@@ -76,15 +84,16 @@ impl Pyramid {
         }
         frame
     }
-
     #[inline]
+    /// Returns the detector pixel length
     pub fn n_px_camera(&self) -> usize {
         self._c_.camera.N_PX_CAMERA as usize
     }
+    /// Returns the detector resolution
     pub fn camera_resolution(&self) -> (usize, usize) {
         (self.n_px_camera(), self.n_px_camera())
     }
-    pub fn processing(&self) -> (Mat, Mat) {
+    pub(crate) fn processing(&self) -> (Mat, Mat) {
         let (n, m) = self.camera_resolution();
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
         let n0 = n_side_lenslet / 2;
@@ -110,7 +119,7 @@ impl Pyramid {
             col_row_data.map(|v| v / med_flux),
         )
     }
-    pub fn add_quads(&mut self) -> Mat {
+    /*     pub fn add_quads(&mut self) -> Mat {
         let (n, m) = self.camera_resolution();
         let LensletArray { n_side_lenslet, .. } = self.lenslet_array;
         let n0 = n_side_lenslet / 2;
@@ -118,8 +127,8 @@ impl Pyramid {
         let mat: Mat = nalgebra::DMatrix::from_column_slice(n, m, &self.frame());
         let row_diff = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
         row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet)
-    }
-    pub fn piston(&self) -> Option<Vec<f32>> {
+    } */
+    /*     pub fn piston(&self) -> Option<Vec<f32>> {
         if self.piston_sensor.is_none() {
             return None;
         };
@@ -143,7 +152,7 @@ impl Pyramid {
         let piston = &piston_sensor.pseudo_inverse
             * nalgebra::DVector::from_iterator(piston_sensor.calibration.nrows(), data);
         Some(piston.as_slice().to_vec())
-    }
+    } */
 }
 
 impl SegmentWiseSensor for Pyramid {

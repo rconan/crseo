@@ -68,7 +68,7 @@ impl Iterator for GmtSegmentationIter {
 
 /// Detector frame
 #[derive(Default, Debug)]
-pub struct Frame<T> {
+pub struct Frame<T = f32> {
     pub resolution: (usize, usize),
     pub value: Vec<T>,
 }

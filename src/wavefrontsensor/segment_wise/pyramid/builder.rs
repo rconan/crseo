@@ -2,14 +2,19 @@ use ffi::pyramid;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    wavefrontsensor::{
-        segment_wise::GmtSegmentation, Calibration, LensletArray, SegmentWiseSensorBuilder,
-    },
-    Builder, CrseoError, SourceBuilder,
+    wavefrontsensor::{LensletArray, SegmentWiseSensorBuilder},
+    Builder,
 };
 
 use super::{piston_sensor::PistonSensor, Modulation, Pyramid};
 
+/// [Pyramid] builder
+///
+/// Default properties:
+///   - n_lenslet: 30
+///   - n_px_lenslet: 8px
+///   - lenslet_pitch: 0
+///   - no modulation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PyramidBuilder {
     pub lenslet_array: LensletArray,
@@ -35,14 +40,19 @@ impl Default for PyramidBuilder {
 }
 
 impl PyramidBuilder {
+    /// Sets the number of equivalent lenslets
     pub fn n_lenslet(mut self, n_lenslet: usize) -> Self {
         self.lenslet_array.n_side_lenslet = n_lenslet;
         self
     }
+    /// Sets the equivalent lenslet array
     pub fn lenslet_array(mut self, lenslet_array: LensletArray) -> Self {
         self.lenslet_array = lenslet_array;
         self
     }
+    /// Sets the modulation amplitude and sampling
+    ///
+    /// The amplitude is given in units of lambda/d
     pub fn modulation(mut self, amplitude: f32, sampling: i32) -> Self {
         self.modulation = Some(Modulation {
             amplitude,
@@ -50,7 +60,7 @@ impl PyramidBuilder {
         });
         self
     }
-    pub fn piston_sensor<G: Into<GmtSegmentation>>(
+    /*     pub fn piston_sensor<G: Into<GmtSegmentation>>(
         &mut self,
         calibration: &Calibration,
         gmt_segmentation: G,
@@ -62,9 +72,9 @@ impl PyramidBuilder {
             calibration.src.clone(),
         )?);
         Ok(())
-    }
+    } */
 
-    pub fn piston_mask<'a>(
+    /*     pub fn piston_mask<'a>(
         &self,
         masks: impl Iterator<Item = Option<&'a nalgebra::DMatrix<bool>>>,
         segmentation: GmtSegmentation,
@@ -72,7 +82,7 @@ impl PyramidBuilder {
     ) -> Result<(Vec<bool>, Vec<bool>), CrseoError> {
         let piston_sensor = PistonSensor::new(&self, masks, segmentation, gs)?;
         Ok(piston_sensor.mask)
-    }
+    } */
 }
 
 impl SegmentWiseSensorBuilder for PyramidBuilder {
