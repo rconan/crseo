@@ -2,8 +2,8 @@ use ffi::pyramid;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    wavefrontsensor::{LensletArray, SegmentWiseSensorBuilder},
-    Builder,
+    wavefrontsensor::{Calibration, GmtSegmentation, LensletArray, SegmentWiseSensorBuilder},
+    Builder, CrseoError,
 };
 
 use super::{piston_sensor::PistonSensor, Modulation, Pyramid};
@@ -60,7 +60,7 @@ impl PyramidBuilder {
         });
         self
     }
-    /*     pub fn piston_sensor<G: Into<GmtSegmentation>>(
+    pub fn piston_sensor<G: Into<GmtSegmentation>>(
         &mut self,
         calibration: &Calibration,
         gmt_segmentation: G,
@@ -72,7 +72,7 @@ impl PyramidBuilder {
             calibration.src.clone(),
         )?);
         Ok(())
-    } */
+    }
 
     /*     pub fn piston_mask<'a>(
         &self,

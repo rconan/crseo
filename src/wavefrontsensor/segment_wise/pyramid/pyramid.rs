@@ -128,7 +128,7 @@ impl Pyramid {
         let row_diff = mat.rows(n0, n_side_lenslet) + mat.rows(n1, n_side_lenslet);
         row_diff.columns(n0, n_side_lenslet) + row_diff.columns(n1, n_side_lenslet)
     } */
-    /*     pub fn piston(&self) -> Option<Vec<f32>> {
+    pub fn piston(&self) -> Option<Vec<f32>> {
         if self.piston_sensor.is_none() {
             return None;
         };
@@ -152,7 +152,7 @@ impl Pyramid {
         let piston = &piston_sensor.pseudo_inverse
             * nalgebra::DVector::from_iterator(piston_sensor.calibration.nrows(), data);
         Some(piston.as_slice().to_vec())
-    } */
+    }
 }
 
 impl SegmentWiseSensor for Pyramid {
