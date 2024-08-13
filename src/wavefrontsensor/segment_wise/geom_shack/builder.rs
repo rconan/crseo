@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    wavefrontsensor::{LensletArray, SegmentWiseSensorBuilder},
-    Builder,
-};
+use crate::{imaging::LensletArray, wavefrontsensor::SegmentWiseSensorBuilder, Builder};
 
 use super::GeomShack;
 

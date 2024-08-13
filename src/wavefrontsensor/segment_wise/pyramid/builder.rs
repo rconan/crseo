@@ -2,7 +2,8 @@ use ffi::pyramid;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    wavefrontsensor::{Calibration, GmtSegmentation, LensletArray, SegmentWiseSensorBuilder},
+    imaging::LensletArray,
+    wavefrontsensor::{Calibration, GmtSegmentation, SegmentWiseSensorBuilder},
     Builder, CrseoError,
 };
 

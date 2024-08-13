@@ -12,9 +12,8 @@
 //! let mut wfs = ceo!(ShackHartmann<Geometric>);
 //! ```
 
-use super::{imaging::NoiseDataSheet, Cu, Mask, Single, Source};
+use super::{Cu, Mask, Single, Source};
 use ffi::{geometricShackHartmann, mask, shackHartmann};
-use serde::{Deserialize, Serialize};
 use std::f32;
 
 pub mod shackhartmann;
@@ -363,39 +362,5 @@ impl Model for Diffractive {
             self.valid_lenslet.set_filter();
             self.valid_lenslet.set_index();
         }
-    }
-}
-
-/// Lenslet array specifications
-/// n_side_lenslet, n_px_lenslet, d
-#[doc(hidden)]
-#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
-pub struct LensletArray {
-    pub n_side_lenslet: usize,
-    pub n_px_lenslet: usize,
-    pub d: f64,
-}
-impl Default for LensletArray {
-    fn default() -> Self {
-        LensletArray {
-            n_side_lenslet: 1,
-            n_px_lenslet: 511,
-            d: 25.5,
-        }
-    }
-}
-/// Detector noise model specifications
-/// n_px_framelet, n_px_imagelet, osf, detector_noise_specs
-#[doc(hidden)]
-#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
-pub struct Detector(
-    pub usize,
-    pub Option<usize>,
-    pub Option<usize>,
-    pub Option<NoiseDataSheet>,
-);
-impl Default for Detector {
-    fn default() -> Self {
-        Detector(512, None, None, None)
     }
 }

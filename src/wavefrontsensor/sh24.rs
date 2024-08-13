@@ -86,10 +86,10 @@ impl<T: Model> DerefMut for ShackHartmann24x24<T> {
     }
 }
 
-/* impl<M, T> FromBuilder for T
+impl<M, T> FromBuilder for T
 where
     M: Model,
     T: DerefMut<Target = ShackHartmann<M>>,
 {
     type ComponentBuilder = ShackHartmannBuilder<M>;
-} */
+}

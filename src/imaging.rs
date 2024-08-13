@@ -5,14 +5,38 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::f32;
 
-#[derive(Debug, Copy, Clone)]
-/// A square lenslet array
+/// Lenslet array specifications
+/// n_side_lenslet, n_px_lenslet, d
+#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub struct LensletArray {
-    /// The number of lenslet per side
-    pub n_side_lenslet: i32,
-    /// Dimension \[m\] of one lenslet
-    pub lenslet_size: f64,
+    pub n_side_lenslet: usize,
+    pub n_px_lenslet: usize,
+    pub d: f64,
 }
+impl Default for LensletArray {
+    fn default() -> Self {
+        LensletArray {
+            n_side_lenslet: 1,
+            n_px_lenslet: 511,
+            d: 25.5,
+        }
+    }
+}
+/// Detector noise model specifications
+/// n_px_framelet, n_px_imagelet, osf, detector_noise_specs
+#[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
+pub struct Detector(
+    pub usize,
+    pub Option<usize>,
+    pub Option<usize>,
+    pub Option<NoiseDataSheet>,
+);
+impl Default for Detector {
+    fn default() -> Self {
+        Detector(512, None, None, None)
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 /// Detector noise specifications
 pub struct NoiseDataSheet {
@@ -66,6 +90,8 @@ impl Default for NoiseDataSheet {
         }
     }
 }
+
+
 
 /// An optical imager with a detector
 ///

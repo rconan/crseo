@@ -3,7 +3,7 @@ use std::ops::Mul;
 use indicatif::ProgressBar;
 
 use crate::{
-    cu::Single, wavefrontsensor::LensletArray, Builder, Cu, FromBuilder, Gmt, Propagation,
+    cu::Single, imaging::LensletArray, Builder, Cu, FromBuilder, Gmt, Propagation,
     SegmentWiseSensor, SourceBuilder, WavefrontSensor,
 };
 

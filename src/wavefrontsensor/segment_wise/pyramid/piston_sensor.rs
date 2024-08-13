@@ -1,9 +1,8 @@
-use crate::wavefrontsensor::segment_wise::GmtSegmentation;
 use crate::{
-    wavefrontsensor::{LensletArray, Pyramid, PyramidBuilder},
-    Builder, FromBuilder, Gmt, WavefrontSensor, WavefrontSensorBuilder,
+    imaging::LensletArray,
+    wavefrontsensor::{segment_wise::GmtSegmentation, Pyramid, PyramidBuilder},
+    Builder, CrseoError, FromBuilder, Gmt, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder,
 };
-use crate::{CrseoError, SourceBuilder};
 use serde::{Deserialize, Serialize};
 use std::io::{self, Write};
 
