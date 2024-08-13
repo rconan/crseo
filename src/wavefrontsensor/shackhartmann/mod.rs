@@ -73,11 +73,16 @@ impl<T: Model> ShackHartmannBuilder<T> {
         self,
         n_px_framelet: usize,
         n_px_imagelet: Option<usize>,
-        osf: Option<usize>,
-        detector_noise_specs: Option<NoiseDataSheet>,
+        osf: usize,
+        noise_specs: Option<NoiseDataSheet>,
     ) -> Self {
         Self {
-            detector: Detector(n_px_framelet, n_px_imagelet, osf, detector_noise_specs),
+            detector: Detector {
+                n_px_framelet,
+                n_px_imagelet,
+                osf,
+                noise_specs,
+            },
             ..self
         }
     }
@@ -100,7 +105,7 @@ impl<T: Model> WavefrontSensorBuilder for ShackHartmannBuilder<T> {
 
     fn detector_noise_specs(self, noise_specs: NoiseDataSheet) -> Self {
         let mut detector = self.detector;
-        detector.3 = Some(noise_specs);
+        detector.noise_specs = Some(noise_specs);
         Self { detector, ..self }
     }
 }
@@ -112,7 +117,12 @@ impl<T: Model> Builder for ShackHartmannBuilder<T> {
             n_px_lenslet,
             d,
         } = self.lenslet_array;
-        let Detector(n_px_framelet, n_px_imagelet, osf, detector_noise_model) = self.detector;
+        let Detector {
+            n_px_framelet,
+            n_px_imagelet,
+            osf,
+            noise_specs,
+        } = self.detector;
         let mut wfs = ShackHartmann::<T> {
             _c_: Model::new(),
             n_side_lenslet: n_side_lenslet as i32,
@@ -121,21 +131,20 @@ impl<T: Model> Builder for ShackHartmannBuilder<T> {
             n_sensor: self.n_sensor as i32,
             n_centroids: 0,
             centroids: Cu::vector((n_side_lenslet * n_side_lenslet * 2 * self.n_sensor) as usize),
-            detector_noise_model,
+            detector_noise_model: noise_specs,
         };
         let n_px = match n_px_imagelet {
             Some(n_px_imagelet) => n_px_imagelet,
             None => n_px_framelet,
         };
         let b = n_px / n_px_framelet;
-        let o = osf.unwrap_or(2);
         wfs.n_centroids = wfs.n_side_lenslet * wfs.n_side_lenslet * 2 * wfs.n_sensor;
         wfs._c_.build(
             wfs.n_side_lenslet,
             wfs.d as f32,
             wfs.n_sensor,
             wfs.n_px_lenslet,
-            o as i32,
+            osf as i32,
             n_px as i32,
             b as i32,
         );

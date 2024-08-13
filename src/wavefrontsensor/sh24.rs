@@ -42,7 +42,7 @@ impl<T: Model> Default for SH24<T> {
             ShackHartmannBuilder::new()
                 .n_sensor(1)
                 .lenslet_array(24, 32, 25.5 / 24.0)
-                .detector(12, Some(60), Some(2), None),
+                .detector(12, Some(60), 2, None),
         )
     }
 }

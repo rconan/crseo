@@ -25,15 +25,15 @@ impl Default for LensletArray {
 /// Detector noise model specifications
 /// n_px_framelet, n_px_imagelet, osf, detector_noise_specs
 #[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
-pub struct Detector(
-    pub usize,
-    pub Option<usize>,
-    pub Option<usize>,
-    pub Option<NoiseDataSheet>,
-);
+pub struct Detector{
+    pub n_px_framelet: usize,
+    pub n_px_imagelet: Option<usize>,
+    pub osf: usize,
+    pub noise_specs: Option<NoiseDataSheet>,
+}
 impl Default for Detector {
     fn default() -> Self {
-        Detector(512, None, None, None)
+        Detector{n_px_framelet: 512, n_px_imagelet:None, osf:2, noise_specs:None}
     }
 }
 
@@ -90,8 +90,6 @@ impl Default for NoiseDataSheet {
         }
     }
 }
-
-
 
 /// An optical imager with a detector
 ///
