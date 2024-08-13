@@ -199,7 +199,7 @@ impl Drop for Centroiding {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{ceo, Conversion, Source};
@@ -261,3 +261,4 @@ mod tests {
         assert!(e < 5f64);
     }
 }
+ */

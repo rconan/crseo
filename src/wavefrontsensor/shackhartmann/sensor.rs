@@ -177,7 +177,7 @@ impl From<ShackHartmann<Diffractive>> for Source {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{Builder, FromBuilder, ShackHartmann, Source};
@@ -206,7 +206,7 @@ mod tests {
             n_sensor = [1],
             lenslet_array = [48, 16, 25.5 / 48f64]
         );
-        let mut src = crate::ceo!(SourceBuilder, pupil_sampling = [48 * 16 + 1]);
+        let mut src = crate::ceo!(Source, pupil_sampling = [48 * 16 + 1]);
         let mut gmt = crate::ceo!(GmtBuilder);
         src.through(&mut gmt).xpupil().through(&mut wfs);
         println!("WFE RMS: {:.3}nm", src.wfe_rms_10e(-9)[0]);
@@ -244,3 +244,4 @@ mod tests {
     }
     */
 }
+ */

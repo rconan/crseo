@@ -30,7 +30,7 @@ fn main() {
         .clang_arg(&format!("-I{}", out.join("include").display()))
         .clang_arg("-I/usr/local/cuda/include")
         .clang_arg("-v")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .allowlist_type("gpu_float")
         .allowlist_type("gpu_double")
         .allowlist_type("mask")

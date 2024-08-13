@@ -12,5 +12,11 @@ categories = ["external-ffi-bindings", "science", "simulation"]
 keywords = ["telescope", "astronomy"]
 
 [build-dependencies]
-bindgen = "0.59.2"
+bindgen = "0.69.4"
 cmake = "0.1.50"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(bindings)',
+    'cfg(docs_rs)',
+] }

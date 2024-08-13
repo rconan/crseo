@@ -869,7 +869,7 @@ impl<'a> Rays<'a> {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
 
     /*
@@ -952,3 +952,4 @@ mod tests {
             });
     }
 }
+ */

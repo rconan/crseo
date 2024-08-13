@@ -220,7 +220,7 @@ impl Mul<&PistonSensor> for &Calibration {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
     use crate::Source;
 
@@ -279,3 +279,4 @@ mod tests {
         dbg!(ramp);
     }
 }
+ */

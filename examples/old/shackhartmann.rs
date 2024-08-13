@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let now = Instant::now();
     println!("Precomputing atmospheric phase screens ...");
     let mut atm = Atmosphere::builder()
-        .ray_tracing(26., 520, 0., 1., None, None)
+        // .ray_tracing(26., 520, 0., 1., None, None)
         .build()?;
     let eta = now.elapsed();
     println!("... done in {}ms", eta.as_millis());
@@ -102,11 +102,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dt = 1e-3;
     let n_step = 1000;
     let pb = ProgressBar::new(n_step);
-    pb.set_style(
+    /*     pb.set_style(
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] {bar:60.cyan/blue} {pos:>7}/{len:7}")
             .progress_chars("=|-"),
-    );
+    ); */
     for k in (0..n_step).progress_with(pb) {
         atm.secs = k as f64 * dt;
         src.through(&mut gmt)

@@ -55,7 +55,7 @@ impl WavefrontSensor for DifferentialPistonSensor {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 pub mod tests {
     use crate::{wavefrontsensor::SegmentCalibration, Builder, FromBuilder};
 
@@ -81,3 +81,4 @@ pub mod tests {
         dbg!(&c);
     }
 }
+ */

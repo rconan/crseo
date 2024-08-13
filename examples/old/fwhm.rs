@@ -92,7 +92,7 @@ fn telescope_aberration_free(filename: &str, e_fwhm: &[f64]) {
     }
 
     let mut file = File::create(format!("{}-tel.pkl", filename)).unwrap();
-    pickle::to_writer(&mut file, &field_free_fwhm, true).unwrap();
+    // pickle::to_writer(&mut file, &field_free_fwhm, true).unwrap();
 }
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let mut gmt = ceo!(GmtBuilder);

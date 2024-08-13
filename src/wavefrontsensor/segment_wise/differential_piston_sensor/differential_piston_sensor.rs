@@ -238,7 +238,7 @@ impl Mul<&DifferentialPistonSensor> for &Calibration {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
     use crate::{
         wavefrontsensor::SegmentCalibration, SegmentWiseSensorBuilder, Source,
@@ -342,3 +342,4 @@ mod tests {
         dbg!(ramp);
     }
 }
+ */

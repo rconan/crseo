@@ -53,11 +53,11 @@ fn main() {
     let mut kl_coefs = lmmse.get_karhunen_loeve_coefficients(&kln, Some(-1f64));
 
     let mut file = File::create("KL_coefs.pkl").unwrap();
-    pickle::to_writer(&mut file, &kl_coefs, true).unwrap();
+    // pickle::to_writer(&mut file, &kl_coefs, true).unwrap();
 
     let phase = Vec::<f32>::from(lmmse_phase);
     let mut file = File::create("tomography.pkl").unwrap();
-    pickle::to_writer(&mut file, &(src_phase, phase), true).unwrap();
+    // pickle::to_writer(&mut file, &(src_phase, phase), true).unwrap();
 
     let mut src = ceo!(SourceBuilder);
 
@@ -65,7 +65,7 @@ fn main() {
     println!("WFE RMS: {}nm", src.wfe_rms_10e(-9)[0]);
     let src_phase: Vec<f32> = src.phase_as_ptr().into();
     let mut file = File::create("SRC_phase.pkl").unwrap();
-    pickle::to_writer(&mut file, &src_phase, true).unwrap();
+    // pickle::to_writer(&mut file, &src_phase, true).unwrap();
 
     gmt.m2_modes(&mut kl_coefs);
     src.through(&mut gmt).xpupil().through(&mut atm);
@@ -73,5 +73,5 @@ fn main() {
 
     let kl_phase: Vec<f32> = src.phase_as_ptr().into();
     let mut file = File::create("KL_phase.pkl").unwrap();
-    pickle::to_writer(&mut file, &kl_phase, true).unwrap();
+    // pickle::to_writer(&mut file, &kl_phase, true).unwrap();
 }

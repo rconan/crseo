@@ -52,11 +52,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let n_step = (exposure / dt) as u64;
         diff_wfs.reset();
         let pb = ProgressBar::new(n_step);
-        pb.set_style(
+        /*         pb.set_style(
             ProgressStyle::default_bar()
                 .template("[{elapsed_precise}] {bar:60.cyan/blue} {pos:>7}/{len:7}")
                 .progress_chars("=|-"),
-        );
+        ); */
         for k in (0..n_step).progress_with(pb) {
             atm.secs = k as f64 * dt;
             src.through(&mut gmt)

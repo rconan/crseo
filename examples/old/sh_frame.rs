@@ -48,11 +48,11 @@ fn main() {
 
     let n_sample = 1_000;
     let pb = ProgressBar::new(n_sample);
-    pb.set_style(
+/*     pb.set_style(
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7}")
             .progress_chars("##-"),
-    );
+    ); */
     for k in 0..n_sample {
         pb.inc(1);
         atm.secs = k as f64 * 1e-3;
