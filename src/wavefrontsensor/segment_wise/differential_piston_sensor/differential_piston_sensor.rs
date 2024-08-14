@@ -88,7 +88,7 @@ impl Propagation for DifferentialPistonSensor {
 impl SegmentWiseSensor for DifferentialPistonSensor {
     fn calibrate_segment(
         &mut self,
-        _src_builder: Option<crate::SourceBuilder>,
+        _src_builder: Option<crate::source::SourceBuilder>,
         _sid: usize,
         _n_mode: usize,
         _pb: Option<indicatif::ProgressBar>,
@@ -153,7 +153,7 @@ impl SegmentWiseSensor for DifferentialPistonSensor {
     fn zeroed_segment(
         &mut self,
         _sid: usize,
-        src_builder: Option<crate::SourceBuilder>,
+        src_builder: Option<crate::source::SourceBuilder>,
     ) -> DataRef {
         let mut gmt = Gmt::builder().build().unwrap();
         // gmt.keep(&[sid as i32]);

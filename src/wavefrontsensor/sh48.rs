@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use super::Model;
-use crate::{Builder, ShackHartmannBuilder};
+use crate::{Builder, wavefrontsensor::ShackHartmannBuilder};
 
 /// `ShackHartmann` "SH48" builder for GMT AGWS model
 ///

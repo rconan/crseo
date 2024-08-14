@@ -37,7 +37,7 @@ pub mod source;
 pub mod wavefrontsensor;
 
 #[doc(inline)]
-pub use atmosphere::{Atmosphere, AtmosphereBuilder, AtmosphereError, RayTracing};
+pub use atmosphere::{Atmosphere, AtmosphereError, RayTracing};
 #[doc(inline)]
 pub use calibrations::Calibration;
 #[doc(inline)]
@@ -49,36 +49,38 @@ pub use error::CrseoError;
 #[doc(inline)]
 pub use fwhm::Fwhm;
 #[doc(inline)]
-pub use gmt::{Gmt, GmtBuilder, GmtError};
+pub use gmt::{Gmt, GmtError};
 #[doc(inline)]
 pub use imaging::Imaging;
 #[doc(inline)]
-pub use lmmse::{LinearMinimumMeanSquareError, LinearMinimumMeanSquareErrorBuilder};
+pub use lmmse::LinearMinimumMeanSquareError;
+
 #[doc(inline)]
-pub use pssn::{PSSn, PSSnBuilder, PSSnEstimates};
+pub use pssn::{PSSn, PSSnEstimates};
 //#[doc(inline)]
 //pub use sensitivities::OpticalSensitivities;
 // #[doc(inline)]
 // pub use piston_sensor::{PistonSensor, PistonSensorBuilder};
 #[doc(inline)]
-pub use source::Propagation;
-#[doc(inline)]
-pub use source::{Source, SourceBuilder};
+pub use source::{Propagation, Source};
 #[doc(inline)]
 pub use wavefrontsensor::{
-    Diffractive, Frame, Geometric, Pyramid, PyramidBuilder, SegmentWiseSensor,
-    SegmentWiseSensorBuilder, ShackHartmann, ShackHartmannBuilder, Stroke, SH24, SH48,
+    Diffractive, Frame, Geometric, Pyramid, SegmentWiseSensor, SegmentWiseSensorBuilder,
+    ShackHartmann, Stroke, SH24, SH48,
 };
 
 pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;
 
 pub mod prelude {
     pub use super::{
-        calibrations, Atmosphere, Builder, Calibration, Diffractive, FromBuilder, Geometric, Gmt,
+        Atmosphere, Builder, Calibration, Diffractive, FromBuilder, Geometric, Gmt,
         LinearMinimumMeanSquareError, PSSn, ShackHartmann, Source, WavefrontSensor,
         WavefrontSensorBuilder, SH24, SH48,
     };
 }
+
+use gmt::GmtBuilder;
+use source::SourceBuilder;
 
 /// CEO macro builder
 ///

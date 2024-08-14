@@ -1,5 +1,5 @@
-use super::{
-    cu::Single, Atmosphere, AtmosphereBuilder, Builder, Conversion, Cu, FromBuilder,
+use crate::{
+    cu::Single, Atmosphere, atmosphere::AtmosphereBuilder, Builder, Conversion, Cu, FromBuilder,
     GeometricShackHartmann as WFS, Gmt, Mask, Result, Source, SourceBuilder,
 };
 use ffi::LMMSE as ceo_LMMSE;
@@ -15,9 +15,9 @@ pub struct LinearMinimumMeanSquareError {
 }
 #[derive(Debug, Clone)]
 pub struct LinearMinimumMeanSquareErrorBuilder {
-    pub atm: super::AtmosphereBuilder,
-    pub guide_star: super::SourceBuilder,
-    pub mmse_star: super::SourceBuilder,
+    pub atm: AtmosphereBuilder,
+    pub guide_star: SourceBuilder,
+    pub mmse_star: SourceBuilder,
     pub fov_diameter: Option<f64>,
     pub n_side_lenslet: usize,
     pub solver_id: String,
@@ -26,9 +26,9 @@ pub struct LinearMinimumMeanSquareErrorBuilder {
 impl Default for LinearMinimumMeanSquareErrorBuilder {
     fn default() -> Self {
         LinearMinimumMeanSquareErrorBuilder {
-            atm: super::Atmosphere::builder(),
-            guide_star: super::Source::builder(),
-            mmse_star: super::Source::builder(),
+            atm: Atmosphere::builder(),
+            guide_star: Source::builder(),
+            mmse_star: Source::builder(),
             fov_diameter: None,
             n_side_lenslet: 0,
             solver_id: "MINRES".to_owned(),
