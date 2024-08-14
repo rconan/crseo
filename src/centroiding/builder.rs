@@ -3,7 +3,7 @@ use crate::Builder;
 use super::Centroiding;
 
 /// Centroiding builder
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct CentroidingBuilder {
     n_lenslet: usize,
     data_units: f64,

@@ -3,6 +3,7 @@ use crate::Builder;
 use super::{Detector, Imaging, LensletArray};
 
 /// Imaging builder
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ImagingBuilder {
     n_sensor: i32,
     lenslet_array: LensletArray,
