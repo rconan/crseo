@@ -1,9 +1,14 @@
+use crate::FromBuilder;
+
 use super::Propagation;
 use super::Source;
 use ffi::{dev2host, imaging};
 use serde::Deserialize;
 use serde::Serialize;
 use std::f32;
+
+mod builder;
+use builder::ImagingBuilder;
 
 /// Lenslet array specifications
 /// n_side_lenslet, n_px_lenslet, d
@@ -22,10 +27,28 @@ impl Default for LensletArray {
         }
     }
 }
+impl LensletArray {
+    pub fn n_side_lenslet(self, n_side_lenslet: usize) -> Self {
+        Self {
+            n_side_lenslet,
+            ..self
+        }
+    }
+    pub fn n_px_lenslet(self, n_px_lenslet: usize) -> Self {
+        Self {
+            n_px_lenslet,
+            ..self
+        }
+    }
+    pub fn d(self, d: f64) -> Self {
+        Self { d, ..self }
+    }
+}
+
 /// Detector noise model specifications
 /// n_px_framelet, n_px_imagelet, osf, detector_noise_specs
 #[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
-pub struct Detector{
+pub struct Detector {
     pub n_px_framelet: usize,
     pub n_px_imagelet: Option<usize>,
     pub osf: usize,
@@ -33,7 +56,35 @@ pub struct Detector{
 }
 impl Default for Detector {
     fn default() -> Self {
-        Detector{n_px_framelet: 512, n_px_imagelet:None, osf:2, noise_specs:None}
+        Detector {
+            n_px_framelet: 512,
+            n_px_imagelet: None,
+            osf: 2,
+            noise_specs: None,
+        }
+    }
+}
+impl Detector {
+    pub fn n_px_framelet(self, n_px_framelet: usize) -> Self {
+        Self {
+            n_px_framelet,
+            ..self
+        }
+    }
+    pub fn n_px_imagelet(self, n_px_imagelet: usize) -> Self {
+        Self {
+            n_px_imagelet: Some(n_px_imagelet),
+            ..self
+        }
+    }
+    pub fn osf(self, osf: usize) -> Self {
+        Self { osf, ..self }
+    }
+    pub fn noise_specs(self, noise_specs: NoiseDataSheet) -> Self {
+        Self {
+            noise_specs: Some(noise_specs),
+            ..self
+        }
     }
 }
 
@@ -97,7 +148,10 @@ impl Default for NoiseDataSheet {
 /// The detector continuously integrates the images formed on the detector until it is explicitly reset
 pub struct Imaging {
     _c_: imaging,
-    dft_osf: i32,
+    dft_osf: usize,
+}
+impl FromBuilder for Imaging {
+    type ComponentBuilder = ImagingBuilder;
 }
 impl Imaging {
     /// Creates a new `Imaging`
@@ -107,7 +161,7 @@ impl Imaging {
             dft_osf: 1,
         }
     }
-    /// Set `Imaging` parameters
+    /*     /// Set `Imaging` parameters
     ///
     /// * `n_sensor` - the number of `Imaging` sensor
     /// * `n_side_lenslet` - the size of the square lenslet array
@@ -136,7 +190,7 @@ impl Imaging {
         }
         self.dft_osf = dft_osf;
         self
-    }
+    } */
     pub fn __ceo__(&self) -> &imaging {
         &self._c_
     }
