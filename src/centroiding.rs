@@ -1,5 +1,10 @@
+use crate::FromBuilder;
+
 use super::Imaging;
 use ffi::{centroiding, dev2host, host2dev_char, mask};
+
+mod builder;
+pub use builder::CentroidingBuilder;
 
 /// Wrapper for CEO centroiding
 pub struct Centroiding {
@@ -20,6 +25,10 @@ pub struct Centroiding {
     pub centroids: Vec<f32>,
 }
 
+impl FromBuilder for Centroiding {
+    type ComponentBuilder = CentroidingBuilder;
+}
+
 impl Centroiding {
     /// Creates a new `Centroiding`
     pub fn new() -> Centroiding {
@@ -35,7 +44,7 @@ impl Centroiding {
             centroids: vec![],
         }
     }
-    /// Sets the `Centroiding` parameters:
+    /*     /// Sets the `Centroiding` parameters:
     ///
     /// * `n_lenslet` - the size of the square lenslet array
     /// * `data_units` - the centroids units
@@ -51,7 +60,7 @@ impl Centroiding {
         self.centroids = vec![0.0; self.n_centroids as usize];
         self.units = data_units.or(Some(1f64)).unwrap() as f32;
         self
-    }
+    } */
     /// Computes the `centroids` from the `sensor` image; optionally, a `Centroiding` `reference` may be provided that offsets the `centroids` and sets the `valid_lenslets`
     pub fn process(&mut self, sensor: &Imaging, reference: Option<&Centroiding>) -> &mut Self {
         if reference.is_none() {
