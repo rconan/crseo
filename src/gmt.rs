@@ -26,7 +26,10 @@ use std::{
 };
 
 mod builder;
-pub use builder::{GmtBuilder, GmtModesError, MirrorBuilder};
+pub use builder::{GmtBuilder, GmtMirrorBuilder, GmtModesError, MirrorBuilder};
+
+pub type GmtM1 = gmt_m1;
+pub type GmtM2 = gmt_m2;
 
 #[derive(Debug, thiserror::Error)]
 pub enum GmtError {
@@ -63,7 +66,7 @@ pub trait MirrorGetSet {
     ///
     /// The coefficients are given segment wise
     /// with the same number of modes per segment
-    fn m2_modes(&mut self, a: &[f64]) -> &mut Self;
+    fn set_modes(&mut self, a: &[f64]) -> &mut Self;
     /// Setsmodal coefficients for segment #`sid` (0 < `sid` < 8)
     fn set_segment_modes(&mut self, sid: u8, a: &[f64]) -> &mut Self;
 }
@@ -84,7 +87,7 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
         self
     }
 
-    fn m2_modes(&mut self, a: &[f64]) -> &mut Self {
+    fn set_modes(&mut self, a: &[f64]) -> &mut Self {
         let a_n_mode = a.len() / 7;
         self.a
             .chunks_mut(self.n_mode)
@@ -131,6 +134,22 @@ impl<M: GmtMx> Deref for Mirror<M> {
 impl<M: GmtMx> DerefMut for Mirror<M> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self._c_
+    }
+}
+
+pub trait GmtMirror<M: GmtMx> {
+    fn as_mut(&mut self) -> &mut Mirror<M>;
+}
+
+impl GmtMirror<gmt_m1> for Gmt {
+    fn as_mut(&mut self) -> &mut Mirror<gmt_m1> {
+        &mut self.m1
+    }
+}
+
+impl GmtMirror<gmt_m2> for Gmt {
+    fn as_mut(&mut self) -> &mut Mirror<gmt_m2> {
+        &mut self.m2
     }
 }
 

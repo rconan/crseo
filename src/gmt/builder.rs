@@ -2,7 +2,7 @@ use crate::{Builder, CrseoError};
 use serde::{Deserialize, Serialize};
 use std::{env, ffi::CString, path::Path};
 
-use super::Gmt;
+use super::{Gmt, GmtM1, GmtM2, GmtMx};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct MirrorBuilder {
@@ -35,6 +35,30 @@ impl MirrorBuilder {
             a.len()
         );
         Self { a, ..self }
+    }
+}
+
+pub trait GmtMirrorBuilder<M: GmtMx> {
+    fn n_mode(self, n_mode: usize) -> Self;
+}
+
+impl GmtMirrorBuilder<GmtM1> for GmtBuilder {
+    #[inline]
+    fn n_mode(self, n_mode: usize) -> Self {
+        Self {
+            m1: self.m1.n_mode(n_mode),
+            ..self
+        }
+    }
+}
+
+impl GmtMirrorBuilder<GmtM2> for GmtBuilder {
+    #[inline]
+    fn n_mode(self, n_mode: usize) -> Self {
+        Self {
+            m2: self.m2.n_mode(n_mode),
+            ..self
+        }
     }
 }
 
@@ -96,6 +120,12 @@ impl GmtBuilder {
             m1: self.m1.mode_type(mode_type).n_mode(n_mode),
             ..self
         }
+    }
+    pub fn n_mode<M: GmtMx>(self, n_mode: usize) -> Self
+    where
+        GmtBuilder: GmtMirrorBuilder<M>,
+    {
+        <Self as GmtMirrorBuilder<M>>::n_mode(self, n_mode)
     }
     /// Set the number of modes of M1
     pub fn m1_n_mode(self, n_mode: usize) -> Self {
