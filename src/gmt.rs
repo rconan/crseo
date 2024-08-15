@@ -48,16 +48,27 @@ pub enum GmtError {
 
 pub trait GmtMx {
     fn modes_as_mut(&mut self) -> &mut ffi::modes;
+    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int);
 }
 
 impl GmtMx for gmt_m1 {
+    #[inline]
     fn modes_as_mut(&mut self) -> &mut ffi::modes {
         &mut self.BS
     }
+    #[inline]
+    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
+        unsafe { self.update(origin_, euler_angles_, idx) }
+    }
 }
 impl GmtMx for gmt_m2 {
+    #[inline]
     fn modes_as_mut(&mut self) -> &mut ffi::modes {
         &mut self.BS
+    }
+    #[inline]
+    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
+        unsafe { self.update(origin_, euler_angles_, idx) }
     }
 }
 
@@ -69,6 +80,12 @@ pub trait MirrorGetSet {
     fn set_modes(&mut self, a: &[f64]) -> &mut Self;
     /// Setsmodal coefficients for segment #`sid` (0 < `sid` < 8)
     fn set_segment_modes(&mut self, sid: u8, a: &[f64]) -> &mut Self;
+    /// Sets M1 segment rigid body motion with:
+    ///
+    /// * `sid` - the segment ID number in the range \[1,7\]
+    /// * `t_xyz` - the 3 translations Tx, Ty and Tz
+    /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
+    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64; 6]) -> &mut Self;
 }
 
 impl<M: GmtMx> MirrorGetSet for Mirror<M> {
@@ -97,6 +114,22 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
             let m_sid_a = self.a.as_mut_ptr();
             self.modes_as_mut().update(m_sid_a);
         }
+        self
+    }
+
+    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64; 6]) -> &mut Self {
+        assert!(sid > 0 && sid < 8, "Segment ID must be in the range [1,7]!");
+        let t_xyz = vector {
+            x: tr_xyz[0],
+            y: tr_xyz[1],
+            z: tr_xyz[2],
+        };
+        let r_xyz = vector {
+            x: tr_xyz[3],
+            y: tr_xyz[4],
+            z: tr_xyz[5],
+        };
+        self.update(t_xyz, r_xyz, sid as i32);
         self
     }
 }
