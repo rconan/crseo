@@ -15,14 +15,18 @@
 //! ```
 //! use crseo::{ceo, Gmt};
 //! // Creates a gmt instance with 27 M1 bending modes
-//! let mut gmt = ceo!(Gmt, m1_n_mode = [27]);
+//! let mut gmt = ceo!(Gmt, m1.n_mode = [27]);
 //! ```
 
-use std::f64::consts::PI;
-use std::fmt::Display;
+use crate::{FromBuilder, Propagation, Source};
+use ffi::{gmt_m1, gmt_m2, vector};
+use std::{
+    ffi::CStr,
+    ops::{Deref, DerefMut},
+};
 
-mod gmt;
-pub use gmt::{Gmt, GmtBuilder, GmtModesError};
+mod builder;
+pub use builder::{GmtBuilder, GmtModesError, MirrorBuilder};
 
 #[derive(Debug, thiserror::Error)]
 pub enum GmtError {
@@ -38,561 +42,450 @@ pub enum GmtError {
     #[error("mirror modes file not found")]
     Modes(#[from] GmtModesError),
 }
-pub type GmtResult<T> = std::result::Result<T, GmtError>;
 
-/// Rigid body motions
-#[derive(Clone, Debug)]
-pub enum RBM {
-    /// Translations
-    Txyz(Vec<f64>),
-    /// Rotations
-    Rxyz(Vec<f64>),
+pub trait GmtMx {
+    fn modes_as_mut(&mut self) -> &mut ffi::modes;
 }
-impl Display for RBM {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use RBM::*;
-        match self {
-            Txyz(val) => write!(
-                f,
-                "{:+6.0?}",
-                val.iter().map(|x| x * 1e9).collect::<Vec<f64>>()
-            ),
-            Rxyz(val) => write!(
-                f,
-                " {:+6.0?}",
-                val.iter()
-                    .map(|x| x * 180. * 3600e3 / PI)
-                    .collect::<Vec<f64>>()
-            ),
-        }
-    }
-}
-/// Mirror degrees-of-freedom
-#[derive(Clone, Debug)]
-pub enum MirrorDof {
-    /// Rigid body motions
-    RigidBodyMotions((Option<RBM>, Option<RBM>)),
-    /// Mirror surface figures
-    Modes(Vec<f64>),
-}
-impl Display for MirrorDof {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use MirrorDof::*;
-        match self {
-            RigidBodyMotions((Some(t_xyz), Some(r_xyz))) => {
-                t_xyz.fmt(f)?;
-                r_xyz.fmt(f)
-            }
-            Modes(modes) => write!(
-                f,
-                " [{}]",
-                modes
-                    .iter()
-                    .take(5)
-                    .map(|x| format!("{:>+10.3e}", x))
-                    .collect::<Vec<String>>()
-                    .join(", ")
-            ),
-            _ => write!(f, ""),
-        }
-    }
-}
-impl From<MirrorDof> for Vec<f64> {
-    fn from(mirror_dof: MirrorDof) -> Self {
-        use MirrorDof::*;
-        use RBM::*;
-        match mirror_dof {
-            RigidBodyMotions((Some(Txyz(mut tr_xyz)), Some(Rxyz(mut r_xyz)))) => {
-                tr_xyz.append(&mut r_xyz);
-                tr_xyz
-            }
-            RigidBodyMotions((None, Some(Rxyz(r_xyz)))) => r_xyz,
-            RigidBodyMotions((Some(Txyz(t_xyz)), None)) => t_xyz,
-            Modes(modes) => modes,
-            _ => Vec::new(),
-        }
-    }
-}
-/// Segment pair degrees-of-freedom
-#[derive(Clone, Debug)]
-pub enum SegmentDof {
-    M1((Option<MirrorDof>, Option<MirrorDof>)),
-    M2((Option<MirrorDof>, Option<MirrorDof>)),
-}
-impl Display for SegmentDof {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use SegmentDof::*;
-        match self {
-            M1((Some(rbm), Some(mode))) => {
-                rbm.fmt(f)?;
-                mode.fmt(f)
-            }
-            M1((Some(rbm), None)) => rbm.fmt(f),
-            M2((Some(rbm), Some(mode))) => {
-                rbm.fmt(f)?;
-                mode.fmt(f)
-            }
-            M2((Some(rbm), None)) => rbm.fmt(f),
-            _ => write!(f, ""),
-        }
-    }
-}
-impl From<SegmentDof> for Vec<f64> {
-    fn from(segment_dof: SegmentDof) -> Self {
-        use SegmentDof::*;
-        match segment_dof {
-            M1((Some(rbm), Some(mode))) => {
-                let mut a: Vec<f64> = rbm.into();
-                let mut b: Vec<f64> = mode.into();
-                a.append(&mut b);
-                a
-            }
-            M1((Some(rbm), None)) => rbm.into(),
-            M1((None, Some(mode))) => mode.into(),
-            M2((Some(rbm), Some(mode))) => {
-                let mut a: Vec<f64> = rbm.into();
-                let mut b: Vec<f64> = mode.into();
-                a.append(&mut b);
-                a
-            }
-            M2((Some(rbm), None)) => rbm.into(),
-            M2((None, Some(mode))) => mode.into(),
-            _ => Vec::new(),
-        }
-    }
-}
-/**
-Degrees-of-freedom of 7 pairs of M1/M2 segments
 
-The degrees of freedom are ordered segment wise `[Si]` for i in `[1,7]`
-where `Si = [M1,M2]` and `Mj = [Txyz, Rxyz, Modes]`
-*/
-#[derive(Default, Clone, Debug)]
-pub struct SegmentsDof {
-    dof: Option<Vec<(Option<SegmentDof>, Option<SegmentDof>)>>,
-    m1_n_mode: usize,
-    m2_n_mode: usize,
-    s7_rz: bool,
-    n_segment: usize,
-}
-impl Display for SegmentsDof {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(dofs) = &self.dof {
-            writeln!(f, "GMT state (Txyz[nm], Rxyz[mas], modes):")?;
-            Ok(for (k, dof) in dofs.iter().enumerate() {
-                if let (Some(m1), Some(m2)) = dof {
-                    writeln!(f, " - S{} M1: {}", k + 1, m1)?;
-                    writeln!(f, "      M2: {}", m2)?;
-                }
-            })
-        } else {
-            writeln!(f, "")
-        }
+impl GmtMx for gmt_m1 {
+    fn modes_as_mut(&mut self) -> &mut ffi::modes {
+        &mut self.BS
     }
 }
-impl IntoIterator for SegmentsDof {
-    type Item = (Option<SegmentDof>, Option<SegmentDof>);
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+impl GmtMx for gmt_m2 {
+    fn modes_as_mut(&mut self) -> &mut ffi::modes {
+        &mut self.BS
+    }
+}
 
-    fn into_iter(self) -> Self::IntoIter {
-        if let Some(segments) = self.dof {
-            segments.into_iter()
-        } else {
-            Vec::new().into_iter()
-        }
-    }
-}
-impl From<SegmentsDof> for Vec<f64> {
-    fn from(segments: SegmentsDof) -> Self {
-        let s7_rz = segments.s7_rz;
-        let idx1 = (segments.m1_n_mode + segments.m2_n_mode + 13) * 6;
-        let idx2 = (segments.m1_n_mode + segments.m2_n_mode + 12) * 7 - segments.m2_n_mode - 1;
-        let mut v: Self = segments
-            .into_iter()
-            .flat_map(|segment| match segment {
-                (Some(m1), Some(m2)) => {
-                    let mut a: Vec<f64> = m1.into();
-                    let mut b: Vec<f64> = m2.into();
-                    a.append(&mut b);
-                    a
-                }
-                (Some(m1), None) => m1.into(),
-                (None, Some(m2)) => m2.into(),
-                _ => Vec::new(),
-            })
-            .collect();
-        if !s7_rz {
-            v.remove(idx2);
-            v.remove(idx1);
-        }
-        v
-    }
-}
-impl SegmentsDof {
-    /// Creates a new GMT state enum
+pub trait MirrorGetSet {
+    /// Sets M2 modal coefficients
     ///
-    /// All the rigid body motions are set to 0.
-    /// The clocking of M1 and M2 center segments are exluded from
-    /// the rigid body motions count leading to a total of 82 RBMs.
-    /// There are no modes on the segments
-    pub fn new() -> Self {
-        use MirrorDof::*;
-        use SegmentDof::*;
-        use RBM::*;
-        let u = vec![0f64; 3];
+    /// The coefficients are given segment wise
+    /// with the same number of modes per segment
+    fn m2_modes(&mut self, a: &[f64]) -> &mut Self;
+    /// Setsmodal coefficients for segment #`sid` (0 < `sid` < 8)
+    fn set_segment_modes(&mut self, sid: u8, a: &[f64]) -> &mut Self;
+}
+
+impl<M: GmtMx> MirrorGetSet for Mirror<M> {
+    fn set_segment_modes(&mut self, sid: u8, a: &[f64]) -> &mut Self {
+        self.a
+            .chunks_mut(self.n_mode)
+            .skip(sid as usize - 1)
+            .take(1)
+            .for_each(|a_sid: &mut [f64]| {
+                a_sid.iter_mut().zip(a).for_each(|(a_sid, a)| *a_sid = *a)
+            });
+        unsafe {
+            let m_sid_a = self.a.as_mut_ptr();
+            self._c_.modes_as_mut().update(m_sid_a);
+        }
+        self
+    }
+
+    fn m2_modes(&mut self, a: &[f64]) -> &mut Self {
+        let a_n_mode = a.len() / 7;
+        self.a
+            .chunks_mut(self.n_mode)
+            .zip(a.chunks(a_n_mode))
+            .for_each(|(a_sid, a)| a_sid.iter_mut().zip(a).for_each(|(a_sid, a)| *a_sid = *a));
+        unsafe {
+            let m_sid_a = self.a.as_mut_ptr();
+            self.modes_as_mut().update(m_sid_a);
+        }
+        self
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Mirror<M: GmtMx> {
+    pub _c_: M,
+    /// mirror mode shapes name
+    pub mode_type: String,
+    /// number of modes per segment
+    pub n_mode: usize,
+    // modes coefficients
+    pub a: Vec<f64>,
+}
+
+impl<M: GmtMx + Default> From<MirrorBuilder> for Mirror<M> {
+    fn from(builder: MirrorBuilder) -> Self {
         Self {
-            dof: Some(
-                (0..7)
-                    .map(|_| {
-                        (
-                            Some(M1((
-                                Some(RigidBodyMotions((
-                                    Some(Txyz(u.clone())),
-                                    Some(Rxyz(u.clone())),
-                                ))),
-                                None,
-                            ))),
-                            Some(M2((
-                                Some(RigidBodyMotions((
-                                    Some(Txyz(u.clone())),
-                                    Some(Rxyz(u.clone())),
-                                ))),
-                                None,
-                            ))),
-                        )
-                    })
-                    .collect(),
-            ),
-            n_segment: 7,
-            ..Default::default()
+            _c_: Default::default(),
+            mode_type: builder.mode_type,
+            n_mode: builder.n_mode,
+            a: builder.a,
         }
     }
-    /// Adds `n` modes to M1 segments (set to 0)
-    pub fn m1_n_mode(self, n: usize) -> Self {
-        let mut dofs = vec![];
-        for dof in self.dof.unwrap().into_iter() {
-            if let (Some(m1), Some(m2)) = dof {
-                if let SegmentDof::M1((Some(rbm), _)) = m1 {
-                    dofs.push((
-                        Some(SegmentDof::M1((
-                            Some(rbm),
-                            Some(MirrorDof::Modes(vec![0f64; n])),
-                        ))),
-                        Some(m2),
-                    ));
-                }
-            }
-        }
-        Self {
-            dof: Some(dofs),
-            m1_n_mode: n,
-            ..self
+}
+
+impl<M: GmtMx> Deref for Mirror<M> {
+    type Target = M;
+
+    fn deref(&self) -> &Self::Target {
+        &self._c_
+    }
+}
+
+impl<M: GmtMx> DerefMut for Mirror<M> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self._c_
+    }
+}
+
+/// GMT wrapper
+pub struct Gmt {
+    pub m1: Mirror<gmt_m1>,
+    pub m2: Mirror<gmt_m2>,
+    /*     /// M1 number of bending modes per segment
+       pub m1.n_mode: usize,
+       /// M2 number of bending modes per segment
+       pub m2.n_mode: usize,
+       /// M2 largest Zernike radial order per segment
+       pub m2_max_n: usize,
+    // default M1 coefs values: Vec of 0f64
+    pub a1: Vec<f64>,
+    // default M2 coefs values: Vec of 0f64
+    pub a2: Vec<f64>,
+    */
+    // pointing error
+    pub pointing_error: Option<(f64, f64)>,
+    m1_truss_projection: bool,
+}
+impl FromBuilder for Gmt {
+    type ComponentBuilder = GmtBuilder;
+}
+impl Gmt {
+    /// Returns `Gmt` M1 mode type
+    pub fn get_m1_mode_type(&self) -> String {
+        unsafe {
+            String::from(
+                CStr::from_ptr(self.m1.BS.filename.as_ptr())
+                    .to_str()
+                    .expect("CStr::to_str failed"),
+            )
         }
     }
-    /// Adds `n` modes to M2 segments (set to 0)
-    pub fn m2_n_mode(self, n: usize) -> Self {
-        let mut dofs = vec![];
-        for dof in self.dof.unwrap().into_iter() {
-            if let (Some(m1), Some(m2)) = dof {
-                if let SegmentDof::M2((Some(rbm), _)) = m2 {
-                    dofs.push((
-                        Some(m1),
-                        Some(SegmentDof::M2((
-                            Some(rbm),
-                            Some(MirrorDof::Modes(vec![0f64; n])),
-                        ))),
-                    ));
-                }
-            }
-        }
-        Self {
-            dof: Some(dofs),
-            m2_n_mode: n,
-            ..self
+    /// Returns `Gmt` M1 properties
+    pub fn get_m1(&self) -> MirrorBuilder {
+        MirrorBuilder {
+            mode_type: self.get_m1_mode_type(),
+            n_mode: self.m1.n_mode,
+            a: self.m1.a.clone(),
         }
     }
-    /// Adds M1 and M2 center segment clocking to segment RBMs
-    pub fn include_s7_rz(self) -> Self {
-        Self {
-            s7_rz: true,
-            ..self
+    /// Returns `Gmt` M2 properties
+    pub fn get_m2(&self) -> MirrorBuilder {
+        MirrorBuilder {
+            mode_type: self.get_m2_mode_type(),
+            n_mode: self.m2.n_mode,
+            a: self.m2.a.clone(),
         }
     }
-    pub fn from_vec(self, vals: Vec<f64>) -> Self {
-        let expected_len =
-            self.n_segment * (self.m1_n_mode + self.m2_n_mode) + if self.s7_rz { 84 } else { 82 };
-        assert_eq!(
-            vals.len(),
-            expected_len,
-            "Expected {} elements found {}",
-            expected_len,
-            vals.len()
-        );
-        let mut v = vals;
-        if !self.s7_rz {
-            let idx = (self.m1_n_mode + self.m2_n_mode + 13) * 6;
-            v.insert(idx, 0f64);
-            let idx = (self.m1_n_mode + self.m2_n_mode + 12) * 7 - self.m2_n_mode - 1;
-            v.insert(idx, 0f64);
-        }
-        use MirrorDof::*;
-        use SegmentDof::*;
-        use RBM::*;
-        let n = self.m1_n_mode + self.m2_n_mode + 12;
-        Self {
-            dof: Some(
-                v.chunks(n)
-                    .map(|s| {
-                        let mut so = s.to_vec();
-                        (
-                            Some(M1((
-                                Some(RigidBodyMotions((
-                                    Some(Txyz(so.drain(..3).collect())),
-                                    Some(Rxyz(so.drain(..3).collect())),
-                                ))),
-                                (self.m1_n_mode > 0)
-                                    .then(|| Modes(so.drain(..self.m1_n_mode).collect())),
-                            ))),
-                            Some(M2((
-                                Some(RigidBodyMotions((
-                                    Some(Txyz(so.drain(..3).collect())),
-                                    Some(Rxyz(so.drain(..3).collect())),
-                                ))),
-                                (self.m2_n_mode > 0)
-                                    .then(|| Modes(so.drain(..self.m2_n_mode).collect())),
-                            ))),
-                        )
-                    })
-                    .collect(),
-            ),
-            ..self
+    /// Returns `Gmt` M2 mode type
+    pub fn get_m2_mode_type(&self) -> String {
+        unsafe {
+            String::from(
+                CStr::from_ptr(self.m2.BS.filename.as_ptr())
+                    .to_str()
+                    .expect("CStr::to_str failed"),
+            )
         }
     }
-    pub fn from_rigid_body_motions(self, vals: Vec<f64>) -> Self {
-        let expected_len = if self.s7_rz { 84 } else { 82 };
-        assert_eq!(
-            vals.len(),
-            expected_len,
-            "Expected {} elements found {}",
-            expected_len,
-            vals.len()
-        );
-        let mut v = vals;
-        if !self.s7_rz {
-            let idx = (self.m1_n_mode + self.m2_n_mode + 13) * 6;
-            v.insert(idx, 0f64);
-            let idx = (self.m1_n_mode + self.m2_n_mode + 12) * 7 - self.m2_n_mode - 1;
-            v.insert(idx, 0f64);
+    /// Resets M1 and M2 to their aligned states
+    pub fn reset(&mut self) -> &mut Self {
+        unsafe {
+            self.m1.reset();
+            self.m2.reset();
+            let a = self.m1.a.as_mut_ptr();
+            self.m1.BS.update(a);
+            let a = self.m2.a.as_mut_ptr();
+            self.m2.BS.update(a);
         }
-        use MirrorDof::*;
-        use SegmentDof::*;
-        use RBM::*;
-        let n = self.m1_n_mode + self.m2_n_mode + 12;
-        Self {
-            dof: Some(
-                v.chunks(n)
-                    .map(|s| {
-                        let mut so = s.to_vec();
-                        (
-                            Some(M1((
-                                Some(RigidBodyMotions((
-                                    Some(Txyz(so.drain(..3).collect())),
-                                    Some(Rxyz(so.drain(..3).collect())),
-                                ))),
-                                (self.m1_n_mode > 0).then(|| Modes(vec![0f64; self.m1_n_mode])),
-                            ))),
-                            Some(M2((
-                                Some(RigidBodyMotions((
-                                    Some(Txyz(so.drain(..3).collect())),
-                                    Some(Rxyz(so.drain(..3).collect())),
-                                ))),
-                                (self.m2_n_mode > 0).then(|| Modes(vec![0f64; self.m2_n_mode])),
-                            ))),
-                        )
-                    })
-                    .collect(),
-            ),
-            ..self
+        self
+    }
+    /// Keeps only the M1 segment specified in the vector `sid`
+    ///
+    /// * `sid` - vector of segment ID numbers in the range \[1,7\]
+    pub fn keep(&mut self, sid: &[i32]) -> &mut Self {
+        unsafe {
+            self.m1.keep(sid.as_ptr() as *mut _, sid.len() as i32);
+            self.m2.keep(sid.as_ptr() as *mut _, sid.len() as i32);
+        }
+        self
+    }
+    /// Sets M1 segment rigid body motion with:
+    ///
+    /// * `sid` - the segment ID number in the range \[1,7\]
+    /// * `t_xyz` - the 3 translations Tx, Ty and Tz
+    /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
+    pub fn m1_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
+        assert!(sid > 0 && sid < 8, "Segment ID must be in the range [1,7]!");
+        let t_xyz = vector {
+            x: t_xyz[0],
+            y: t_xyz[1],
+            z: t_xyz[2],
+        };
+        let r_xyz = vector {
+            x: r_xyz[0],
+            y: r_xyz[1],
+            z: r_xyz[2],
+        };
+        unsafe {
+            self.m1.update(t_xyz, r_xyz, sid);
         }
     }
-    pub fn segment(&mut self, sid: usize, segment_dof: SegmentDof) -> GmtResult<&mut Self> {
-        use MirrorDof::*;
-        use SegmentDof::*;
-        use RBM::*;
-        match segment_dof {
-            M1((Some(RigidBodyMotions((Some(Txyz(_)), Some(Rxyz(_))))), _)) => {
-                if let Some(dof) = self.dof.as_mut() {
-                    dof[sid - 1] = (Some(segment_dof), dof[sid - 1].1.clone());
-                }
-                Ok(self)
-            }
-            M1((Some(RigidBodyMotions((Some(Txyz(ref val)), None))), ref x)) => {
-                if let Some(dof) = self.dof.as_mut() {
-                    let sdof = M1((
-                        Some(RigidBodyMotions((
-                            Some(Txyz(val.to_owned())),
-                            Some(Rxyz(vec![0f64; 3])),
-                        ))),
-                        x.to_owned(),
-                    ));
-                    dof[sid - 1] = (Some(sdof), dof[sid - 1].1.clone());
-                }
-                Ok(self)
-            }
-            M1((Some(RigidBodyMotions((None, Some(Rxyz(ref val))))), ref x)) => {
-                if let Some(dof) = self.dof.as_mut() {
-                    let sdof = M1((
-                        Some(RigidBodyMotions((
-                            Some(Txyz(vec![0f64; 3])),
-                            Some(Rxyz(val.to_owned())),
-                        ))),
-                        x.to_owned(),
-                    ));
-                    dof[sid - 1] = (Some(sdof), dof[sid - 1].1.clone());
-                }
-                Ok(self)
-            }
-            M2((Some(RigidBodyMotions((Some(Txyz(_)), Some(Rxyz(_))))), _)) => {
-                if let Some(dof) = self.dof.as_mut() {
-                    dof[sid - 1] = (dof[sid - 1].0.clone(), Some(segment_dof));
-                }
-                Ok(self)
-            }
-            M2((Some(RigidBodyMotions((Some(Txyz(ref val)), None))), ref x)) => {
-                if let Some(dof) = self.dof.as_mut() {
-                    let sdof = M2((
-                        Some(RigidBodyMotions((
-                            Some(Txyz(val.to_owned())),
-                            Some(Rxyz(vec![0f64; 3])),
-                        ))),
-                        x.to_owned(),
-                    ));
-                    dof[sid - 1] = (dof[sid - 1].0.clone(), Some(sdof));
-                }
-                Ok(self)
-            }
-            M2((Some(RigidBodyMotions((None, Some(Rxyz(ref val))))), ref x)) => {
-                if let Some(dof) = self.dof.as_mut() {
-                    let sdof = M2((
-                        Some(RigidBodyMotions((
-                            Some(Txyz(vec![0f64; 3])),
-                            Some(Rxyz(val.to_owned())),
-                        ))),
-                        x.to_owned(),
-                    ));
-                    dof[sid - 1] = (dof[sid - 1].0.clone(), Some(sdof));
-                }
-                Ok(self)
-            }
-            _ => Err(GmtError::SegmentDof),
+    /// Sets M2 segment rigid body motion with:
+    ///
+    /// * `sid` - the segment ID number in the range \[1,7\]
+    /// * `t_xyz` - the 3 translations Tx, Ty and Tz
+    /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
+    pub fn m2_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
+        let t_xyz = vector {
+            x: t_xyz[0],
+            y: t_xyz[1],
+            z: t_xyz[2],
+        };
+        let r_xyz = vector {
+            x: r_xyz[0],
+            y: r_xyz[1],
+            z: r_xyz[2],
+        };
+        unsafe {
+            self.m2.update(t_xyz, r_xyz, sid);
         }
     }
-    pub fn apply_to(&self, gmt: &mut Gmt) -> GmtResult<()> {
-        if let Some(segments) = &self.dof {
-            use MirrorDof::*;
-            use SegmentDof::*;
-            use RBM::*;
-            let mut a1 = vec![];
-            let mut a2 = vec![];
-            for (k, segment) in segments.iter().enumerate() {
-                match segment {
-                    (
-                        Some(M1((
-                            Some(RigidBodyMotions((Some(Txyz(m1_t_xyz)), Some(Rxyz(m1_r_xyz))))),
-                            Some(Modes(m1_modes)),
-                        ))),
-                        Some(M2((
-                            Some(RigidBodyMotions((Some(Txyz(m2_t_xyz)), Some(Rxyz(m2_r_xyz))))),
-                            Some(Modes(m2_modes)),
-                        ))),
-                    ) => {
-                        let sid = k as i32 + 1;
-                        gmt.m1_segment_state(sid, m1_t_xyz, m1_r_xyz);
-                        gmt.m2_segment_state(sid, m2_t_xyz, m2_r_xyz);
-                        a1.extend_from_slice(m1_modes);
-                        a2.extend_from_slice(m2_modes);
-                        Ok(())
-                    }
-                    (
-                        Some(M1((
-                            Some(RigidBodyMotions((Some(Txyz(m1_t_xyz)), Some(Rxyz(m1_r_xyz))))),
-                            None,
-                        ))),
-                        None,
-                    ) => {
-                        let sid = k as i32 + 1;
-                        gmt.m1_segment_state(sid, m1_t_xyz, m1_r_xyz);
-                        Ok(())
-                    }
-                    (
-                        None,
-                        Some(M2((
-                            Some(RigidBodyMotions((Some(Txyz(m2_t_xyz)), Some(Rxyz(m2_r_xyz))))),
-                            None,
-                        ))),
-                    ) => {
-                        let sid = k as i32 + 1;
-                        gmt.m2_segment_state(sid, m2_t_xyz, m2_r_xyz);
-                        Ok(())
-                    }
-                    (
-                        Some(M1((
-                            Some(RigidBodyMotions((Some(Txyz(m1_t_xyz)), Some(Rxyz(m1_r_xyz))))),
-                            None,
-                        ))),
-                        Some(M2((
-                            Some(RigidBodyMotions((Some(Txyz(m2_t_xyz)), Some(Rxyz(m2_r_xyz))))),
-                            None,
-                        ))),
-                    ) => {
-                        let sid = k as i32 + 1;
-                        gmt.m1_segment_state(sid, m1_t_xyz, m1_r_xyz);
-                        gmt.m2_segment_state(sid, m2_t_xyz, m2_r_xyz);
-                        Ok(())
-                    }
-                    (
-                        Some(M1((
-                            Some(RigidBodyMotions((Some(Txyz(m1_t_xyz)), Some(Rxyz(m1_r_xyz))))),
-                            None,
-                        ))),
-                        Some(M2((
-                            Some(RigidBodyMotions((Some(Txyz(m2_t_xyz)), Some(Rxyz(m2_r_xyz))))),
-                            Some(Modes(m2_modes)),
-                        ))),
-                    ) => {
-                        let sid = k as i32 + 1;
-                        gmt.m1_segment_state(sid, m1_t_xyz, m1_r_xyz);
-                        gmt.m2_segment_state(sid, m2_t_xyz, m2_r_xyz);
-                        a2.extend_from_slice(m2_modes);
-                        Ok(())
-                    }
-                    (
-                        Some(M1((
-                            Some(RigidBodyMotions((Some(Txyz(m1_t_xyz)), Some(Rxyz(m1_r_xyz))))),
-                            Some(Modes(m1_modes)),
-                        ))),
-                        Some(M2((
-                            Some(RigidBodyMotions((Some(Txyz(m2_t_xyz)), Some(Rxyz(m2_r_xyz))))),
-                            None,
-                        ))),
-                    ) => {
-                        let sid = k as i32 + 1;
-                        gmt.m1_segment_state(sid, m1_t_xyz, m1_r_xyz);
-                        gmt.m2_segment_state(sid, m2_t_xyz, m2_r_xyz);
-                        a1.extend_from_slice(m1_modes);
-                        Ok(())
-                    }
-                    _ => Err(GmtError::GmtDofMatch),
-                }?;
-            }
-            if !a1.is_empty() {
-                gmt.m1_modes(&mut a1);
-            }
-            if !a2.is_empty() {
-                gmt.m2_modes(&mut a2);
+    /// Sets M1 modal coefficients
+    ///
+    /// The coefficients are given segment wise
+    /// with the same number of modes per segment
+    pub fn m1_modes(&mut self, a: &[f64]) {
+        let a_n_mode = a.len() / 7;
+        self.m1
+            .a
+            .chunks_mut(self.m1.n_mode)
+            .zip(a.chunks(a_n_mode))
+            .for_each(|(a1, a)| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
+        unsafe {
+            let m1_a = self.m1.a.as_mut_ptr();
+            self.m1.BS.update(m1_a);
+        }
+    }
+    pub fn m1_segment_modes(&mut self, a: &[Vec<f64>]) {
+        self.m1
+            .a
+            .chunks_mut(self.m1.n_mode)
+            .zip(a)
+            .for_each(|(a1, a)| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
+        unsafe {
+            let m1_a = self.m1.a.as_mut_ptr();
+            self.m1.BS.update(m1_a);
+        }
+    }
+    pub fn m1_modes_ij(&mut self, i: usize, j: usize, value: f64) {
+        let mut a = vec![0f64; 7 * self.m1.n_mode];
+        a[i * self.m1.n_mode + j] = value;
+        unsafe {
+            self.m1.BS.update(a.as_mut_ptr());
+        }
+    }
+    /// Sets M2 modal coefficients
+    ///
+    /// The coefficients are given segment wise
+    /// with the same number of modes per segment
+    pub fn m2_modes(&mut self, a: &[f64]) {
+        let a_n_mode = a.len() / 7;
+        self.m2
+            .a
+            .chunks_mut(self.m2.n_mode)
+            .zip(a.chunks(a_n_mode))
+            .for_each(|(a2, a)| a2.iter_mut().zip(a).for_each(|(a2, a)| *a2 = *a));
+        unsafe {
+            let m2_a = self.m2.a.as_mut_ptr();
+            self.m2.BS.update(m2_a);
+        }
+    }
+    /// Sets M2 modal coefficients for segment #`sid` (0 < `sid` < 8)
+    pub fn m2_segment_modes(&mut self, sid: u8, a: &[f64]) {
+        self.m2
+            .a
+            .chunks_mut(self.m2.n_mode)
+            .skip(sid as usize - 1)
+            .take(1)
+            .for_each(|a2| a2.iter_mut().zip(a).for_each(|(a2, a)| *a2 = *a));
+        unsafe {
+            let m2_a = self.m2.a.as_mut_ptr();
+            self.m2.BS.update(m2_a);
+        }
+    }
+    /// Reset the segment modes to 0 and sets M2 modal coefficient #`j` for segment #`i`
+    pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
+        let mut a = vec![0f64; 7 * self.m2.n_mode];
+        a[i * self.m2.n_mode + j] = value;
+        unsafe {
+            self.m2.BS.update(a.as_mut_ptr());
+        }
+    }
+    /// Updates M1 and M1 rigid body motion and M1 model coefficients
+    pub fn update(
+        &mut self,
+        m1_rbm: Option<&Vec<Vec<f64>>>,
+        m2_rbm: Option<&Vec<Vec<f64>>>,
+        m1_mode: Option<&Vec<Vec<f64>>>,
+        m2_mode: Option<&Vec<Vec<f64>>>,
+    ) {
+        if let Some(m1_rbm) = m1_rbm {
+            for (k, rbm) in m1_rbm.iter().enumerate() {
+                self.m1_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
             }
         }
-        Ok(())
+        if let Some(m2_rbm) = m2_rbm {
+            for (k, rbm) in m2_rbm.iter().enumerate() {
+                self.m2_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
+            }
+        }
+        if let Some(m1_mode) = m1_mode {
+            let mut m = m1_mode.clone().into_iter().flatten().collect::<Vec<f64>>();
+            self.m1_modes(&mut m);
+        }
+        if let Some(m2_mode) = m2_mode {
+            let mut m = m2_mode.clone().into_iter().flatten().collect::<Vec<f64>>();
+            self.m2_modes(&mut m);
+        }
+    }
+    pub fn update42(
+        &mut self,
+        m1_rbm: Option<&[f64]>,
+        m2_rbm: Option<&[f64]>,
+        m1_mode: Option<&[f64]>,
+        m2_mode: Option<&[f64]>,
+    ) {
+        if let Some(m1_rbm) = m1_rbm {
+            for (k, rbm) in m1_rbm.chunks(6).enumerate() {
+                self.m1_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
+            }
+        }
+        if let Some(m2_rbm) = m2_rbm {
+            for (k, rbm) in m2_rbm.chunks(6).enumerate() {
+                self.m2_segment_state((k + 1) as i32, &rbm[..3], &rbm[3..]);
+            }
+        }
+        if let Some(m1_mode) = m1_mode {
+            let mut m = m1_mode.to_vec();
+            self.m1_modes(&mut m);
+        }
+        if let Some(m2_mode) = m2_mode {
+            let mut m = m2_mode.to_vec();
+            self.m2_modes(&mut m);
+        }
+    }
+    /*
+    pub fn update(&mut self, gstate: &GmtState) {
+        let mut t_xyz = vec![0.0; 3];
+        let mut r_xyz = vec![0.0; 3];
+        let mut a: Vec<f64> = vec![0.0; 7 * self.m1.n_mode as usize];
+        let mut id = 0;
+
+        for sid in 1..8 {
+            //print!("{}", sid);••••••••••••
+            id = sid - 1;
+            t_xyz[0] = gstate.rbm[[id, 0]] as f64;
+            t_xyz[1] = gstate.rbm[[id, 1]] as f64;
+            t_xyz[2] = gstate.rbm[[id, 2]] as f64;
+            r_xyz[0] = gstate.rbm[[id, 3]] as f64;
+            r_xyz[1] = gstate.rbm[[id, 4]] as f64;
+            r_xyz[2] = gstate.rbm[[id, 5]] as f64;
+            self.m1_segment_state(sid as i32, &t_xyz, &r_xyz);
+            if self.m1.n_mode > 0 {
+                for k_bm in 0..self.m1.n_mode {
+                    let idx = id * self.m1.n_mode as usize + k_bm as usize;
+                    a[idx as usize] = gstate.bm[[id, k_bm as usize]] as f64;
+                }
+            }
+            id += 7;
+            t_xyz[0] = gstate.rbm[[id, 0]] as f64;
+            t_xyz[1] = gstate.rbm[[id, 1]] as f64;
+            t_xyz[2] = gstate.rbm[[id, 2]] as f64;
+            r_xyz[0] = gstate.rbm[[id, 3]] as f64;
+            r_xyz[1] = gstate.rbm[[id, 4]] as f64;
+            r_xyz[2] = gstate.rbm[[id, 5]] as f64;
+            self.m2_segment_state(sid as i32, &t_xyz, &r_xyz);
+        }
+        self.m1_modes(&mut a);
+    }
+     */
+    pub fn trace_all(&mut self, src: &mut Source) -> &mut Self {
+        unsafe {
+            src.as_raw_mut_ptr().reset_rays();
+            let rays = &mut src.as_raw_mut_ptr().rays;
+            self.m1.traceall(rays);
+            self.m2.traceall(rays);
+            rays.to_sphere1(-5.830, 2.197173);
+        }
+        self
+    }
+}
+impl Drop for Gmt {
+    /// Frees CEO memory before dropping `Gmt`
+    fn drop(&mut self) {
+        unsafe {
+            self.m1.cleanup();
+            self.m2.cleanup();
+        }
+    }
+}
+impl Propagation for Gmt {
+    /// Ray traces a `Source` through `Gmt`, ray tracing stops at the exit pupil
+    fn propagate(&mut self, src: &mut Source) {
+        if let Some((pz, pa)) = self.pointing_error {
+            let (s, c) = pa.sin_cos();
+            let (px, py) = (pz * c, pz * s);
+            let (zenith, azimuth): (Vec<_>, Vec<_>) = src
+                .zenith
+                .iter()
+                .map(|z| *z as f64)
+                .zip(src.azimuth.iter().map(|a| *a as f64))
+                .map(|(z, a)| {
+                    let (s, c) = a.sin_cos();
+                    (z * c - px, z * s - py)
+                })
+                .map(|(x, y)| (x.hypot(y), y.atan2(x)))
+                .unzip();
+            src.update(zenith, azimuth);
+            unsafe {
+                src.as_raw_mut_ptr().reset_rays();
+                let rays = &mut src.as_raw_mut_ptr().rays;
+                self.m2.blocking(rays);
+                self.m1.trace(rays);
+                if self.m1_truss_projection {
+                    rays.gmt_truss_onaxis();
+                }
+                rays.gmt_m2_baffle();
+                self.m2.trace(rays);
+                rays.to_sphere1(-5.830, 2.197173);
+            }
+            src.update(
+                src.zenith.iter().map(|x| *x as f64).collect(),
+                src.azimuth.iter().map(|x| *x as f64).collect(),
+            );
+        } else {
+            unsafe {
+                src.as_raw_mut_ptr().reset_rays();
+                let rays = &mut src.as_raw_mut_ptr().rays;
+                self.m2.blocking(rays);
+                self.m1.trace(rays);
+                if self.m1_truss_projection {
+                    rays.gmt_truss_onaxis();
+                }
+                rays.gmt_m2_baffle();
+                self.m2.trace(rays);
+                rays.to_sphere1(-5.830, 2.197173);
+            }
+        }
+    }
+    fn time_propagate(&mut self, _secs: f64, src: &mut Source) {
+        self.propagate(src)
     }
 }
 
@@ -603,12 +496,12 @@ mod tests {
 
     #[test]
     fn gmt_new() {
-        Gmt::builder().m1_n_mode(27).m2_n_mode(123).build().unwrap();
+        Gmt::builder().m1.n_mode(27).m2.n_mode(123).build().unwrap();
     }
 
     #[test]
     fn gmt_new_with_macro() {
-        crate::ceo!(GmtBuilder, m1_n_mode = [27], m2_n_mode = [123]);
+        crate::ceo!(GmtBuilder, m1.n_mode = [27], m2.n_mode = [123]);
     }
 
     #[test]

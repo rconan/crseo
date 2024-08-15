@@ -137,9 +137,9 @@ where
         _valids: bool,
     ) -> Vec<f64> {
         let mut m1_rbm = vec![vec![0.; 6]; 7];
-        let mut m1_mode = vec![vec![0.; gmt.m1_n_mode]; 7];
+        let mut m1_mode = vec![vec![0.; gmt.m1.n_mode]; 7];
         let mut m2_rbm = vec![vec![0.; 6]; 7];
-        let mut m2_mode = vec![vec![0.; gmt.m2_n_mode]; 7];
+        let mut m2_mode = vec![vec![0.; gmt.m2.n_mode]; 7];
         let mut update = |x: f64, gmt: &mut Gmt| {
             match mirror {
                 Mirror::M1 => {
