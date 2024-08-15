@@ -1,6 +1,6 @@
 use active_optics::{Calib, M2_N_MODE, SID};
 use complot::{Config, Heatmap};
-use crseo::{Builder, FromBuilder, Gmt, Source};
+use crseo::{gmt::GmtM2, Builder, FromBuilder, Gmt, Source};
 use skyangle::Conversion;
 use std::f32::consts::PI;
 
@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let phase0 = src.phase().clone();
     let amplitude0 = src.amplitude();
 
-    gmt.m1_segment_state(1, &[0., -20e-6, 0.], &[0f64.from_mas(), 0., 0.]);
+    gmt.m1_segment_state(1, &[0., 0e-6, 0.], &[100f64.from_mas(), 0., 0.]);
     src.through(&mut gmt).xpupil();
 
     let n = src.pupil_sampling();
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
         .into();
 
-    let calib = Calib::<SID>::load("calib_m2.pkl")?;
+    let calib = Calib::<GmtM2, SID>::load("calib_m2.pkl")?;
     let pinv = calib.pseudoinverse();
 
     let dphase: Vec<f64> = phase.iter().take(n * n).map(|x| -*x as f64).collect();

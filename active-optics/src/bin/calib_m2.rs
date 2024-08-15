@@ -1,9 +1,8 @@
 use active_optics::{Calib, M2_N_MODE, SID};
-use crseo::{Builder, FromBuilder, Gmt, Source};
-use std::time::Instant;
+use crseo::gmt::GmtM2;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut gmt = Gmt::builder().m2_n_mode(M2_N_MODE).build()?;
+    /*     let mut gmt = Gmt::builder().m2_n_mode(M2_N_MODE).build()?;
     gmt.keep(&[SID as i32]);
     let mut src = Source::builder().build()?;
 
@@ -20,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let now = Instant::now();
     for i in 0..M2_N_MODE {
         a[i] = stroke;
-        gmt.m2_segment_modes(SID, &a);
+        gmt.m2.set_segment_modes(SID, &a);
         src.through(&mut gmt).xpupil();
         let area = src.amplitude().iter().filter(|&&x| x > 0.).count();
         if area != area0 {
@@ -51,7 +50,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     dbg!(calib.len());
 
     let calib = Calib::<SID>::new(M2_N_MODE, calib, mask);
-    calib.dump("calib_m2.pkl")?;
+    calib.dump("calib_m2.pkl")?; */
+
+    let mut calib = Calib::<GmtM2, SID>::new(M2_N_MODE);
+    calib.calibrate_segment_modes(1e-6)?.dump("calib_m2.pkl")?;
 
     Ok(())
 }
