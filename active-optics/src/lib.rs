@@ -2,6 +2,8 @@ use faer::{mat::from_column_major_slice, Mat};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, fs::File, ops::Mul, path::Path};
 
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/config.rs"));
+
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]

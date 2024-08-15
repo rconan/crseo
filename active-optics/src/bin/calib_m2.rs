@@ -1,16 +1,9 @@
-use active_optics::Calib;
+use active_optics::{Calib, M2_N_MODE, SID};
 use crseo::{Builder, FromBuilder, Gmt, Source};
-use std::{env, sync::LazyLock, time::Instant};
-
-const SID: u8 = 1;
-static M2_N_MODE: LazyLock<usize> = LazyLock::new(|| {
-    env::var("M2_N_MODE")
-        .map(|x| x.parse().unwrap())
-        .unwrap_or(66)
-});
+use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut gmt = Gmt::builder().m2_n_mode(*M2_N_MODE).build()?;
+    let mut gmt = Gmt::builder().m2_n_mode(M2_N_MODE).build()?;
     gmt.keep(&[SID as i32]);
     let mut src = Source::builder().build()?;
 
@@ -22,10 +15,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     dbg!(area0);
 
     let stroke = 1e-6;
-    let mut a = vec![0f64; *M2_N_MODE];
+    let mut a = vec![0f64; M2_N_MODE];
     let mut calib: Vec<f64> = Vec::new();
     let now = Instant::now();
-    for i in 0..*M2_N_MODE {
+    for i in 0..M2_N_MODE {
         a[i] = stroke;
         gmt.m2_segment_modes(SID, &a);
         src.through(&mut gmt).xpupil();
@@ -57,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     dbg!(calib.len());
 
-    let calib = Calib::<SID>::new(*M2_N_MODE, calib, mask);
+    let calib = Calib::<SID>::new(M2_N_MODE, calib, mask);
     calib.dump("calib_m2.pkl")?;
 
     Ok(())

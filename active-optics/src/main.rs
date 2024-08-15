@@ -1,19 +1,11 @@
-use active_optics::Calib;
+use active_optics::{Calib, M2_N_MODE, SID};
 use complot::{Config, Heatmap};
 use crseo::{Builder, FromBuilder, Gmt, Source};
 use skyangle::Conversion;
-use std::{env, f32::consts::PI, sync::LazyLock};
-
-const SID: u8 = 1;
-
-static M2_N_MODE: LazyLock<usize> = LazyLock::new(|| {
-    env::var("M2_N_MODE")
-        .map(|x| x.parse().unwrap())
-        .unwrap_or(66)
-});
+use std::f32::consts::PI;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut gmt = Gmt::builder().m2_n_mode(*M2_N_MODE).build()?;
+    let mut gmt = Gmt::builder().m2_n_mode(M2_N_MODE).build()?;
     let mut src = Source::builder()
         .size(2)
         .zenith_azimuth(vec![0., 6f32.from_arcmin()], vec![0., PI / 2.])

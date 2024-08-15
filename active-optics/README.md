@@ -9,8 +9,9 @@ The path to the modes of M1 (`bending modes.ceo`) and M2 (`Karhunen-Loeve.ceo`) 
 
 ## Calibration
 
-`calib_m2.rs` performs the calibration of the M2 modes, the number of modes is set per default to 66, but it can be set with the
-environment variable `M2_N_MODE`
+`calib_m2.rs` performs the calibration of the M2 modes for a single segment.
+
+The segnent ID # and the number of modes is set in the script `src/config.rs` .
 
 ```
 cargo run --release --bin calib_m2
