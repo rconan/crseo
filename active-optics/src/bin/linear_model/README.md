@@ -24,15 +24,19 @@ The unit norm gradient vector of M1 aberrations are:
 
  * S1 
 
-|   | Rx | Ry |
-|:---:|:---:|:---:|
-| Gx | 0 | +1 |
-| Gy | -1 | 0 |
+|   | Tx | Ty | Rx | Ry |
+|:---:|:---:|:---:|:---:|:---:|
+| Gx | +1 | 0 | 0 | +1 |
+| Gy | 0 | +1 | -1 | 0 |
 
 | GS | #1 | #2 | #3 |
 |:--:|:--:|:--:|:--:|
-| Rx | ![](m1_to_agws_col0src0_.png) | ![](m1_to_agws_col0src1_.png) | ![](m1_to_agws_col0src2_.png) |
-| Ry | ![](m1_to_agws_col1src0_.png) | ![](m1_to_agws_col1src1_.png) | ![](m1_to_agws_col1src2_.png) |
+| Tx | ![](m1_to_agws_col0src0_.png) | ![](m1_to_agws_col0src1_.png) | ![](m1_to_agws_col0src2_.png) |
+| Ty | ![](m1_to_agws_col1src0_.png) | ![](m1_to_agws_col1src1_.png) | ![](m1_to_agws_col1src2_.png) |
+| Tz | ![](m1_to_agws_col2src0_.png) | ![](m1_to_agws_col2src1_.png) | ![](m1_to_agws_col2src2_.png) |
+| Rx | ![](m1_to_agws_col3src0_.png) | ![](m1_to_agws_col3src1_.png) | ![](m1_to_agws_col3src2_.png) |
+| Ry | ![](m1_to_agws_col4src0_.png) | ![](m1_to_agws_col4src1_.png) | ![](m1_to_agws_col4src2_.png) |
+| Rz | ![](m1_to_agws_col5src0_.png) | ![](m1_to_agws_col5src1_.png) | ![](m1_to_agws_col5src2_.png) |
 
  * S2 
 
