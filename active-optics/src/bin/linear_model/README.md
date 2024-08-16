@@ -1,16 +1,19 @@
 # Active Optics Linear Model
 
-The model with two set of guide stars:
+The model is using with two set of guide stars:
  * 1 on-axis guide star
  * 3 off-axis guide stars evenly spaced on a 6' ring 
 
+M1 segment ID and the # of M2 modes is set in `config.rs`.
+
 The linear interaction matrices between the source wavefronts and both M1 RBMS and M2 modes
-are derived with
+are computed with
 ```
-cargo run --release --bin calibration --features m2,on-axis,modes
-cargo run --release --bin calibration --features m2,off-axis,modes
-cargo run --release --bin calibration --features m1,on-axis,rbms
-cargo run --release --bin calibration --features m1,off-axis,rbms
+cargo run --release --bin calibration
+```
+and the linear model is run with
+```
+cargo run --release --bin linear_model
 ```
 
 The unit norm field position vector of the off-axis guide stars are
