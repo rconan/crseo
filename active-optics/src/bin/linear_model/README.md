@@ -29,6 +29,8 @@ The unit norm gradient vector of M1 aberrations are:
 | Gx | +1 | 0 | 0 | +1 |
 | Gy | 0 | +1 | -1 | 0 |
 
+Residual aberrations in the field for each M1 S1 RBM corrected with M2 S1 ASM
+
 | GS | #1 | #2 | #3 |
 |:--:|:--:|:--:|:--:|
 | Tx | ![](m1_to_agws_col0src0_.png) | ![](m1_to_agws_col0src1_.png) | ![](m1_to_agws_col0src2_.png) |
@@ -38,9 +40,3 @@ The unit norm gradient vector of M1 aberrations are:
 | Ry | ![](m1_to_agws_col4src0_.png) | ![](m1_to_agws_col4src1_.png) | ![](m1_to_agws_col4src2_.png) |
 | Rz | ![](m1_to_agws_col5src0_.png) | ![](m1_to_agws_col5src1_.png) | ![](m1_to_agws_col5src2_.png) |
 
- * S2 
-
-|   | Rx | Ry |
-|:---:|:---:|:---:|
-| Gx | -0.866 | +0.500 |
-| Gy | -0.500 | -0.866 |
