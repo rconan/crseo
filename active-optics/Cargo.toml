@@ -10,3 +10,11 @@ faer = "0.19.1"
 serde = { version = "1.0.207", features = ["derive"] }
 serde-pickle = "1.1.1"
 skyangle = "0.2.2"
+
+[features]
+m1 = []
+m2 = []
+modes = []
+rbms = []
+on-axis = []
+off-axis = []
