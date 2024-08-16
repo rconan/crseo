@@ -102,6 +102,24 @@ where
             .filter_map(|(x, b)| if *b { Some(*x) } else { None })
             .collect()
     }
+    pub fn unmask<'a>(&'a self, mut data: impl Iterator<Item = &'a f64>) -> Vec<f64> {
+        self.mask
+            .iter()
+            .map(|b| if *b { *data.next().unwrap() } else { 0. })
+            .collect()
+    }
+    #[inline]
+    pub fn mask_len(&self) -> usize {
+        self.mask.len()
+    }
+    #[inline]
+    pub fn src_mask_len(&self) -> usize {
+        self.mask.len() / self.src_builder.size
+    }
+    #[inline]
+    pub fn src_mask_square_len(&self) -> usize {
+        (self.src_mask_len() as f64).sqrt() as usize
+    }
 }
 impl<M, const SID: u8> Calib<M, SID>
 where
@@ -118,43 +136,44 @@ where
         src.through(&mut gmt).xpupil();
         // let phase0 = src.phase().clone();
         let amplitude0 = src.amplitude();
-        let mask: Vec<_> = amplitude0.iter().map(|x| *x > 0.).collect();
-        let area0 = mask.iter().filter(|&&x| x).count();
+        let mut mask: Vec<_> = amplitude0.iter().map(|x| *x > 0.).collect();
 
         let mut a = vec![0f64; self.n_mode];
-        let mut calib: Vec<f64> = Vec::new();
+        let mut calib = vec![];
         let now = Instant::now();
         for i in 0..self.n_mode {
             a[i] = stroke;
             <Gmt as GmtMirror<M>>::as_mut(&mut gmt).set_segment_modes(SID, &a);
             src.through(&mut gmt).xpupil();
-            let area = src.amplitude().iter().filter(|&&x| x > 0.).count();
-            if area != area0 {
-                panic!("Expected area={}, found {}", area0, area);
-            }
+            mask.iter_mut()
+                .zip(src.amplitude().into_iter())
+                .for_each(|(m, a)| *m &= a > 0.);
             let push = src.phase().clone();
 
             a[i] *= -1.;
             <Gmt as GmtMirror<M>>::as_mut(&mut gmt).set_segment_modes(SID, &a);
             src.through(&mut gmt).xpupil();
-            let area = src.amplitude().iter().filter(|&&x| x > 0.).count();
-            if area != area0 {
-                panic!("Expected area={}, found {}", area0, area);
-            }
+            mask.iter_mut()
+                .zip(src.amplitude().into_iter())
+                .for_each(|(m, a)| *m &= a > 0.);
 
-            let pushpull = push
+            let pushpull: Vec<_> = push
                 .iter()
                 .zip(src.phase().iter())
                 .zip(&mask)
-                .filter(|&(_, &m)| m)
-                .map(|((x, y), _)| 0.5 * (x - y) as f64 / stroke);
-            calib.extend(pushpull);
+                .map(|((x, y), &m)| if m { 0.5 * (x - y) as f64 / stroke } else { 0. })
+                .collect();
+            calib.push(pushpull);
 
             a[i] = 0.;
         }
+        calib.iter_mut().for_each(|x| {
+            let mut iter = mask.iter();
+            x.retain(|_| *iter.next().unwrap())
+        });
         println!("Elapsed: {:?}", now.elapsed());
         self.mask = mask;
-        self.c = calib;
+        self.c = calib.into_iter().flatten().collect();
         Ok(self)
     }
 
@@ -168,7 +187,6 @@ where
         // let phase0 = src.phase().clone();
         let amplitude0 = src.amplitude();
         let mut mask: Vec<_> = amplitude0.iter().map(|x| *x > 0.).collect();
-        let area0 = mask.iter().filter(|&&x| x).count();
 
         let mut tr_xyz = [0f64; 6];
         let mut calib = vec![];
@@ -180,25 +198,17 @@ where
             tr_xyz[i] = s;
             <Gmt as GmtMirror<M>>::as_mut(&mut gmt).set_rigid_body_motions(SID, &tr_xyz);
             src.through(&mut gmt).xpupil();
-            let amplitude = src.amplitude();
-            let area = amplitude.iter().filter(|&&x| x > 0.).count();
-            if area != area0 {
-                mask.iter_mut()
-                    .zip(amplitude.iter())
-                    .for_each(|(m, &a)| *m &= a > 0.);
-            }
+            mask.iter_mut()
+                .zip(src.amplitude().into_iter())
+                .for_each(|(m, a)| *m &= a > 0.);
             let push = src.phase().clone();
 
             tr_xyz[i] *= -1.;
             <Gmt as GmtMirror<M>>::as_mut(&mut gmt).set_rigid_body_motions(SID, &tr_xyz);
             src.through(&mut gmt).xpupil();
-            let amplitude = src.amplitude();
-            let area = amplitude.iter().filter(|&&x| x > 0.).count();
-            if area != area0 {
-                mask.iter_mut()
-                    .zip(amplitude.iter())
-                    .for_each(|(m, &a)| *m &= a > 0.);
-            }
+            mask.iter_mut()
+                .zip(src.amplitude().into_iter())
+                .for_each(|(m, a)| *m &= a > 0.);
 
             let pushpull: Vec<_> = push
                 .iter()
@@ -224,40 +234,45 @@ where
         assert_eq!(self.mask.len(), other.mask.len());
         let area_a = self.area();
         let area_b = other.area();
-        if area_a > area_b {
-            let c_to_area: Vec<_> = self
-                .c
-                .chunks(area_a)
-                .flat_map(|c| {
-                    self.mask
-                        .iter()
-                        .zip(&other.mask)
-                        .filter(|&(&ma, _)| ma)
-                        .zip(c)
-                        .filter(|&((_, &mb), _)| mb)
-                        .map(|(_, c)| *c)
-                })
-                .collect();
-            self.c = c_to_area;
-            self.mask = other.mask.clone();
-        } else {
-            let c_to_area: Vec<_> = other
-                .c
-                .chunks(area_b)
-                .flat_map(|c| {
-                    other
-                        .mask
-                        .iter()
-                        .zip(&self.mask)
-                        .filter(|&(&ma, _)| ma)
-                        .zip(c)
-                        .filter(|&((_, &mb), _)| mb)
-                        .map(|(_, c)| *c)
-                })
-                .collect();
-            other.c = c_to_area;
-            other.mask = self.mask.clone();
-        }
+        let mask: Vec<_> = self
+            .mask
+            .iter()
+            .zip(other.mask.iter())
+            .map(|(&a, &b)| a && b)
+            .collect();
+
+        let c_to_area: Vec<_> = self
+            .c
+            .chunks(area_a)
+            .flat_map(|c| {
+                self.mask
+                    .iter()
+                    .zip(&mask)
+                    .filter(|&(&ma, _)| ma)
+                    .zip(c)
+                    .filter(|&((_, &mb), _)| mb)
+                    .map(|(_, c)| *c)
+            })
+            .collect();
+        self.c = c_to_area;
+        let c_to_area: Vec<_> = other
+            .c
+            .chunks(area_b)
+            .flat_map(|c| {
+                other
+                    .mask
+                    .iter()
+                    .zip(&mask)
+                    .filter(|&(&ma, _)| ma)
+                    .zip(c)
+                    .filter(|&((_, &mb), _)| mb)
+                    .map(|(_, c)| *c)
+            })
+            .collect();
+        other.c = c_to_area;
+
+        self.mask = mask.clone();
+        other.mask = mask;
     }
 }
 
