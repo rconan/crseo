@@ -85,7 +85,7 @@ pub trait MirrorGetSet {
     /// * `sid` - the segment ID number in the range \[1,7\]
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
-    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64; 6]) -> &mut Self;
+    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64]) -> &mut Self;
 }
 
 impl<M: GmtMx> MirrorGetSet for Mirror<M> {
@@ -117,7 +117,7 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
         self
     }
 
-    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64; 6]) -> &mut Self {
+    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64]) -> &mut Self {
         assert!(sid > 0 && sid < 8, "Segment ID must be in the range [1,7]!");
         let t_xyz = vector {
             x: tr_xyz[0],

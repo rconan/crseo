@@ -142,7 +142,7 @@ impl ShackHartmann<Geometric> {
     pub fn fold_into(&mut self, data: &mut Cu<Single>, lenslet_mask: &mut Mask) {
         unsafe {
             self._c_
-                .folded_slopes(data.as_ptr(), lenslet_mask.as_mut_prt());
+                .folded_slopes(data.as_mut_ptr(), lenslet_mask.as_mut_prt());
         }
     }
 }

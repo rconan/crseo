@@ -66,6 +66,7 @@ pub struct Cu<T: CuType> {
     pub n_cols: usize,
     dev_alloc: bool,
 }
+
 impl<T: CuType> Cu<T> {
     /// Creates an empty CUDA array
     pub fn new() -> Cu<T> {
@@ -118,7 +119,7 @@ impl Cu<Single> {
         self._c_.build(s as i32);
         self._c_.assign_f32(ptr);
     }
-    pub fn as_ptr(&mut self) -> *mut f32 {
+    pub fn as_ptr(&self) -> *const f32 {
         self._c_.dev_data
     }
     pub fn as_mut_ptr(&mut self) -> *mut f32 {

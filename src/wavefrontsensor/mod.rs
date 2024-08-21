@@ -122,7 +122,7 @@ impl Model for Geometric {
         let mut data: Cu<Single> = Cu::vector(m);
         data.malloc();
         unsafe {
-            self.get_valid_slopes(data.as_ptr());
+            self.get_valid_slopes(data.as_mut_ptr());
         }
         data
     }
@@ -176,7 +176,7 @@ impl Model for Geometric {
         let mut data: Cu<Single> = Cu::vector(m);
         data.malloc();
         unsafe {
-            self.masked_slopes(data.as_ptr(), lenslet_mask.as_mut_prt());
+            self.masked_slopes(data.as_mut_ptr(), lenslet_mask.as_mut_prt());
         }
         data
     }
@@ -238,7 +238,7 @@ impl Model for Diffractive {
         let mut data: Cu<Single> = Cu::vector(m);
         data.malloc();
         unsafe {
-            self.get_valid_slopes(data.as_ptr());
+            self.get_valid_slopes(data.as_mut_ptr());
         }
         data
     }
@@ -283,7 +283,7 @@ impl Model for Diffractive {
         let mut data: Cu<Single> = Cu::vector(m);
         data.malloc();
         unsafe {
-            self.masked_slopes(data.as_ptr(), lenslet_mask.as_mut_prt());
+            self.masked_slopes(data.as_mut_ptr(), lenslet_mask.as_mut_prt());
         }
         data
     }

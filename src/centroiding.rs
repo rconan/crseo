@@ -1,9 +1,9 @@
 use crate::FromBuilder;
 
-use super::Imaging;
 use ffi::{centroiding, dev2host, host2dev_char, mask};
 
 mod builder;
+use crate::imaging::Frame;
 pub use builder::CentroidingBuilder;
 
 /// Wrapper for CEO centroiding
@@ -62,51 +62,50 @@ impl Centroiding {
         self
     } */
     /// Computes the `centroids` from the `sensor` image; optionally, a `Centroiding` `reference` may be provided that offsets the `centroids` and sets the `valid_lenslets`
-    pub fn process(&mut self, sensor: &Imaging, reference: Option<&Centroiding>) -> &mut Self {
-        if reference.is_none() {
-            unsafe {
+    pub fn process(&mut self, frame: &Frame, reference: Option<&Centroiding>) -> &mut Self {
+        match reference {
+            None => unsafe {
                 self._c_.get_data2(
-                    sensor.__ceo__().d__frame,
-                    sensor.__ceo__().N_PX_CAMERA,
+                    frame.dev.as_ptr() as *mut _,
+                    frame.n_px_camera as i32,
                     0.0,
                     0.0,
                     self.units,
                 );
-            }
-        } else {
-            let r = reference.unwrap();
-            assert_eq!(self.n_lenslet_total, r.n_lenslet_total);
-            unsafe {
-                self._c_.get_data3(
-                    sensor.__ceo__().d__frame,
-                    sensor.__ceo__().N_PX_CAMERA,
-                    r._c_.d__cx,
-                    r._c_.d__cy,
-                    self.units,
-                    r._c_mask_.m,
-                );
-            }
-            /*
-            let n = r.n_lenslet_total as usize;
-            let cx = &self.centroids[..n];
-            let cy = &self.centroids[n..];
-            let mut  vcx: Vec<f32> = r
-                .valid_lenslets
-                .iter()
-                .zip(cx.iter())
-                .filter(|x| x.0.is_positive())
-                .map(|x| *x.1)
-                .collect();
-            let mut vcy: Vec<f32> = r
-                .valid_lenslets
-                .iter()
-                .zip(cy.iter())
-                .filter(|x| x.0.is_positive())
-                .map(|x| *x.1)
-                .collect();
-            vcx.append(&mut vcy);
-            */
-        }
+            },
+            Some(r) => {
+                assert_eq!(self.n_lenslet_total, r.n_lenslet_total);
+                unsafe {
+                    self._c_.get_data3(
+                        frame.dev.as_ptr() as *mut _,
+                        frame.n_px_camera as i32,
+                        r._c_.d__cx,
+                        r._c_.d__cy,
+                        self.units,
+                        r._c_mask_.m,
+                    );
+                }
+            } /*
+              let n = r.n_lenslet_total as usize;
+              let cx = &self.centroids[..n];
+              let cy = &self.centroids[n..];
+              let mut  vcx: Vec<f32> = r
+                  .valid_lenslets
+                  .iter()
+                  .zip(cx.iter())
+                  .filter(|x| x.0.is_positive())
+                  .map(|x| *x.1)
+                  .collect();
+              let mut vcy: Vec<f32> = r
+                  .valid_lenslets
+                  .iter()
+                  .zip(cy.iter())
+                  .filter(|x| x.0.is_positive())
+                  .map(|x| *x.1)
+                  .collect();
+              vcx.append(&mut vcy);
+              */
+        };
         self
     }
     /// grabs the `centroids` from the GPU
@@ -122,7 +121,7 @@ impl Centroiding {
     }
     /// returns the valid `centroids` i.e. the `centroids` that corresponds to a non-zero entry in the `valid_lenslets` mask; if `some_valid_lenslet` is given, then it supersedes any preset `valid_lenset`
     pub fn valids(&self, some_valid_lenslets: Option<&Vec<i8>>) -> Vec<f32> {
-        let valid_lenslets = some_valid_lenslets.or(Some(&self.valid_lenslets)).unwrap();
+        let valid_lenslets = some_valid_lenslets.unwrap_or_else(|| &self.valid_lenslets);
         assert_eq!(self.n_lenslet_total, valid_lenslets.len() as u32);
         let n = valid_lenslets.iter().fold(0u32, |a, x| a + (*x as u32)) as usize;
         let mut valid_centroids: Vec<f32> = vec![0f32; 2 * n];

@@ -292,7 +292,7 @@ impl Mask {
     }
     pub fn filter(&mut self, f: &mut Cu<Single>) -> &mut Self {
         unsafe {
-            self._c_.alter(f.as_ptr());
+            self._c_.alter(f.as_mut_ptr());
             self._c_.set_index();
         }
         self

@@ -1,6 +1,6 @@
-use crate::Builder;
-
 use super::Centroiding;
+use crate::imaging::ImagingBuilder;
+use crate::Builder;
 
 /// Centroiding builder
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -14,6 +14,15 @@ impl Default for CentroidingBuilder {
         Self {
             n_lenslet: 1,
             data_units: 1.,
+        }
+    }
+}
+
+impl From<&ImagingBuilder> for CentroidingBuilder {
+    fn from(value: &ImagingBuilder) -> Self {
+        Self {
+            n_lenslet: value.lenslet_array.n_side_lenslet,
+            ..Default::default()
         }
     }
 }

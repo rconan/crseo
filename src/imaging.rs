@@ -1,4 +1,4 @@
-use crate::FromBuilder;
+use crate::{Cu, FromBuilder};
 
 use super::Propagation;
 use super::Source;
@@ -8,7 +8,8 @@ use serde::Serialize;
 use std::f32;
 
 mod builder;
-use builder::ImagingBuilder;
+use crate::cu::Single;
+pub use builder::ImagingBuilder;
 
 /// Lenslet array specifications
 /// n_side_lenslet, n_px_lenslet, d
@@ -28,19 +29,26 @@ impl Default for LensletArray {
     }
 }
 impl LensletArray {
+    /// Sets the size of the square lenslet array
+    ///
+    /// The lenslet pitch is re-computed as well.
     pub fn n_side_lenslet(self, n_side_lenslet: usize) -> Self {
+        let d = self.d * self.n_side_lenslet as f64 / n_side_lenslet as f64;
         Self {
             n_side_lenslet,
+            d,
             ..self
         }
     }
+    /// Sets the number of pixel per lenslet
     pub fn n_px_lenslet(self, n_px_lenslet: usize) -> Self {
         Self {
             n_px_lenslet,
             ..self
         }
     }
-    pub fn d(self, d: f64) -> Self {
+    /// Sets the lenslet pitch
+    pub fn pitch(self, d: f64) -> Self {
         Self { d, ..self }
     }
 }
@@ -142,6 +150,26 @@ impl Default for NoiseDataSheet {
     }
 }
 
+#[derive(Clone)]
+pub struct Frame {
+    pub dev: Cu<Single>,
+    pub n_px_camera: usize,
+}
+
+impl Default for Frame {
+    fn default() -> Self {
+        Self {
+            dev: Cu::new(),
+            n_px_camera: Default::default(),
+        }
+    }
+}
+impl From<&mut Frame> for Vec<f32> {
+    fn from(value: &mut Frame) -> Self {
+        value.dev.from_dev()
+    }
+}
+
 /// An optical imager with a detector
 ///
 /// The optical imager is a square lenslet array which focal plane lies on the detector.
@@ -149,6 +177,8 @@ impl Default for NoiseDataSheet {
 pub struct Imaging {
     _c_: imaging,
     dft_osf: usize,
+    /// lenslet flux threshold
+    pub fluxlet_threshold: f64,
 }
 impl FromBuilder for Imaging {
     type ComponentBuilder = ImagingBuilder;
@@ -159,6 +189,7 @@ impl Imaging {
         Imaging {
             _c_: Default::default(),
             dft_osf: 1,
+            fluxlet_threshold: 0.,
         }
     }
     /*     /// Set `Imaging` parameters
@@ -194,7 +225,7 @@ impl Imaging {
     pub fn __ceo__(&self) -> &imaging {
         &self._c_
     }
-    /// Returns the frame from the GPU
+    /// Transfer the frame from the GPU to the host
     pub fn frame_transfer(&mut self, frame: &mut Vec<f32>) -> &mut Self {
         unsafe {
             dev2host(
@@ -204,6 +235,17 @@ impl Imaging {
             );
         }
         self
+    }
+    /// Returns a pointer to the frame on the device
+    pub fn frame(&self) -> Frame {
+        let mut cu = Cu::<Single>::vector(
+            (self.resolution() * self.resolution() * self._c_.N_SOURCE) as usize,
+        );
+        cu.from_ptr(self._c_.d__frame);
+        Frame {
+            dev: cu,
+            n_px_camera: self._c_.N_PX_CAMERA as usize,
+        }
     }
     /// Resets the detector frame to zero
     pub fn reset(&mut self) -> &mut Self {

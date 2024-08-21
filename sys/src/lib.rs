@@ -661,6 +661,7 @@ impl Default for stats {
     }
 }
 unsafe impl Send for gpu_double {}
+unsafe impl Sync for gpu_double {}
 impl Default for gpu_double {
     fn default() -> Self {
         Self {
@@ -676,6 +677,8 @@ impl Default for gpu_double {
     }
 }
 unsafe impl Send for gpu_float {}
+unsafe impl Sync for gpu_float {}
+
 impl Default for gpu_float {
     fn default() -> Self {
         Self {

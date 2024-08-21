@@ -176,7 +176,7 @@ impl<S: PSSnErrors> PSSn<S> {
         let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
-            self._c_.xotf(d_otf.as_ptr());
+            self._c_.xotf(d_otf.as_mut_ptr());
         }
         self.otf = d_otf.from_dev();
         self
@@ -185,7 +185,7 @@ impl<S: PSSnErrors> PSSn<S> {
         let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
-            self._c_.O0(d_otf.as_ptr());
+            self._c_.O0(d_otf.as_mut_ptr());
         }
         d_otf.from_dev()
     }
@@ -193,7 +193,7 @@ impl<S: PSSnErrors> PSSn<S> {
         let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
-            self._c_.O(d_otf.as_ptr());
+            self._c_.O(d_otf.as_mut_ptr());
         }
         d_otf.from_dev()
     }
@@ -201,7 +201,7 @@ impl<S: PSSnErrors> PSSn<S> {
         let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
-            self._c_.O(d_otf.as_ptr());
+            self._c_.O(d_otf.as_mut_ptr());
         }
         self.otf = d_otf.from_dev();
         self
@@ -210,7 +210,7 @@ impl<S: PSSnErrors> PSSn<S> {
         let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
-            self._c_.B(d_otf.as_ptr());
+            self._c_.B(d_otf.as_mut_ptr());
         }
         d_otf.from_dev()
     }
@@ -218,7 +218,7 @@ impl<S: PSSnErrors> PSSn<S> {
         let mut d_otf = Cu::<cu::Single>::vector(2 * self._c_.NN as usize);
         d_otf.malloc();
         unsafe {
-            self._c_.C(d_otf.as_ptr());
+            self._c_.C(d_otf.as_mut_ptr());
         }
         d_otf.from_dev()
     }
