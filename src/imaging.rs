@@ -154,6 +154,8 @@ impl Default for NoiseDataSheet {
 pub struct Frame {
     pub dev: Cu<Single>,
     pub n_px_camera: usize,
+    pub resolution: usize,
+    pub n_frame: usize,
 }
 
 impl Default for Frame {
@@ -161,12 +163,24 @@ impl Default for Frame {
         Self {
             dev: Cu::new(),
             n_px_camera: Default::default(),
+            resolution: Default::default(),
+            n_frame: Default::default(),
         }
     }
 }
 impl From<&mut Frame> for Vec<f32> {
     fn from(value: &mut Frame) -> Self {
         value.dev.from_dev()
+    }
+}
+impl From<Frame> for Vec<f32> {
+    fn from(mut value: Frame) -> Self {
+        value.dev.from_dev()
+    }
+}
+impl Frame {
+    pub fn roi(&self) -> (usize, usize) {
+        (self.resolution, self.resolution)
     }
 }
 
@@ -245,6 +259,8 @@ impl Imaging {
         Frame {
             dev: cu,
             n_px_camera: self._c_.N_PX_CAMERA as usize,
+            resolution: self.resolution() as usize,
+            n_frame: self._c_.N_SOURCE as usize,
         }
     }
     /// Resets the detector frame to zero

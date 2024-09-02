@@ -33,6 +33,7 @@ pub mod pssn;
 pub mod raytracing;
 //pub mod sensitivities;
 // pub mod piston_sensor;
+pub mod segment_piston_sensor;
 pub mod source;
 pub mod wavefrontsensor;
 
@@ -54,6 +55,8 @@ pub use gmt::{Gmt, GmtError};
 pub use imaging::Imaging;
 #[doc(inline)]
 pub use lmmse::LinearMinimumMeanSquareError;
+#[doc(inline)]
+pub use segment_piston_sensor::SegmentPistonSensor;
 
 #[doc(inline)]
 pub use pssn::{PSSn, PSSnEstimates};

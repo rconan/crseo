@@ -33,8 +33,8 @@ gnuplot = "0.0.43"
 env_logger = "0.11.1"
 anyhow = "1.0.57"
 zernike = "0.2.1"
-complot = { version = "0.3.1", features = ["png"] }
 nanorand = "0.7.0"
+complot = "0.3.4"
 
 [features]
 analytic = []

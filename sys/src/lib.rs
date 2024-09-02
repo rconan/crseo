@@ -3,9 +3,9 @@
 #![allow(non_snake_case)]
 #![allow(improper_ctypes)]
 
-#[cfg(bindings)]
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-#[cfg(docs_rs)]
+// #[cfg(bindings)]
+// include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+// #[cfg(docs_rs)]
 include!("bindings.rs");
 
 use std::ptr;
@@ -720,6 +720,47 @@ impl Default for pyramid {
             modulation_sampling: 0,
             camera: imaging::default(),
             alpha: 0f32,
+        }
+    }
+}
+
+unsafe impl Send for segmentPistonSensor {}
+impl Default for segmentPistonSensor {
+    fn default() -> Self {
+        Self {
+            ri: Default::default(),
+            ro: Default::default(),
+            lenslet_height: Default::default(),
+            lenslet_size: Default::default(),
+            lenslet: Default::default(),
+            lenslet_mask: Default::default(),
+            lenslet_src: Default::default(),
+            dispersion: Default::default(),
+            N_LAMBDA: Default::default(),
+            N_GS: Default::default(),
+            pixel_scale: Default::default(),
+            field_of_view: Default::default(),
+            camera: Default::default(),
+            camera_array: ptr::null_mut(),
+            nyquist_factor: Default::default(),
+            BIN_IMAGE: Default::default(),
+            N_PX_LENSLET: Default::default(),
+            N_PX_LENSLET2: Default::default(),
+            N_PX: Default::default(),
+            N_PX2: Default::default(),
+            N_PX_IMAGE: Default::default(),
+            N_LENSLET: Default::default(),
+            N_LENSLET2: Default::default(),
+            FFT: Default::default(),
+            fft_src: Default::default(),
+            fft_phase: ptr::null_mut(),
+            fft_mask: Default::default(),
+            D_px: Default::default(),
+            D_px2: Default::default(),
+            m2px: Default::default(),
+            R: Default::default(),
+            lambda0: Default::default(),
+            spectral_bandwidth: Default::default(),
         }
     }
 }

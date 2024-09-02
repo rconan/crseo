@@ -388,7 +388,7 @@ mod tests {
         let w = d.from_dev();
         println!("w: {:?}", w);
         let mut dd = Cu::<Single>::vector(5);
-        dd.from_ptr(d.as_ptr());
+        dd.from_ptr(d.as_mut_ptr());
         let w = dd.from_dev();
         println!("w: {:?}", w);
     }

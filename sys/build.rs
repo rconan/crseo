@@ -53,6 +53,7 @@ fn main() {
         .allowlist_type("LMMSE")
         .allowlist_type("pyramid")
         .allowlist_type("conic")
+        .allowlist_type("segmentPistonSensor")
         .allowlist_function("transform_to_S")
         .allowlist_function("transform_to_R")
         .allowlist_function("intersect")

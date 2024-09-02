@@ -7,3 +7,4 @@
 #include <atmosphere.h>
 #include <LMMSE.h>
 #include <pyramid.h>
+#include <segmentPistonSensor.h>

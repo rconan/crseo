@@ -4,7 +4,7 @@ use std::{env, ffi::CString, path::Path};
 
 use super::{Gmt, GmtM1, GmtM2, GmtMx};
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct MirrorBuilder {
     pub mode_type: String,
     pub n_mode: usize,
@@ -90,7 +90,7 @@ impl GmtMirrorBuilder<GmtM2> for GmtBuilder {
 /// use crseo::{FromBuilder, Builder, Gmt};
 /// let mut gmt = Gmt::builder().m1_n_mode(27).build();
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GmtBuilder {
     pub m1: MirrorBuilder,
     pub m2: MirrorBuilder,
