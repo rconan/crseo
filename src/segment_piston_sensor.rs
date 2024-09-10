@@ -1,6 +1,6 @@
 mod builder;
 pub use builder::SegmentPistonSensorBuilder;
-mod processing;
+pub mod processing;
 
 use crate::{cu::Single, imaging::Frame, Cu, FromBuilder, Propagation};
 
@@ -36,12 +36,21 @@ impl Propagation for SegmentPistonSensor {
 }
 
 impl SegmentPistonSensor {
-    pub fn fft(&mut self) -> Frame {
+    pub fn n_camera_frame(&self) -> usize {
+        self._c_.camera.N_FRAME as usize
+    }
+    pub fn n_fft_frame(&self) -> usize {
+        self._c_.FFT.N_FRAME as usize
+    }
+    pub fn fft(&mut self) -> &mut Self {
         unsafe {
             self._c_.fft();
         }
+        self
+    }
+    pub fn fft_frame(&mut self) -> Frame {
         let n = self._c_.FFT.N_SIDE_LENSLET * self._c_.FFT.N_PX_CAMERA;
-        let mut cu = Cu::<Single>::vector((n.pow(2)) as usize);
+        let mut cu = Cu::<Single>::vector((n.pow(2) * self._c_.N_GS) as usize);
         cu.from_ptr(self._c_.FFT.d__frame);
         Frame {
             dev: cu,
@@ -52,7 +61,7 @@ impl SegmentPistonSensor {
     }
     pub fn frame(&self) -> Frame {
         let resolution = self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET;
-        let mut cu = Cu::<Single>::vector((resolution.pow(2)) as usize);
+        let mut cu = Cu::<Single>::vector((resolution.pow(2) * self._c_.N_GS) as usize);
         cu.from_ptr(self._c_.camera.d__frame);
         Frame {
             dev: cu,
@@ -67,6 +76,27 @@ impl SegmentPistonSensor {
             self._c_.FFT.reset();
         }
         self
+    }
+    pub fn camera_reset(&mut self) -> &mut Self {
+        unsafe {
+            self._c_.camera.reset();
+        }
+        self
+    }
+    pub fn fft_reset(&mut self) -> &mut Self {
+        unsafe {
+            self._c_.FFT.reset();
+        }
+        self
+    }
+    pub fn frame_size(&self) -> usize {
+        (self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET) as usize
+    }
+    pub fn fft_size(&self) -> usize {
+        (self._c_.FFT.N_SIDE_LENSLET * self._c_.FFT.N_PX_CAMERA) as usize
+    }
+    pub fn n_source(&self) -> usize {
+        self._c_.N_GS as usize
     }
 }
 
@@ -111,7 +141,7 @@ mod tests {
 
         dbg!(hframe.iter().sum::<f32>());
 
-        let mut fft = sps.fft();
+        let mut fft = sps.fft_frame();
 
         let _: Heatmap = (
             (src.phase().as_slice(), (512, 512)),
@@ -210,7 +240,7 @@ mod tests {
         let mut frame = sps.frame();
         let hframe: Vec<f32> = (&mut frame).into();
 
-        let mut fft = sps.fft();
+        let mut fft = sps.fft().fft_frame();
 
         let _: Heatmap = (
             (src.phase().as_slice(), (512, 512)),
@@ -257,7 +287,7 @@ mod tests {
         let mut frame = sps.frame();
         let hframe: Vec<f32> = (&mut frame).into();
 
-        let mut fft = sps.fft();
+        let mut fft = sps.fft().fft_frame();
 
         let _: Heatmap = (
             (src.phase().as_slice(), (512, 512)),

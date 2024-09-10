@@ -173,6 +173,15 @@ impl From<&mut Frame> for Vec<f32> {
         value.dev.from_dev()
     }
 }
+
+impl From<&Frame> for Vec<f32> {
+    fn from(value: &Frame) -> Self {
+        let mut dev = Cu::<Single>::vector(value.dev.size());
+        dev.from_ptr(value.dev.as_ptr() as *mut _);
+        dev.from_dev()
+    }
+}
+
 impl From<Frame> for Vec<f32> {
     fn from(mut value: Frame) -> Self {
         value.dev.from_dev()

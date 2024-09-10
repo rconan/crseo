@@ -48,7 +48,7 @@ pub struct DispersedFringeSensor {
     n: usize,
     threshold: Option<f32>,
     mask_radius: Option<f32>,
-    intercept: Vec<f32>,
+    pub intercept: Vec<f32>,
     reference: Option<Vec<f32>>,
 }
 
@@ -67,7 +67,7 @@ impl DispersedFringeSensor {
 
 impl From<&mut SegmentPistonSensor> for DispersedFringeSensor {
     fn from(sps: &mut SegmentPistonSensor) -> Self {
-        let mut frame = sps.fft();
+        let mut frame = sps.fft_frame();
         let n = frame.resolution;
         let q = n / 4;
         let data = Vec::<f32>::from(&mut frame);
@@ -184,6 +184,55 @@ mod tests {
     use super::DispersedFringeSensor;
 
     #[test]
+    fn dfs0() -> Result<(), Box<dyn Error>> {
+        let mut gmt = Gmt::builder().build()?;
+        let src_builder = Source::builder();
+
+        let mut sps = SegmentPistonSensor::builder()
+            .src(src_builder.clone())
+            // .nyquist_factor(3.)
+            .build()?;
+
+        let mut src = src_builder.build()?;
+
+        src.through(&mut gmt).xpupil().through(&mut sps);
+        let mut dfs0 = DispersedFringeSensor::from(sps.fft());
+        dfs0.intercept();
+
+        dbg!(dfs0.intercept);
+        Ok(())
+    }
+
+    #[test]
+    fn dfs0_tz() -> Result<(), Box<dyn Error>> {
+        let mut gmt = Gmt::builder().build()?;
+        let src_builder = Source::builder().band("J");
+
+        let mut sps = SegmentPistonSensor::builder()
+            .src(src_builder.clone())
+            .nyquist_factor(3.)
+            .build()?;
+
+        let mut src = src_builder.build()?;
+
+        src.through(&mut gmt).xpupil().through(&mut sps);
+        let mut dfs0 = DispersedFringeSensor::from(sps.fft());
+        dfs0.intercept();
+
+        let mut tr_xyz = [0f64; 6];
+        tr_xyz[2] = 1e-6;
+        gmt.m1.set_rigid_body_motions(1, &tr_xyz);
+
+        src.through(&mut gmt).xpupil().through(sps.reset());
+        let mut dfs = DispersedFringeSensor::from(sps.fft());
+        dfs.set_reference(&dfs0).intercept();
+
+        dbg!(dfs.intercept);
+
+        Ok(())
+    }
+
+    #[test]
     fn dfs_tz() -> Result<(), Box<dyn Error>> {
         let mut gmt = Gmt::builder().build()?;
         let src_builder = Source::builder().band("J");
@@ -207,7 +256,7 @@ mod tests {
         for tz in -10..11 {
             let mut tr_xyz = [0f64; 6];
             tr_xyz[2] = tz as f64 * 1e-6;
-            gmt.m1.set_rigid_body_motions(7, &tr_xyz);
+            gmt.m1.set_rigid_body_motions(1, &tr_xyz);
 
             src.through(&mut gmt).xpupil().through(sps.reset());
             let mut dfs = DispersedFringeSensor::from(&mut sps).threshold(0.01);
@@ -235,7 +284,7 @@ mod tests {
         let mut src = src_builder.build()?;
 
         let mut tr_xyz = [0f64; 6];
-        tr_xyz[2] = -10e-6;
+        tr_xyz[2] = 10e-6;
         //tr_xyz[4] = tz as f64 * 100f64.from_mas();
         gmt.m1.set_rigid_body_motions(1, &tr_xyz);
 
@@ -243,11 +292,12 @@ mod tests {
 
         let mut dfs: DispersedFringeSensor = (&mut sps).into();
 
-        println!("{:+6.4?}", dfs.intercept());
+        println!("{:+6.4?}", dfs.intercept().intercept);
 
-        let fftlet = dfs.fftlet(10, Some(0.05), Some(0.2));
+        let idx = 10;
+        let fftlet = dfs.fftlet(idx, Some(0.05), Some(0.2));
 
-        let mut buffer = BufWriter::new(File::create("fftlet.pkl")?);
+        let mut buffer = BufWriter::new(File::create(format!("fftlet_{idx}.pkl"))?);
         serde_pickle::to_writer(&mut buffer, &fftlet, Default::default())?;
 
         let mut buffer = BufWriter::new(File::create("dfs.pkl")?);
