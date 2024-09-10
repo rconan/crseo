@@ -8,8 +8,13 @@ fn main() {
     let mut gmt = Gmt::builder().build().unwrap();
     let now = Instant::now();
     src.through(&mut gmt).xpupil();
-    println!("Ray tracing in {}ms", now.elapsed().as_millis());
+    println!("Ray tracing in {:?}", now.elapsed());
     let wfe = src.wfe_rms_10e(-9)[0];
     println!("WFE RMS: {}", wfe);
     assert!((wfe - 0.7966555).abs() < 1e-3);
 }
+
+/*
+Ray tracing in:
+ * g6e.4xlarge: 2.07499ms
+*/

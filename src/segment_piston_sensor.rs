@@ -50,7 +50,7 @@ impl SegmentPistonSensor {
     }
     pub fn fft_frame(&mut self) -> Frame {
         let n = self._c_.FFT.N_SIDE_LENSLET * self._c_.FFT.N_PX_CAMERA;
-        let mut cu = Cu::<Single>::vector((n.pow(2) * self._c_.N_GS) as usize);
+        let mut cu = Cu::<Single>::vector((n.pow(2)) as usize);
         cu.from_ptr(self._c_.FFT.d__frame);
         Frame {
             dev: cu,
@@ -61,7 +61,7 @@ impl SegmentPistonSensor {
     }
     pub fn frame(&self) -> Frame {
         let resolution = self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET;
-        let mut cu = Cu::<Single>::vector((resolution.pow(2) * self._c_.N_GS) as usize);
+        let mut cu = Cu::<Single>::vector((resolution.pow(2)) as usize);
         cu.from_ptr(self._c_.camera.d__frame);
         Frame {
             dev: cu,
