@@ -141,7 +141,7 @@ mod tests {
 
         dbg!(hframe.iter().sum::<f32>());
 
-        let mut fft = sps.fft_frame();
+        let mut fft = sps.fft().fft_frame();
 
         let _: Heatmap = (
             (src.phase().as_slice(), (512, 512)),

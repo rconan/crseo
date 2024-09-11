@@ -1,6 +1,6 @@
 [package]
 name = "crseo-sys"
-version = "1.1.1"
+version = "1.2.0"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
 license = "MIT"
@@ -12,7 +12,7 @@ categories = ["external-ffi-bindings", "science", "simulation"]
 keywords = ["telescope", "astronomy"]
 
 [build-dependencies]
-bindgen = "0.69.4"
+bindgen = "0.70.1"
 cmake = "0.1.50"
 
 [lints.rust]
