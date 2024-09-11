@@ -4,6 +4,7 @@ pub mod processing;
 
 use crate::{cu::Single, imaging::Frame, Cu, FromBuilder, Propagation};
 
+/// GMT AGWS dispersed fringe sensor model
 pub struct SegmentPistonSensor {
     _c_: ffi::segmentPistonSensor,
     malloc_dft: bool,
@@ -36,18 +37,22 @@ impl Propagation for SegmentPistonSensor {
 }
 
 impl SegmentPistonSensor {
+    /// Gets the current # of accumulated camera frame
     pub fn n_camera_frame(&self) -> usize {
         self._c_.camera.N_FRAME as usize
     }
+    /// Gets the current # of accumulated FFT frame
     pub fn n_fft_frame(&self) -> usize {
         self._c_.FFT.N_FRAME as usize
     }
+    /// Performs the Fourier transform of the image
     pub fn fft(&mut self) -> &mut Self {
         unsafe {
             self._c_.fft();
         }
         self
     }
+    /// Returns the camera frame
     pub fn fft_frame(&mut self) -> Frame {
         let n = self._c_.FFT.N_SIDE_LENSLET * self._c_.FFT.N_PX_CAMERA;
         let mut cu = Cu::<Single>::vector((n.pow(2)) as usize);
@@ -59,6 +64,7 @@ impl SegmentPistonSensor {
             n_frame: 1,
         }
     }
+    /// Returns the FFT frame
     pub fn frame(&self) -> Frame {
         let resolution = self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET;
         let mut cu = Cu::<Single>::vector((resolution.pow(2)) as usize);
@@ -70,6 +76,7 @@ impl SegmentPistonSensor {
             n_frame: 1,
         }
     }
+    /// Resets both the camera and FFT frames
     pub fn reset(&mut self) -> &mut Self {
         unsafe {
             self._c_.camera.reset();
@@ -77,24 +84,29 @@ impl SegmentPistonSensor {
         }
         self
     }
+    /// Resets the camera frame
     pub fn camera_reset(&mut self) -> &mut Self {
         unsafe {
             self._c_.camera.reset();
         }
         self
     }
+    /// Resets the FFT frame
     pub fn fft_reset(&mut self) -> &mut Self {
         unsafe {
             self._c_.FFT.reset();
         }
         self
     }
+    /// Returns the size of the camera frame
     pub fn frame_size(&self) -> usize {
         (self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET) as usize
     }
+    /// Returns the size of the FFT frame
     pub fn fft_size(&self) -> usize {
         (self._c_.FFT.N_SIDE_LENSLET * self._c_.FFT.N_PX_CAMERA) as usize
     }
+    /// Returns the number of devices
     pub fn n_source(&self) -> usize {
         self._c_.N_GS as usize
     }

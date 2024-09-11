@@ -121,7 +121,7 @@ use source::SourceBuilder;
 ///     ShackHartmann<Diffractive>,
 ///     n_sensor = [1],
 ///     lenslet_array = [48, 16, 25.5 / 48f64],
-///     detector = [8, Some(24), None, None]
+///     detector = [8, Some(24), 1, None]
 /// );
 /// let mut src = ceo!(Source, pupil_sampling = [48 * 16 + 1]);
 /// let mut gmt = ceo!(Gmt);

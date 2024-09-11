@@ -12,7 +12,11 @@ use crate::cu::Single;
 pub use builder::ImagingBuilder;
 
 /// Lenslet array specifications
-/// n_side_lenslet, n_px_lenslet, d
+///
+/// Default properties:
+///  - # of lenslet     : 1
+///  - lenslet pitch    : 25.5m
+///  - # pixel/lenslet  : 511px
 #[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub struct LensletArray {
     pub n_side_lenslet: usize,
@@ -54,7 +58,10 @@ impl LensletArray {
 }
 
 /// Detector noise model specifications
-/// n_px_framelet, n_px_imagelet, osf, detector_noise_specs
+///
+/// Default properties:
+///  - # pixel/framelet         : 512px
+///  - DFT padding factor (osf) : 2
 #[derive(Debug, Clone, PartialEq, Copy, Serialize, Deserialize)]
 pub struct Detector {
     pub n_px_framelet: usize,
