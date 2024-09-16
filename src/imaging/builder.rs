@@ -61,13 +61,14 @@ impl Builder for ImagingBuilder {
             ..
         } = self.detector;
         let n_px = n_px_imagelet.unwrap_or_else(|| n_px_framelet);
-        let binning = n_px / n_px_framelet;
+        let binning = (n_px / n_px_framelet).max(1);
 
         let mut imgr = Imaging {
             _c_: Default::default(),
             dft_osf: osf,
             fluxlet_threshold: self.fluxlet_threshold,
         };
+
         unsafe {
             imgr._c_.setup3(
                 n_px_lenslet as i32,

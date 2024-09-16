@@ -9,6 +9,13 @@ pub struct CentroidingBuilder {
     data_units: f64,
 }
 
+impl CentroidingBuilder {
+    pub fn n_lenslet(mut self, n_lenslet: usize) -> Self {
+        self.n_lenslet = n_lenslet;
+        self
+    }
+}
+
 impl Default for CentroidingBuilder {
     fn default() -> Self {
         Self {
@@ -52,6 +59,7 @@ impl Builder for CentroidingBuilder {
         cmpt.flux = vec![0.0; cmpt.n_lenslet_total as usize];
         cmpt.centroids = vec![0.0; cmpt.n_centroids as usize];
         cmpt.units = self.data_units as f32;
+        cmpt.valid_lenslets(None, Some(vec![1i8; cmpt.n_lenslet_total as usize]));
         Ok(cmpt)
     }
 }

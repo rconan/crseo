@@ -24,7 +24,7 @@ skyangle = "0.2.2"
 indicatif = "0.17.3"
 toml = "0.8.8"
 serde-pickle = "1.1.1"
-nalgebra = { version = "0.33.0", features = ["serde-serialize"] }
+nalgebra = { version = "0.32.6", features = ["serde-serialize"] }
 
 [dev-dependencies]
 bincode = "1.3.2"

@@ -207,66 +207,155 @@ impl Drop for Centroiding {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use std::env;
+
+    use super::*;
+    use crate::{
+        ceo, imaging::LensletArray, wavefrontsensor::shackhartmann::sensor, Builder, Conversion,
+        Gmt, Imaging, Source,
+    };
+
+    #[test]
+    fn shackhartmann() {
+        env::set_var("GMT_MODES_PATH", "/home/ubuntu/CEO/gmtMirrors/");
+
+        let pupil_size = 25.5f64;
+        let n_side_lenslet = 6;
+        let n_px_lenslet = 16;
+        let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
+        let mut gmt = Gmt::builder().build().unwrap();
+        let n_gs = 2;
+        let mut src = Source::builder()
+            .pupil_sampling(pupil_sampling)
+            .size(n_gs)
+            .build()
+            .unwrap();
+
+        let sensor = Imaging::builder().lenslet_array(
+            LensletArray::default()
+                .n_side_lenslet(n_side_lenslet)
+                .n_px_lenslet(n_px_lenslet),
+        );
+
+        let mut cog0 = CentroidingBuilder::from(&sensor).build().unwrap();
+        let mut cog = CentroidingBuilder::from(&sensor).build().unwrap();
+        let mut sensor = sensor.build().unwrap();
+
+        src.through(&mut gmt).xpupil().through(&mut sensor);
+        cog0.process(&sensor.frame(), None)
+            .valid_lenslets(Some(0.85), None);
+
+        src.through(&mut gmt).xpupil().through(sensor.reset());
+        cog.process(&sensor.frame(), Some(&cog0)).grab();
+
+        let m2_rbm = vec![vec![0f64, 0f64, 0f64, 1e-6, 0f64, 0f64]; 7];
+        gmt.update(None, Some(&m2_rbm), None, None);
+        src.through(&mut gmt).xpupil().through(sensor.reset());
+        cog.process(&sensor.frame(), Some(&cog0)).grab();
+
+        {
+            println!("centroids");
+            let (cx, cy) = cog.centroids.split_at(cog.centroids.len() / 2);
+            cx.iter()
+                .zip(cy)
+                .for_each(|(x, y)| println!("{:+.3} {:+.3}", x, y));
+        }
+
+        let v = cog.valids(Some(&cog0.valid_lenslets));
+        {
+            println!("valid centroids");
+            let (cx, cy) = v.split_at(v.len() / 2);
+            cx.iter()
+                .zip(cy)
+                .for_each(|(x, y)| println!("{:+.3} {:+.3}", x, y));
+        }
+
+        // let mut cog = Centroiding::new();
+        // cog.build(n_side_lenslet as u32, Some(p))
+        //     .valid_lenslets(None, Some(cog0.valid_lenslets.clone()));
+        // src.through(&mut gmt).xpupil().lenslet_gradients(
+        //     n_side_lenslet,
+        //     lenslet_size as f64,
+        //     &mut cog,
+        // );
+        // let s0 = cog.grab().valids(None);
+
+        // let m2_rbm = vec![vec![0f64, 0f64, 0f64, 1e-6, 1e-6, 0f64]; 7];
+        // gmt.update(None, Some(&m2_rbm), None, None);
+        // sensor.reset();
+        // src.through(&mut gmt).xpupil().through(&mut sensor);
+        // let c = cog.process(&sensor, Some(&cog0)).grab().valids(None);
+        // src.lenslet_gradients(n_side_lenslet, lenslet_size as f64, &mut cog);
+        // let s = cog
+        //     .grab()
+        //     .valids(None)
+        //     .iter()
+        //     .zip(s0.iter())
+        //     .map(|x| x.0 - x.1)
+        //     .collect::<Vec<f32>>();
+
+        // let e = ((c
+        //     .iter()
+        //     .zip(s.iter())
+        //     .map(|x| (x.0 - x.1).powi(2))
+        //     .sum::<f32>()
+        //     / nv as f32)
+        //     .sqrt() as f64)
+        //     .to_mas();
+        // println!("Centroid error: {}mas", e);
+        // assert!(e < 5f64);
+    }
+}
+
 /* #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ceo, Conversion, Source};
+    use crate::{imaging, Builder};
+    use std::error::Error;
 
     #[test]
-    fn centroiding_sim() {
-        let pupil_size = 25.5f64;
-        let n_side_lenslet = 48;
-        let n_px_lenslet = 16;
-        let pupil_sampling = n_side_lenslet * n_px_lenslet + 1;
-        let lenslet_size = (pupil_size / n_side_lenslet as f64) as f32;
-        let mut gmt = ceo!(GmtBuilder);
-        let mut src = Source::new(1, pupil_size, pupil_sampling);
-        src.build("V", vec![0f32], vec![0f32], vec![18f32]);
-        src.fwhm(3f64);
-        let mut sensor = Imaging::new();
-        sensor.build(1, n_side_lenslet, n_px_lenslet, 2, 24, 3);
-        let p = sensor.pixel_scale(&mut src) as f64;
+    pub fn centroids() -> Result<(), Box<dyn Error>> {
+        let n_lenslet = 1;
+        let n_px = 4;
+        let mut cog = Centroiding::builder().n_lenslet(n_lenslet).build()?;
+        dbg!(&cog.valid_lenslets);
+        dbg!(&cog.centroids);
 
-        let mut cog0 = Centroiding::new();
-        cog0.build(n_side_lenslet as u32, None);
-        src.through(&mut gmt).xpupil().through(&mut sensor);
-        let nv = cog0.process(&sensor, None).valid_lenslets(Some(0.5), None);
-        println!("Valid lenslet #: {}", nv);
+        // let x: Vec<_> = vec![1f32; (n_lenslet * n_px ).pow(2)];
+        let px: Vec<_> = vec![
+            (0..n_lenslet)
+                .flat_map(|l| {
+                    (0..n_px)
+                        .map(|i| {
+                            let h = (n_px - 1) as f32 * 0.5 + 1f32;
+                            if i as f32 == h {
+                                0f32
+                            } else {
+                                if (i as f32) < h {
+                                    -1f32
+                                } else {
+                                    1f32
+                                }
+                            }
+                        })
+                        .collect::<Vec<f32>>()
+                })
+                .collect::<Vec<_>>();
+            n_lenslet * n_px
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
 
-        let mut cog = Centroiding::new();
-        cog.build(n_side_lenslet as u32, Some(p))
-            .valid_lenslets(None, Some(cog0.valid_lenslets.clone()));
-        src.through(&mut gmt).xpupil().lenslet_gradients(
-            n_side_lenslet,
-            lenslet_size as f64,
-            &mut cog,
-        );
-        let s0 = cog.grab().valids(None);
+        dbg!(&px);
 
-        let m2_rbm = vec![vec![0f64, 0f64, 0f64, 1e-6, 1e-6, 0f64]; 7];
-        gmt.update(None, Some(&m2_rbm), None, None);
-        sensor.reset();
-        src.through(&mut gmt).xpupil().through(&mut sensor);
-        let c = cog.process(&sensor, Some(&cog0)).grab().valids(None);
-        src.lenslet_gradients(n_side_lenslet, lenslet_size as f64, &mut cog);
-        let s = cog
-            .grab()
-            .valids(None)
-            .iter()
-            .zip(s0.iter())
-            .map(|x| x.0 - x.1)
-            .collect::<Vec<f32>>();
+        let frame = imaging::Frame::new(px, n_lenslet * n_px, n_px-1);
+        let c = &cog.process(&frame, None).grab().centroids;
+        dbg!(&c);
 
-        let e = ((c
-            .iter()
-            .zip(s.iter())
-            .map(|x| (x.0 - x.1).powi(2))
-            .sum::<f32>()
-            / nv as f32)
-            .sqrt() as f64)
-            .to_mas();
-        println!("Centroid error: {}mas", e);
-        assert!(e < 5f64);
+        Ok(())
     }
 }
  */

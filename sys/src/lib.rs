@@ -764,3 +764,14 @@ impl Default for segmentPistonSensor {
         }
     }
 }
+
+impl std::fmt::Display for gmt_m1 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "M1")
+    }
+}
+impl std::fmt::Display for gmt_m2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "M2")
+    }
+}

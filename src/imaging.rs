@@ -6,6 +6,7 @@ use ffi::{dev2host, imaging};
 use serde::Deserialize;
 use serde::Serialize;
 use std::f32;
+use std::fmt::Display;
 
 mod builder;
 use crate::cu::Single;
@@ -194,7 +195,30 @@ impl From<Frame> for Vec<f32> {
         value.dev.from_dev()
     }
 }
+
+impl From<Vec<f32>> for Frame {
+    fn from(value: Vec<f32>) -> Self {
+        let n = value.len();
+        let sqrt_n = (n as f64).sqrt() as usize;
+        assert_eq!(n, sqrt_n * sqrt_n, "the frame is not square");
+        Self {
+            dev: Cu::<Single>::from(value),
+            n_px_camera: sqrt_n,
+            resolution: sqrt_n,
+            n_frame: 1,
+        }
+    }
+}
+
 impl Frame {
+    pub fn new(data: Vec<f32>, resolution: usize, n_px_camera: usize) -> Self {
+        Self {
+            dev: Cu::<Single>::from(data),
+            n_px_camera,
+            resolution,
+            n_frame: 1,
+        }
+    }
     pub fn roi(&self) -> (usize, usize) {
         (self.resolution, self.resolution)
     }
@@ -320,9 +344,13 @@ impl Imaging {
         self
     }
     /// Returns the detector pixel scale
-    pub fn pixel_scale(&mut self, src: &mut Source) -> f32 {
+    pub fn pixel_scale(&self, src: &Source) -> f32 {
         (src.wavelength() / src.pupil_size / self.dft_osf as f64) as f32
             * (self._c_.N_SIDE_LENSLET * self._c_.BIN_IMAGE) as f32
+    }
+    /// Returns the lenslet field-of-view
+    pub fn field_of_view(&self, src: &Source) -> f32 {
+        self.pixel_scale(src) * (self._c_.N_PX_CAMERA as f32)
     }
     /// Sets the detector pointing direction
     pub fn pointing(
@@ -338,6 +366,21 @@ impl Imaging {
                 .set_pointing_direction(zen.as_mut_ptr(), azi.as_mut_ptr());
         }
         self
+    }
+}
+impl Display for Imaging {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "Imaging: {}x{} lenslets, {}x{} pixels, osf {}, {}x{} binning",
+            self._c_.N_SIDE_LENSLET,
+            self._c_.N_SIDE_LENSLET,
+            self._c_.N_PX_CAMERA,
+            self._c_.N_PX_CAMERA,
+            self.dft_osf,
+            self._c_.BIN_IMAGE,
+            self._c_.BIN_IMAGE
+        )
     }
 }
 impl Drop for Imaging {

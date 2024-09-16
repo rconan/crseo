@@ -27,8 +27,10 @@ use ffi::{bundle, dev2host, dev2host_int, source, vector};
 use serde::{Deserialize, Serialize};
 
 use std::{
+    cell::UnsafeCell,
     f32,
     ffi::{CStr, CString},
+    fmt::Display,
     usize,
 };
 
@@ -88,6 +90,26 @@ pub struct Source {
     pub azimuth: Vec<f32>,
     pub magnitude: Vec<f32>,
 }
+impl Display for Source {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "Source(x{}) @ λ={:.0}nm",
+            self.size,
+            self.wavelength() * 1e9
+        )?;
+        writeln!(f, "  zenith: {:?}deg", self.zenith)?;
+        writeln!(f, "  azimuth: {:?}deg", self.azimuth)?;
+        writeln!(f, "  magnitude: {:?}", self.magnitude)?;
+        writeln!(
+            f,
+            "  pupil: (size: {}m, sampling: {}px)",
+            self.pupil_size, self.pupil_sampling
+        )?;
+        Ok(())
+    }
+}
+
 impl PartialEq for Source {
     fn eq(&self, other: &Self) -> bool {
         Into::<SourceBuilder>::into(self) == Into::<SourceBuilder>::into(other)
@@ -199,8 +221,8 @@ impl Source {
         }
     }
     /// Returns the `Source` wavelength \[m\]
-    pub fn wavelength(&mut self) -> f64 {
-        unsafe { self._c_.wavelength() as f64 }
+    pub fn wavelength(&self) -> f64 {
+        unsafe { (&mut *UnsafeCell::new(self._c_).get()).wavelength() as f64 }
     }
     /// Sets the `Source` full width at half maximum in un-binned detector pixel
     pub fn fwhm(&mut self, value: f64) {

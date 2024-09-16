@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     f32,
     ffi::CString,
+    fmt::Display,
     ops::{Div, Mul},
     path::Path,
 };
@@ -134,6 +135,17 @@ pub struct Atmosphere {
     //filename: String,
     //k_duration: i32,
     propagate_ptr: fn(&mut Atmosphere, &mut Source, f32),
+}
+impl Display for Atmosphere {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "Atmosphere: r0@{:.0}z={:.2}cm, outer scale={:.2}m",
+            self.zenith_angle.to_degrees(),
+            self.r0() * 1e2,
+            self.oscale,
+        )
+    }
 }
 impl FromBuilder for Atmosphere {
     type ComponentBuilder = AtmosphereBuilder;

@@ -22,6 +22,7 @@ use crate::{FromBuilder, Propagation, Source};
 use ffi::{gmt_m1, gmt_m2, vector};
 use std::{
     ffi::CStr,
+    fmt::{Debug, Display},
     ops::{Deref, DerefMut},
 };
 
@@ -145,6 +146,12 @@ pub struct Mirror<M: GmtMx> {
     pub a: Vec<f64>,
 }
 
+impl<M: GmtMx + Display> Display for Mirror<M> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} ({},{})", self._c_, self.mode_type, self.n_mode)
+    }
+}
+
 impl<M: GmtMx + Default> From<MirrorBuilder> for Mirror<M> {
     fn from(builder: MirrorBuilder) -> Self {
         Self {
@@ -172,17 +179,24 @@ impl<M: GmtMx> DerefMut for Mirror<M> {
 
 pub trait GmtMirror<M: GmtMx> {
     fn as_mut(&mut self) -> &mut Mirror<M>;
+    fn to_string(&self) -> String;
 }
 
 impl GmtMirror<gmt_m1> for Gmt {
     fn as_mut(&mut self) -> &mut Mirror<gmt_m1> {
         &mut self.m1
     }
+    fn to_string(&self) -> String {
+        self.m1._c_.to_string()
+    }
 }
 
 impl GmtMirror<gmt_m2> for Gmt {
     fn as_mut(&mut self) -> &mut Mirror<gmt_m2> {
         &mut self.m2
+    }
+    fn to_string(&self) -> String {
+        self.m2._c_.to_string()
     }
 }
 
@@ -204,6 +218,16 @@ pub struct Gmt {
     // pointing error
     pub pointing_error: Option<(f64, f64)>,
     m1_truss_projection: bool,
+}
+impl Display for Gmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.m1_truss_projection {
+            writeln!(f, "GMT: {}, {}", self.m1, self.m2)?;
+        } else {
+            writeln!(f, "GMT (no trusses): {}, {}", self.m1, self.m2)?;
+        };
+        Ok(())
+    }
 }
 impl FromBuilder for Gmt {
     type ComponentBuilder = GmtBuilder;
