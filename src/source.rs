@@ -397,7 +397,7 @@ impl Source {
     ) {
         let lenslet_size = self.pupil_size / n_lenslet as f64;
         unsafe {
-            if data.n_valid_lenslet < data.n_lenslet_total {
+            if data.n_valid_lenslet_total() < data.n_lenslet_total {
                 self._c_.wavefront.finite_difference1(
                     data.__mut_ceo__().0.d__cx,
                     data.__mut_ceo__().0.d__cy,
