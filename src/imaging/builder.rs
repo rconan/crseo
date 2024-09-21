@@ -60,7 +60,7 @@ impl Builder for ImagingBuilder {
             osf,
             ..
         } = self.detector;
-        let n_px = n_px_imagelet.unwrap_or_else(|| n_px_framelet);
+        let n_px = n_px_imagelet.unwrap_or_else(|| n_px_lenslet);
         let binning = (n_px / n_px_framelet).max(1);
 
         let mut imgr = Imaging {

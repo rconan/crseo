@@ -25,6 +25,7 @@
 use super::{cu::Double, cu::Single, Centroiding, Cu, FromBuilder};
 use ffi::{bundle, dev2host, dev2host_int, source, vector};
 use serde::{Deserialize, Serialize};
+use skyangle::Conversion;
 
 use std::{
     cell::UnsafeCell,
@@ -98,8 +99,22 @@ impl Display for Source {
             self.size,
             self.wavelength() * 1e9
         )?;
-        writeln!(f, "  zenith: {:?}deg", self.zenith)?;
-        writeln!(f, "  azimuth: {:?}deg", self.azimuth)?;
+        writeln!(
+            f,
+            "  zenith: {:.2?}arcsec",
+            self.zenith
+                .iter()
+                .map(|x| x.to_arcsec())
+                .collect::<Vec<_>>()
+        )?;
+        writeln!(
+            f,
+            "  azimuth: {:.2?}deg",
+            self.azimuth
+                .iter()
+                .map(|x| x.to_degrees())
+                .collect::<Vec<_>>()
+        )?;
         writeln!(f, "  magnitude: {:?}", self.magnitude)?;
         writeln!(
             f,

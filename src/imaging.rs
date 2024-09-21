@@ -367,6 +367,9 @@ impl Imaging {
         }
         self
     }
+    pub fn n_guide_star(&self) -> i32 {
+        self._c_.N_SOURCE
+    }
 }
 impl Display for Imaging {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

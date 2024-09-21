@@ -1,5 +1,8 @@
 mod builder;
+use std::{cell::UnsafeCell, fmt::Display};
+
 pub use builder::SegmentPistonSensorBuilder;
+use skyangle::Conversion;
 pub mod processing;
 
 use crate::{cu::Single, imaging::Frame, Cu, FromBuilder, Propagation};
@@ -9,6 +12,29 @@ pub struct SegmentPistonSensor {
     _c_: ffi::segmentPistonSensor,
     malloc_dft: bool,
     middle_mask_width: Option<f64>,
+}
+
+impl Display for SegmentPistonSensor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            r#"Dispersed fringe sensor (x{}) @ λ={:.0}nm:
+ {}m width, {}m height, {:.3}"/micron, {:.0}mas/px
+ frame sizes: camera={}x{}px={}px, fft={}x{}px={}px"#,
+            self._c_.N_GS,
+            self._c_.lambda0 * 1e9,
+            self._c_.lenslet_size,
+            self._c_.lenslet_height,
+            1e-6 * self._c_.dispersion.to_arcsec(),
+            self._c_.pixel_scale.to_mas(),
+            self._c_.camera.N_SIDE_LENSLET,
+            self._c_.camera.N_PX_CAMERA,
+            self.frame_size(),
+            self._c_.FFT.N_SIDE_LENSLET,
+            self._c_.FFT.N_PX_CAMERA,
+            self.fft_size()
+        )
+    }
 }
 
 impl FromBuilder for SegmentPistonSensor {
@@ -53,26 +79,26 @@ impl SegmentPistonSensor {
         self
     }
     /// Returns the camera frame
-    pub fn fft_frame(&mut self) -> Frame {
-        let n = self._c_.FFT.N_SIDE_LENSLET * self._c_.FFT.N_PX_CAMERA;
-        let mut cu = Cu::<Single>::vector((n.pow(2)) as usize);
-        cu.from_ptr(self._c_.FFT.d__frame);
-        Frame {
-            dev: cu,
-            n_px_camera: self._c_.FFT.N_PX_CAMERA as usize,
-            resolution: n as usize,
-            n_frame: 1,
-        }
-    }
-    /// Returns the FFT frame
     pub fn frame(&self) -> Frame {
-        let resolution = self._c_.camera.N_PX_CAMERA * self._c_.camera.N_SIDE_LENSLET;
-        let mut cu = Cu::<Single>::vector((resolution.pow(2)) as usize);
+        let resolution = self.frame_size();
+        let mut cu = Cu::<Single>::vector(resolution.pow(2));
         cu.from_ptr(self._c_.camera.d__frame);
         Frame {
             dev: cu,
             n_px_camera: self._c_.camera.N_PX_CAMERA as usize,
-            resolution: resolution as usize,
+            resolution: resolution ,
+            n_frame: 1,
+        }
+    }
+    /// Returns the FFT frame
+    pub fn fft_frame(&mut self) -> Frame {
+        let n = self.fft_size();
+        let mut cu = Cu::<Single>::vector(n.pow(2));
+        cu.from_ptr(self._c_.FFT.d__frame);
+        Frame {
+            dev: cu,
+            n_px_camera: self._c_.FFT.N_PX_CAMERA as usize,
+            resolution: n ,
             n_frame: 1,
         }
     }
