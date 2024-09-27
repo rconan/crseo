@@ -1,5 +1,5 @@
 mod builder;
-use std::{cell::UnsafeCell, fmt::Display};
+use std::fmt::Display;
 
 pub use builder::SegmentPistonSensorBuilder;
 use skyangle::Conversion;
@@ -86,7 +86,7 @@ impl SegmentPistonSensor {
         Frame {
             dev: cu,
             n_px_camera: self._c_.camera.N_PX_CAMERA as usize,
-            resolution: resolution ,
+            resolution: resolution,
             n_frame: 1,
         }
     }
@@ -98,7 +98,7 @@ impl SegmentPistonSensor {
         Frame {
             dev: cu,
             n_px_camera: self._c_.FFT.N_PX_CAMERA as usize,
-            resolution: n ,
+            resolution: n,
             n_frame: 1,
         }
     }
@@ -223,14 +223,13 @@ mod tests {
         gmt.m1.set_rigid_body_motions(1, &tr_xyz);
 
         src.through(&mut gmt).xpupil().through(&mut sps);
+        let mut fft = sps.fft();
 
         let mut frame = sps.frame();
         let hframe: Vec<f32> = (&mut frame).into();
 
         let mut buffer = BufWriter::new(File::create(format!("sps-frame-{p}microntz.pkl"))?);
         serde_pickle::to_writer(&mut buffer, &hframe, Default::default())?;
-
-        // let mut fft = sps.fft();
 
         // let _: Heatmap = (
         //     (src.phase().as_slice(), (512, 512)),

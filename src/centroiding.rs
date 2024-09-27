@@ -7,6 +7,8 @@ use crate::imaging::Frame;
 pub use builder::CentroidingBuilder;
 
 /// Wrapper for CEO centroiding
+///
+/// The x and y centroids are stored as `[[cx,cy]_1, ... , [cx,cy]_n]` for `n` guide stars
 pub struct Centroiding {
     _c_: centroiding,
     _c_mask_: mask,
@@ -137,28 +139,36 @@ impl Centroiding {
     ///
     ///  if `some_valid_lenslet` is given, then it supersedes any preset `valid_lenset`
     pub fn valids(&self, some_valid_lenslets: Option<&Vec<i8>>) -> Vec<Vec<f32>> {
-        let valid_lenslets = some_valid_lenslets.unwrap_or_else(|| &self.valid_lenslets);
-        valid_lenslets
-            .chunks(self.n_lenslet_total)
-            .zip(self.centroids.chunks(self.n_lenslet_total * 2))
-            .map(|(v, c)| {
+        let mut valid_lenslets = some_valid_lenslets
+            .unwrap_or_else(|| &self.valid_lenslets)
+            .chunks(self.n_lenslet_total);
+
+        self.centroids
+            .chunks(self.n_lenslet_total * 2)
+            .map(|c| {
                 c.iter()
-                    .zip(v.iter().cycle())
+                    .zip(valid_lenslets.next().unwrap().iter().cycle())
                     .filter_map(|(c, v)| if v.is_positive() { Some(*c) } else { None })
                     .collect::<Vec<_>>()
             })
             .collect()
     }
     /// returns the flux of each lenslet
-    pub fn lenslet_flux(&mut self) -> &Vec<f32> {
+    pub fn lenslet_flux(&self) -> &Vec<f32> {
         unsafe {
             dev2host(
-                self.flux.as_mut_ptr(),
+                self.flux.as_ptr() as *mut _,
                 self._c_.d__mass,
                 self.flux.len() as i32,
             );
         }
         &self.flux
+    }
+    pub fn lenslet_array_flux(&mut self) -> Vec<f32> {
+        self.lenslet_flux()
+            .chunks(self.n_lenslet_total)
+            .map(|x| x.iter().sum())
+            .collect::<Vec<_>>()
     }
     /// Returns the sum of the flux of all the lenslets
     pub fn integrated_flux(&mut self) -> f32 {
@@ -172,13 +182,33 @@ impl Centroiding {
         some_flux_threshold: Option<f64>,
         some_valid_lenslets: Option<Vec<i8>>,
     ) -> &mut Self {
-        if some_flux_threshold.is_some() {
+        if let Some(some_flux_threshold) = some_flux_threshold {
+            let n = self.n_lenslet_total;
             let lenslet_flux = self.lenslet_flux();
-            let lenslet_flux_max = lenslet_flux.iter().cloned().fold(0.0, f32::max);
-            let threshold_flux = lenslet_flux_max * some_flux_threshold.unwrap() as f32;
+            // dbg!(lenslet_flux.len());
+            // let lenslet_flux_max = lenslet_flux.iter().cloned().fold(0.0, f32::max);
+            // let threshold_flux = dbg!(lenslet_flux_max) * some_flux_threshold.unwrap() as f32;
+            // dbg!(lenslet_flux
+            //     .iter()
+            //     .map(|x| if x >= &threshold_flux { 1i8 } else { 0i8 })
+            //     .filter(|x| x.is_positive())
+            //     .count());
+            // self.valid_lenslets = lenslet_flux
+            //     .iter()
+            //     .map(|x| if x >= &threshold_flux { 1i8 } else { 0i8 })
+            //     .collect();
             self.valid_lenslets = lenslet_flux
-                .iter()
-                .map(|x| if x >= &threshold_flux { 1i8 } else { 0i8 })
+                .chunks(n)
+                .flat_map(|flux| {
+                    let threshold_flux = flux
+                        .iter()
+                        .max_by(|a, b| a.partial_cmp(b).unwrap())
+                        .unwrap()
+                        * some_flux_threshold as f32;
+                    flux.iter()
+                        .map(|x| if x >= &threshold_flux { 1i8 } else { 0i8 })
+                        .collect::<Vec<_>>()
+                })
                 .collect();
         }
         if some_valid_lenslets.is_some() {
@@ -196,10 +226,12 @@ impl Centroiding {
             self._c_mask_.set_filter();
         }
 
+        // dbg!((self.valid_lenslets.len(), self.n_lenslet_total));
+
         self.n_valid_lenslet = self
             .valid_lenslets
             .chunks(self.n_lenslet_total)
-            .map(|x| x.iter().sum::<i8>() as usize)
+            .map(|x| x.iter().filter(|x| x.is_positive()).count())
             .collect();
         self
     }
@@ -251,7 +283,7 @@ mod tests {
         let mut src = Source::builder()
             .pupil_sampling(pupil_sampling)
             .size(n_gs)
-            .zenith_azimuth(vec![0f32, 1f32.from_arcmin()], vec![0f32; 2])
+            .zenith_azimuth(vec![0f32; n_gs], vec![0f32; n_gs])
             .build()
             .unwrap();
 

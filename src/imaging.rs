@@ -375,7 +375,8 @@ impl Display for Imaging {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "Imaging: {}x{} lenslets, {}x{} pixels, osf {}, {}x{} binning",
+            "Imaging (x{}): {}x{} lenslets, {}x{} pixels, osf {}, {}x{} binning",
+            self._c_.N_SOURCE,
             self._c_.N_SIDE_LENSLET,
             self._c_.N_SIDE_LENSLET,
             self._c_.N_PX_CAMERA,

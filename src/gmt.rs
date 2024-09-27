@@ -348,12 +348,14 @@ impl Gmt {
             self.m1.BS.update(m1_a);
         }
     }
-    pub fn m1_segment_modes(&mut self, a: &[Vec<f64>]) {
+    /// Sets M1 modal coefficients for segment #`sid` (0 < `sid` < 8)
+    pub fn m1_segment_modes(&mut self, sid: u8, a: &[f64]) {
         self.m1
             .a
             .chunks_mut(self.m1.n_mode)
-            .zip(a)
-            .for_each(|(a1, a)| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
+            .skip(sid as usize - 1)
+            .take(1)
+            .for_each(|a1| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
         unsafe {
             let m1_a = self.m1.a.as_mut_ptr();
             self.m1.BS.update(m1_a);

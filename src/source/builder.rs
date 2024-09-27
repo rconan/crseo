@@ -68,9 +68,17 @@ impl Default for SourceBuilder {
     }
 }
 impl SourceBuilder {
-    /// Set the number of sources
+    /// Set the number of source
+    ///
+    /// Reset the zenith, azimuth and magnitude to their default values
     pub fn size(self, size: usize) -> Self {
-        Self { size, ..self }
+        Self {
+            size,
+            zenith: vec![0f32; size],
+            azimuth: vec![0f32; size],
+            magnitude: vec![0f32; size],
+            ..self
+        }
     }
     /// Set the sampling of the pupil in pixels
     pub fn pupil_sampling(self, resolution: usize) -> Self {
