@@ -307,7 +307,7 @@ impl Source {
             );
         }
         self.phase();
-        let mut segment_wfe: Vec<(f64, f64)> = Vec::with_capacity(7 * self.size as usize * 2);
+        let mut segment_wfe: Vec<(f64, f64)> = vec![];
         for (mask, phase) in mask.chunks(n_ray).zip(self._phase.chunks(n_ray)) {
             for k in 1..8 {
                 let segment_phase = mask
@@ -316,13 +316,15 @@ impl Source {
                     .filter_map(|(&mask, &phase)| (mask == k).then_some(phase))
                     .collect::<Vec<f32>>();
                 let n = segment_phase.len() as f32;
-                let mean = segment_phase.iter().sum::<f32>() / n;
-                let var = segment_phase
-                    .iter()
-                    .map(|x| (x - mean).powi(2))
-                    .sum::<f32>()
-                    / n;
-                segment_wfe.push((mean as f64, var.sqrt() as f64));
+                if n > 0. {
+                    let mean = segment_phase.iter().sum::<f32>() / n;
+                    let var = segment_phase
+                        .iter()
+                        .map(|x| (x - mean).powi(2))
+                        .sum::<f32>()
+                        / n;
+                    segment_wfe.push((mean as f64, var.sqrt() as f64));
+                }
             }
         }
         segment_wfe
