@@ -89,7 +89,7 @@ impl From<&mut SegmentPistonSensor> for DispersedFringeSensor {
             data: chop_data,
             n: q,
             threshold: Some(0.2),
-            mask_radius: Some(0.05),
+            mask_radius: Some(13.),
             ..Default::default()
         }
     }
@@ -105,11 +105,11 @@ impl DispersedFringeSensor {
 
         let x = (0..n)
             .flat_map(move |i| repeat(i).take(n))
-            .map(move |x| (x as f32 - 0.5 * (n - 1) as f32) / (n - 1) as f32);
+            .map(move |x| (x as f32 - 0.5 * (n - 1) as f32));
         let y = (0..n)
             .cycle()
             .take(n * n)
-            .map(move |x| (x as f32 - 0.5 * (n - 1) as f32) / (n - 1) as f32);
+            .map(move |x| (x as f32 - 0.5 * (n - 1) as f32));
 
         x.zip(y).map(move |(x, y)| {
             let (so, co) = O[i].sin_cos();
@@ -239,13 +239,13 @@ mod tests {
 
         let mut sps = SegmentPistonSensor::builder()
             .src(src_builder.clone())
-            .nyquist_factor(3.)
+            // .nyquist_factor(3.)
             .build()?;
 
         let mut src = src_builder.build()?;
 
         src.through(&mut gmt).xpupil().through(&mut sps);
-        let mut dfs0 = DispersedFringeSensor::from(&mut sps).threshold(0.01);
+        let mut dfs0 = DispersedFringeSensor::from(sps.fft());
         dfs0.intercept();
 
         // serde_pickle::to_writer(&mut File::create("DFS0.pkl")?, &dfs0, Default::default())?;
@@ -259,7 +259,7 @@ mod tests {
             gmt.m1.set_rigid_body_motions(1, &tr_xyz);
 
             src.through(&mut gmt).xpupil().through(sps.reset());
-            let mut dfs = DispersedFringeSensor::from(&mut sps).threshold(0.01);
+            let mut dfs = DispersedFringeSensor::from(sps.fft());
             dfs.set_reference(&dfs0).intercept();
 
             data.push((tz, dfs));
@@ -277,27 +277,62 @@ mod tests {
 
         let mut sps = SegmentPistonSensor::builder()
             .src(src_builder.clone())
-            .nyquist_factor(3.)
+            // .nyquist_factor(3.)
             .build()
             .unwrap();
 
         let mut src = src_builder.build()?;
 
         let mut tr_xyz = [0f64; 6];
-        tr_xyz[2] = 10e-6;
+        let idx = 1;
+        tr_xyz[2] = idx as f64 * 1e-6;
         //tr_xyz[4] = tz as f64 * 100f64.from_mas();
         gmt.m1.set_rigid_body_motions(1, &tr_xyz);
 
         src.through(&mut gmt).xpupil().through(&mut sps);
 
-        let mut dfs: DispersedFringeSensor = (&mut sps).into();
+        let mut dfs: DispersedFringeSensor = sps.fft().into();
 
         println!("{:+6.4?}", dfs.intercept().intercept);
 
-        let idx = 10;
-        let fftlet = dfs.fftlet(idx, Some(0.05), Some(0.2));
+        let fftlet = dfs.fftlet(idx, Some(13.), None); //, Some(0.2));
 
         let mut buffer = BufWriter::new(File::create(format!("fftlet_{idx}.pkl"))?);
+        serde_pickle::to_writer(&mut buffer, &fftlet, Default::default())?;
+
+        let mut buffer = BufWriter::new(File::create("dfs.pkl")?);
+        serde_pickle::to_writer(&mut buffer, &dfs, Default::default())?;
+
+        Ok(())
+    }
+    #[test]
+    fn fftlet_raw() -> Result<(), Box<dyn Error>> {
+        let mut gmt = Gmt::builder().build()?;
+        let src_builder = Source::builder().band("J");
+
+        let mut sps = SegmentPistonSensor::builder()
+            .src(src_builder.clone())
+            // .nyquist_factor(3.)
+            .build()
+            .unwrap();
+
+        let mut src = src_builder.build()?;
+
+        let mut tr_xyz = [0f64; 6];
+        let idx = 1;
+        tr_xyz[2] = idx as f64 * 1e-6;
+        //tr_xyz[4] = tz as f64 * 100f64.from_mas();
+        gmt.m1.set_rigid_body_motions(1, &tr_xyz);
+
+        src.through(&mut gmt).xpupil().through(&mut sps);
+
+        let mut dfs: DispersedFringeSensor = sps.fft().into();
+
+        println!("{:+6.4?}", dfs.intercept().intercept);
+
+        let fftlet = dfs.fftlet(idx, None, None);
+
+        let mut buffer = BufWriter::new(File::create(format!("fftlet_{idx}_raw.pkl"))?);
         serde_pickle::to_writer(&mut buffer, &fftlet, Default::default())?;
 
         let mut buffer = BufWriter::new(File::create("dfs.pkl")?);
