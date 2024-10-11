@@ -229,7 +229,7 @@ impl Frame {
 /// The optical imager is a square lenslet array which focal plane lies on the detector.
 /// The detector continuously integrates the images formed on the detector until it is explicitly reset
 pub struct Imaging {
-    _c_: imaging,
+    pub(crate) _c_: imaging,
     dft_osf: usize,
     /// lenslet flux threshold
     pub fluxlet_threshold: f64,

@@ -42,7 +42,7 @@ impl Default for SegmentPistonSensorBuilder {
             src_builder: SourceBuilder::default(),
             lenslet_size: 1.5,
             dispersion: 5.0.from_arcsec() * 1e6,
-            field_of_view: 3.0.from_arcsec(),
+            field_of_view: 3.2.from_arcsec(),
             nyquist_factor: 1.0,
             bin_image: 2,
             malloc_dft: true,
@@ -145,7 +145,6 @@ impl Builder for SegmentPistonSensorBuilder {
                 )
             }
         }
-
         Ok(sps)
     }
 }

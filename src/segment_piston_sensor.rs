@@ -32,7 +32,7 @@ impl Display for SegmentPistonSensor {
             self.frame_size(),
             self._c_.FFT.N_SIDE_LENSLET,
             self._c_.FFT.N_PX_CAMERA,
-            self.fft_size()
+            self.fft_size(),
         )
     }
 }
@@ -136,6 +136,14 @@ impl SegmentPistonSensor {
     pub fn n_source(&self) -> usize {
         self._c_.N_GS as usize
     }
+    /// Returns the detector pixel scale
+    pub fn pixel_scale(&self) -> f32 {
+        self._c_.pixel_scale * self._c_.BIN_IMAGE as f32
+    }
+    /// Returns the lenslet field-of-view
+    pub fn field_of_view(&self) -> f32 {
+        self._c_.pixel_scale * self._c_.BIN_IMAGE as f32 * self._c_.camera.N_PX_CAMERA as f32
+    }
 }
 
 impl Drop for SegmentPistonSensor {
@@ -163,10 +171,10 @@ mod tests {
     #[test]
     fn sps0() {
         let mut gmt = Gmt::builder().build().unwrap();
-        let mut src = Source::builder().build().unwrap();
+        let mut src = Source::builder().band("J").build().unwrap();
 
         let mut sps = SegmentPistonSensor::builder()
-            .nyquist_factor(3.)
+            // .nyquist_factor(3.)
             .build()
             .unwrap();
 
