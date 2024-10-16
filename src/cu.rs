@@ -8,7 +8,7 @@ pub trait CuType {
     fn new() -> Self;
     fn build(&mut self, size: i32);
     fn malloc(&mut self);
-    fn assign_f32(&mut self, _ptr: *mut f32) {}
+    fn assign_f32(&mut self, _ptr: *const f32) {}
     fn assign_f64(&mut self, _ptr: *mut f64) {}
     fn drop(&mut self);
 }
@@ -49,8 +49,8 @@ impl CuType for Single {
             self.dev_malloc();
         }
     }
-    fn assign_f32(&mut self, ptr: *mut f32) {
-        self.dev_data = ptr;
+    fn assign_f32(&mut self, ptr: *const f32) {
+        self.dev_data = ptr as *mut _;
     }
     fn drop(&mut self) {
         unsafe {

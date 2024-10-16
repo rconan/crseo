@@ -91,7 +91,7 @@ impl SegmentPistonSensor {
         }
     }
     /// Returns the FFT frame
-    pub fn fft_frame(&mut self) -> Frame {
+    pub fn fft_frame(&self) -> Frame {
         let n = self.fft_size();
         let mut cu = Cu::<Single>::vector(n.pow(2));
         cu.from_ptr(self._c_.FFT.d__frame);
