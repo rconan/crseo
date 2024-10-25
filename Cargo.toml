@@ -1,6 +1,6 @@
 [package]
 name = "crseo"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["Rod Conan <rconan@gmto.org>"]
 edition = "2021"
 license = "MIT"

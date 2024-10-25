@@ -402,7 +402,12 @@ impl Source {
             );
         }
         sxy.into_iter()
-            .flat_map(|x| x.into_iter().map(|x| x as f64).collect::<Vec<f64>>())
+            .flat_map(|x| {
+                x.into_iter()
+                    .filter(|x| !x.is_nan())
+                    .map(|x| x as f64)
+                    .collect::<Vec<f64>>()
+            })
             .collect()
     }
     /// Returns the x and y gradient of the wavefront in average over each lenslet of a `n_lenslet`x`n_lenslet` array, the gradients are saved in `Centroiding`
