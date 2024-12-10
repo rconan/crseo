@@ -162,7 +162,16 @@ impl<M: GmtMx + Default> From<MirrorBuilder> for Mirror<M> {
         }
     }
 }
-
+// impl Mirror<GmtM1> {
+//     fn global_tiptilt(&mut self, tip: f64, tilt: f64) {
+//         unsafe { self._c_.global_tiptilt(tip as f32, tilt as f32) };
+//     }
+// }
+// impl Mirror<GmtM2> {
+//     fn global_tiptilt(&mut self, tip: f64, tilt: f64) {
+//         unsafe { self._c_.global_tiptilt(tip as f32, tilt as f32) };
+//     }
+// }
 impl<M: GmtMx> Deref for Mirror<M> {
     type Target = M;
 

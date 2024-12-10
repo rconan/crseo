@@ -168,7 +168,7 @@ impl<T: std::fmt::Debug> fmt::Display for CeoError<T> {
 pub type Result<T> = std::result::Result<T, CrseoError>;
 /// CEO builder type trait
 pub trait Builder: Default {
-    type Component;
+    type Component: FromBuilder;
     fn new() -> Self {
         Default::default()
     }
