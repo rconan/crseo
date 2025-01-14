@@ -237,7 +237,10 @@ impl Source {
     }
     /// Returns the `Source` wavelength \[m\]
     pub fn wavelength(&self) -> f64 {
-        unsafe { (&mut *UnsafeCell::new(self._c_).get()).wavelength() as f64 }
+        unsafe {
+            let src = UnsafeCell::new(self._c_);
+            (&mut *src.get()).wavelength() as f64
+        }
     }
     /// Sets the `Source` full width at half maximum in un-binned detector pixel
     pub fn fwhm(&mut self, value: f64) {
