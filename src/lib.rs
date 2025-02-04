@@ -82,8 +82,9 @@ pub mod prelude {
     };
 }
 
+mod builders;
+pub use builders::SourceBuilder;
 use gmt::GmtBuilder;
-use source::SourceBuilder;
 
 /// CEO macro builder
 ///

@@ -4,9 +4,10 @@ use ffi::vector;
 use serde::{Deserialize, Serialize};
 use skyangle::Conversion;
 
-use crate::{source::PHOTOMETRY, Builder};
-
-use super::{PupilSampling, Source};
+use crate::{
+    source::{PupilSampling, PHOTOMETRY},
+    Builder, Source,
+};
 
 /// `Source` builder
 ///

@@ -22,6 +22,8 @@
 //! let mut src = ceo!(Source, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
+use crate::SourceBuilder;
+
 use super::{cu::Double, cu::Single, Centroiding, Cu, FromBuilder};
 use ffi::{bundle, dev2host, dev2host_int, mask, source, vector};
 use serde::{Deserialize, Serialize};
@@ -35,10 +37,7 @@ use std::{
     usize,
 };
 
-const PHOTOMETRY: [&str; 6] = ["V", "R", "I", "J", "H", "K"];
-
-mod builder;
-pub use builder::SourceBuilder;
+pub(crate) const PHOTOMETRY: [&str; 6] = ["V", "R", "I", "J", "H", "K"];
 
 /// A system that mutates `Source` arguments should implement the `Propagation` trait
 pub trait Propagation {
@@ -78,7 +77,7 @@ impl PupilSampling {
 
 /// source wrapper
 pub struct Source {
-    _c_: source,
+    pub(crate) _c_: source,
     /// The number of sources
     pub size: i32,
     /// The diameter of the entrance pupil \[m\]
@@ -649,6 +648,19 @@ impl Rays {
             rays.get_optical_path_difference(d_opd.malloc().as_mut_ptr());
         }
         d_opd.into()
+    }
+    /// Returns the vignetting mask
+    pub fn vignetting(&self) -> Vec<bool> {
+        let rays = unsafe { &mut *self._c_.get() };
+        let n = rays.N_RAY_TOTAL as usize;
+        let mut d_v = Cu::<Double>::vector(n);
+        unsafe {
+            rays.get_vignetting(d_v.malloc().as_mut_ptr());
+        }
+        Vec::<f64>::from(d_v)
+            .into_iter()
+            .map(|v| v.abs() > 0f64)
+            .collect()
     }
     /// Returns the mask that is applied to the ray bundle
     pub fn mask(&self) -> Mask {

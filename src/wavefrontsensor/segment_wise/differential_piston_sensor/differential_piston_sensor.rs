@@ -2,7 +2,9 @@ use std::ops::Mul;
 
 use ffi::dev2host_int;
 
-use crate::{Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, WavefrontSensor};
+use crate::{
+    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder, WavefrontSensor,
+};
 
 use super::{
     data_processing::{Calibration, DataRef, Slopes, SlopesArray},
@@ -88,7 +90,7 @@ impl Propagation for DifferentialPistonSensor {
 impl SegmentWiseSensor for DifferentialPistonSensor {
     fn calibrate_segment(
         &mut self,
-        _src_builder: Option<crate::source::SourceBuilder>,
+        _src_builder: Option<SourceBuilder>,
         _sid: usize,
         _n_mode: usize,
         _pb: Option<indicatif::ProgressBar>,
@@ -150,11 +152,7 @@ impl SegmentWiseSensor for DifferentialPistonSensor {
         self.pupil_sampling
     }
 
-    fn zeroed_segment(
-        &mut self,
-        _sid: usize,
-        src_builder: Option<crate::source::SourceBuilder>,
-    ) -> DataRef {
+    fn zeroed_segment(&mut self, _sid: usize, src_builder: Option<SourceBuilder>) -> DataRef {
         let mut gmt = Gmt::builder().build().unwrap();
         // gmt.keep(&[sid as i32]);
 

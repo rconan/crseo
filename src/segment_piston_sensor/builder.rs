@@ -2,7 +2,7 @@ use std::ops::DerefMut;
 
 use skyangle::Conversion;
 
-use crate::{gmt::GmtBuilder, source::SourceBuilder, Builder};
+use crate::{gmt::GmtBuilder, Builder, SourceBuilder};
 
 use super::SegmentPistonSensor;
 
