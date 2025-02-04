@@ -22,20 +22,18 @@ pub type Result<T> = std::result::Result<T, AtmosphereError>;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
+#[serde(rename = "lower_case")]
 struct GmtAtmosphere {
     r0: f32,
     #[serde(rename = "L0")]
     l_not: f32,
     #[serde(rename = "L")]
     length: f32,
-    #[serde(rename = "lower_case")]
     nxy_pupil: i32,
     fov: f32,
     duration: f32,
-    #[serde(rename = "lower_case")]
     n_duration: i32,
     filename: String,
-    #[serde(rename = "lower_case")]
     seed: i32,
 }
 
@@ -361,14 +359,14 @@ impl Propagation for Atmosphere {
     }
 }
 
-/* #[cfg(test)]
+#[cfg(test)]
 mod tests {
     use super::*;
 
     // cargo test --release --package crseo --lib  -- atmosphere::tests::atmosphere_new --exact --nocapture
     #[test]
     fn atmosphere_new() {
-        crate::ceo!(AtmosphereBuilder);
+        crate::ceo!(Atmosphere);
     }
 
     // cargo test --release --package crseo --lib  -- atmosphere::tests::dump_toml --exact --nocapture
@@ -387,4 +385,3 @@ mod tests {
         Ok(())
     }
 }
- */
