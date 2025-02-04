@@ -23,7 +23,7 @@
 //! ```
 
 use super::{cu::Double, cu::Single, Centroiding, Cu, FromBuilder};
-use ffi::{bundle, dev2host, dev2host_int, source, vector};
+use ffi::{bundle, dev2host, dev2host_int, mask, source, vector};
 use serde::{Deserialize, Serialize};
 use skyangle::Conversion;
 
@@ -590,9 +590,9 @@ impl Source {
         self._c_.rays.V.area
     }
     /// Return the source rays
-    pub fn rays(&mut self) -> Rays {
+    pub fn rays(&self) -> Rays {
         Rays {
-            _c_: &mut self._c_.rays,
+            _c_: UnsafeCell::new(self._c_.rays),
         }
     }
 }
@@ -610,42 +610,82 @@ impl Default for Source {
     }
 }
 
-pub struct Rays<'a> {
-    _c_: &'a mut bundle,
+/// Ray bundle
+pub struct Rays {
+    _c_: UnsafeCell<bundle>,
 }
-impl<'a> Rays<'a> {
+impl Rays {
     /// Returns the rays \[x,y,z\] coordinates
     ///
     /// Returns the coordinates as [x1,y1,z1,x2,y2,z2,...]
-    pub fn coordinates(&mut self) -> Vec<f64> {
-        let n = 3 * self._c_.N_RAY_TOTAL as usize;
+    pub fn coordinates(&self) -> Vec<f64> {
+        let rays = unsafe { &mut *self._c_.get() };
+        let n = 3 * rays.N_RAY_TOTAL as usize;
         let mut d_xyz = Cu::<Double>::vector(n);
         unsafe {
-            self._c_.get_coordinates(d_xyz.malloc().as_mut_ptr());
+            rays.get_coordinates(d_xyz.malloc().as_mut_ptr());
         }
         d_xyz.into()
     }
     /// Returns the rays \[k,l,m\] directions
     ///
     /// Returns the directions as [k1,l1,m1,k2,l2,m2,...]
-    pub fn directions(&mut self) -> Vec<f64> {
-        let n = 3 * self._c_.N_RAY_TOTAL as usize;
+    pub fn directions(&self) -> Vec<f64> {
+        let rays = unsafe { &mut *self._c_.get() };
+        let n = 3 * rays.N_RAY_TOTAL as usize;
         let mut d_klm = Cu::<Double>::vector(n);
         unsafe {
-            self._c_.get_directions(d_klm.malloc().as_mut_ptr());
+            rays.get_directions(d_klm.malloc().as_mut_ptr());
         }
         d_klm.into()
     }
     /// Returns the rays optical path difference
-    pub fn opd(&mut self) -> Vec<f64> {
-        let n = self._c_.N_RAY_TOTAL as usize;
+    pub fn opd(&self) -> Vec<f64> {
+        let rays = unsafe { &mut *self._c_.get() };
+        let n = rays.N_RAY_TOTAL as usize;
         let mut d_opd = Cu::<Double>::vector(n);
         //        let mut d_opd: Cu<Double> = vec![0f64; n].into();
         unsafe {
-            self._c_
-                .get_optical_path_difference(d_opd.malloc().as_mut_ptr());
+            rays.get_optical_path_difference(d_opd.malloc().as_mut_ptr());
         }
         d_opd.into()
+    }
+    /// Returns the mask that is applied to the ray bundle
+    pub fn mask(&self) -> Mask {
+        let rays = unsafe { *self._c_.get() };
+        Mask {
+            _c_: UnsafeCell::new(rays.V),
+        }
+    }
+}
+
+/// A generic binary mask structure
+pub struct Mask {
+    _c_: UnsafeCell<mask>,
+}
+impl Mask {
+    /// Returns the total number of mask element
+    pub fn nel(&self) -> usize {
+        unsafe { &*self._c_.get() }.nel as usize
+    }
+    /// Returns the number of non-zeros in the mask
+    pub fn nnz(&self) -> usize {
+        unsafe { &*self._c_.get() }.nnz as usize
+    }
+    /// Filters out the values according to the mask
+    pub fn filter<'a, T: 'a + ?Sized>(
+        &'a self,
+        data: impl Iterator<Item = &'a T>,
+    ) -> impl Iterator<Item = &'a T> {
+        data.zip(self.iter())
+            .filter(|(_, m)| *m)
+            .map(|(data, _)| data)
+    }
+    /// Returns an iterator over the mask values
+    pub fn iter(&self) -> impl Iterator<Item = bool> {
+        let mut d_f = Cu::<Single>::vector(self.nel());
+        d_f.from_ptr(unsafe { &mut *self._c_.get() }.f);
+        Vec::<f32>::from(d_f).into_iter().map(|f| f > 0.0)
     }
 }
 
