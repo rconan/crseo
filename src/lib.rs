@@ -149,6 +149,24 @@ macro_rules! ceo {
         $crate::Builder::build(<$crate::$element<$crate::$model> as $crate::FromBuilder>::builder()$(.$arg($($val),*))*).unwrap()
     };
 }
+#[macro_export]
+macro_rules! gmt {
+    () => {
+        $crate::Builder::build(<$crate::Gmt as $crate::FromBuilder>::builder()).unwrap()
+    };
+    ($($arg:ident = [$($val:expr),*]),*) => {
+        $crate::Builder::build(<$crate::Gmt as $crate::FromBuilder>::builder()$(.$arg($($val),*))*).unwrap()
+    };
+}
+#[macro_export]
+macro_rules! source {
+    () => {
+        $crate::Builder::build(<$crate::Source as $crate::FromBuilder>::builder()).unwrap()
+    };
+    ($($arg:ident = [$($val:expr),*]),*) => {
+        $crate::Builder::build(<$crate::Source as $crate::FromBuilder>::builder()$(.$arg($($val),*))*).unwrap()
+    };
+}
 /*
 macro_rules! gmt {
     ($($arg:ident = $val:expr),*) => {
