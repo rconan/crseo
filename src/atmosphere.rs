@@ -7,11 +7,10 @@ use std::{
     path::Path,
 };
 
+use crate::builders::atmosphere::{AtmosphereBuilder, AtmosphereBuilderError};
+
 use super::{Cu, FromBuilder, Propagation, Single, Source};
 use ffi::atmosphere;
-
-mod builder;
-pub use builder::{AtmosphereBuilder, AtmosphereBuilderError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AtmosphereError {
@@ -125,14 +124,14 @@ impl RayTracing {
 }
 
 pub struct Atmosphere {
-    _c_: atmosphere,
+    pub(crate) _c_: atmosphere,
     pub r0_at_zenith: f64,
     pub oscale: f64,
     pub zenith_angle: f64,
     pub secs: f64,
     //filename: String,
     //k_duration: i32,
-    propagate_ptr: fn(&mut Atmosphere, &mut Source, f32),
+    pub(crate) propagate_ptr: fn(&mut Atmosphere, &mut Source, f32),
 }
 impl Display for Atmosphere {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

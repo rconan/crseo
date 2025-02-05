@@ -5,9 +5,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{AtmosphereError, Builder, CrseoError};
-
-use super::{Atmosphere, RayTracing, TurbulenceProfile};
+use crate::{
+    atmosphere::TurbulenceProfile, Atmosphere, AtmosphereError, Builder, CrseoError, RayTracing,
+};
 
 /// [`CEO`](../struct.CEO.html#impl-6) [`Atmosphere`](../struct.Atmosphere.html) builder type
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
