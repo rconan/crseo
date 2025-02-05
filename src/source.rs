@@ -22,10 +22,10 @@
 //! let mut src = ceo!(Source, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use crate::builders::source::SourceBuilder;
+use crate::{builders::source::SourceBuilder, utilities::Mask};
 
 use super::{cu::Double, cu::Single, Centroiding, Cu, FromBuilder};
-use ffi::{bundle, dev2host, dev2host_int, mask, source, vector};
+use ffi::{bundle, dev2host, dev2host_int, source, vector};
 use serde::{Deserialize, Serialize};
 use skyangle::Conversion;
 
@@ -670,37 +670,6 @@ impl Rays {
         }
     }
 }
-
-/// A generic binary mask structure
-pub struct Mask {
-    _c_: UnsafeCell<mask>,
-}
-impl Mask {
-    /// Returns the total number of mask element
-    pub fn nel(&self) -> usize {
-        unsafe { &*self._c_.get() }.nel as usize
-    }
-    /// Returns the number of non-zeros in the mask
-    pub fn nnz(&self) -> usize {
-        unsafe { &*self._c_.get() }.nnz as usize
-    }
-    /// Filters out the values according to the mask
-    pub fn filter<'a, T: 'a + ?Sized>(
-        &'a self,
-        data: impl Iterator<Item = &'a T>,
-    ) -> impl Iterator<Item = &'a T> {
-        data.zip(self.iter())
-            .filter(|(_, m)| *m)
-            .map(|(data, _)| data)
-    }
-    /// Returns an iterator over the mask values
-    pub fn iter(&self) -> impl Iterator<Item = bool> {
-        let mut d_f = Cu::<Single>::vector(self.nel());
-        d_f.from_ptr(unsafe { &mut *self._c_.get() }.f);
-        Vec::<f32>::from(d_f).into_iter().map(|f| f > 0.0)
-    }
-}
-
 /* #[cfg(test)]
 mod tests {
 

@@ -83,7 +83,7 @@ pub mod prelude {
 }
 
 pub mod builders;
-
+pub mod utilities;
 /// CEO macro builder
 ///
 /// One macro to rule them all, one macro to find them, one macro to bring them all and in the darkness bind them all
