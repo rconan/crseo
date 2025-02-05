@@ -1,6 +1,5 @@
-use super::Centroiding;
 use crate::imaging::ImagingBuilder;
-use crate::Builder;
+use crate::{Builder, Centroiding};
 
 /// Centroiding builder
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

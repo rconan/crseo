@@ -1,31 +1,29 @@
-use crate::{Builder, FromBuilder};
+use crate::{builders::centroiding::CentroidingBuilder, Builder, FromBuilder};
 
 use ffi::{centroiding, dev2host, host2dev_char, mask};
 
-mod builder;
 use crate::imaging::Frame;
-pub use builder::CentroidingBuilder;
 
 /// Wrapper for CEO centroiding
 ///
 /// The x and y centroids are stored as `[[cx,cy]_1, ... , [cx,cy]_n]` for `n` guide stars
 pub struct Centroiding {
-    _c_: centroiding,
-    _c_mask_: mask,
+    pub(crate) _c_: centroiding,
+    pub(crate) _c_mask_: mask,
     /// The total number of lenslets
     pub n_lenslet_total: usize,
     /// The number of centroids
     pub n_centroids: usize,
     /// The centroid units, default: 1 (pixel)
     pub units: f32,
-    flux: Vec<f32>,
+    pub(crate) flux: Vec<f32>,
     /// The valid lenslet mask
     pub valid_lenslets: Vec<i8>,
     /// The number of valid lenslet per guide star
     pub n_valid_lenslet: Vec<usize>,
     /// The centroids
     pub centroids: Vec<f32>,
-    xy_mean: Option<Vec<(f32, f32)>>,
+    pub(crate) xy_mean: Option<Vec<(f32, f32)>>,
 }
 
 impl FromBuilder for Centroiding {
