@@ -1,3 +1,4 @@
+use crate::builders::imaging::ImagingBuilder;
 use crate::{Cu, FromBuilder};
 
 use super::Propagation;
@@ -8,9 +9,7 @@ use serde::Serialize;
 use std::f32;
 use std::fmt::Display;
 
-mod builder;
 use crate::cu::Single;
-pub use builder::ImagingBuilder;
 
 /// Lenslet array specifications
 ///
@@ -230,7 +229,7 @@ impl Frame {
 /// The detector continuously integrates the images formed on the detector until it is explicitly reset
 pub struct Imaging {
     pub(crate) _c_: imaging,
-    dft_osf: usize,
+    pub(crate) dft_osf: usize,
     /// lenslet flux threshold
     pub fluxlet_threshold: f64,
 }

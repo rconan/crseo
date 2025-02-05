@@ -1,6 +1,7 @@
-use crate::Builder;
-
-use super::{Detector, Imaging, LensletArray};
+use crate::{
+    imaging::{Detector, LensletArray},
+    Builder, Imaging,
+};
 
 /// Imaging builder
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
