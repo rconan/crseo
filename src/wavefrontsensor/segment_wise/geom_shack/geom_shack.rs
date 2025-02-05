@@ -1,10 +1,11 @@
+use crate::builders::source::SourceBuilder;
 use std::ops::Mul;
 
 use indicatif::ProgressBar;
 
 use crate::{
     cu::Single, imaging::LensletArray, Builder, Cu, FromBuilder, Gmt, Propagation,
-    SegmentWiseSensor, SourceBuilder, WavefrontSensor,
+    SegmentWiseSensor, WavefrontSensor,
 };
 
 use super::{

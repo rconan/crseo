@@ -1,4 +1,5 @@
 mod builder;
+use crate::builders::source::SourceBuilder;
 pub use builder::PhaseSensorBuilder;
 mod phase_sensor;
 pub use phase_sensor::PhaseSensor;
@@ -6,7 +7,7 @@ pub use phase_sensor::PhaseSensor;
 pub use super::data_processing;
 use crate::{
     wavefrontsensor::{GeomShack, PistonSensor},
-    SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder,
+    SegmentWiseSensorBuilder, WavefrontSensor, WavefrontSensorBuilder,
 };
 
 impl WavefrontSensorBuilder for PhaseSensorBuilder {

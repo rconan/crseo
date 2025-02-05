@@ -1,8 +1,9 @@
-use crate::{Builder, CrseoError};
+use crate::{
+    gmt::{GmtM1, GmtM2, GmtMx},
+    Builder, CrseoError, Gmt, GmtError,
+};
 use serde::{Deserialize, Serialize};
 use std::{env, ffi::CString, path::Path};
-
-use super::{Gmt, GmtM1, GmtM2, GmtMx};
 
 #[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct MirrorBuilder {
@@ -203,10 +204,8 @@ impl MirrorBuilder {
 impl Builder for GmtBuilder {
     type Component = Gmt;
     fn build(self) -> std::result::Result<Gmt, CrseoError> {
-        let m1_mode_type =
-            CString::new(self.m1.mode_path().map_err(|e| super::GmtError::from(e))?)?;
-        let m2_mode_type =
-            CString::new(self.m2.mode_path().map_err(|e| super::GmtError::from(e))?)?;
+        let m1_mode_type = CString::new(self.m1.mode_path().map_err(|e| GmtError::from(e))?)?;
+        let m2_mode_type = CString::new(self.m2.mode_path().map_err(|e| GmtError::from(e))?)?;
 
         let mut gmt = Gmt {
             m1: self.m1.into(),

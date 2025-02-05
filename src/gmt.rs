@@ -18,16 +18,16 @@
 //! let mut gmt = ceo!(Gmt, m1_n_mode = [27]);
 //! ```
 
-use crate::{FromBuilder, Propagation, Source};
+use crate::{
+    builders::gmt::{GmtBuilder, GmtModesError, MirrorBuilder},
+    FromBuilder, Propagation, Source,
+};
 use ffi::{gmt_m1, gmt_m2, vector};
 use std::{
     ffi::CStr,
     fmt::{Debug, Display},
     ops::{Deref, DerefMut},
 };
-
-mod builder;
-pub use builder::{GmtBuilder, GmtMirrorBuilder, GmtModesError, MirrorBuilder};
 
 pub type GmtM1 = gmt_m1;
 pub type GmtM2 = gmt_m2;
@@ -226,7 +226,7 @@ pub struct Gmt {
     */
     // pointing error
     pub pointing_error: Option<(f64, f64)>,
-    m1_truss_projection: bool,
+    pub(crate) m1_truss_projection: bool,
 }
 impl Display for Gmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

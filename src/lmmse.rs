@@ -1,6 +1,6 @@
 use crate::{
-    cu::Single, Atmosphere, atmosphere::AtmosphereBuilder, Builder, Conversion, Cu, FromBuilder,
-    GeometricShackHartmann as WFS, Gmt, Mask, Result, Source, SourceBuilder,
+    atmosphere::AtmosphereBuilder, builders::source::SourceBuilder, cu::Single, Atmosphere,
+    Builder, Conversion, Cu, FromBuilder, GeometricShackHartmann as WFS, Gmt, Mask, Result, Source,
 };
 use ffi::LMMSE as ceo_LMMSE;
 use std::ffi::CString;

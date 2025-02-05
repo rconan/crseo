@@ -3,7 +3,8 @@ use std::ops::Mul;
 use ffi::dev2host_int;
 
 use crate::{
-    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder, WavefrontSensor,
+    builders::source::SourceBuilder, Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor,
+    WavefrontSensor,
 };
 
 use super::{

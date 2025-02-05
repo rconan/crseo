@@ -82,9 +82,7 @@ pub mod prelude {
     };
 }
 
-mod builders;
-pub use builders::SourceBuilder;
-use gmt::GmtBuilder;
+pub mod builders;
 
 /// CEO macro builder
 ///
@@ -203,7 +201,10 @@ pub trait FromBuilder {
 
 /// Interface for wavefront sensor builders
 pub trait WavefrontSensorBuilder {
-    fn guide_stars(&self, template: Option<SourceBuilder>) -> SourceBuilder {
+    fn guide_stars(
+        &self,
+        template: Option<builders::source::SourceBuilder>,
+    ) -> builders::source::SourceBuilder {
         template.unwrap_or_default()
     }
     fn detector_noise_specs(self, _noise_specs: imaging::NoiseDataSheet) -> Self
@@ -214,7 +215,7 @@ pub trait WavefrontSensorBuilder {
     }
     fn decouple(
         &self,
-        _gmt_builder: GmtBuilder,
+        _gmt_builder: builders::gmt::GmtBuilder,
         _src: &mut crate::Source,
         _threshold: f64,
     ) -> Result<Vec<i32>> {

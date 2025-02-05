@@ -22,7 +22,7 @@
 //! let mut src = ceo!(Source, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use crate::SourceBuilder;
+use crate::builders::source::SourceBuilder;
 
 use super::{cu::Double, cu::Single, Centroiding, Cu, FromBuilder};
 use ffi::{bundle, dev2host, dev2host_int, mask, source, vector};

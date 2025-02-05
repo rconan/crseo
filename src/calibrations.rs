@@ -1,6 +1,8 @@
+use crate::builders::{gmt::GmtBuilder, source::SourceBuilder};
+
 use super::{
-    cu::Double, wavefrontsensor::Geometric, Builder, Cu, Gmt, GmtBuilder, Propagation,
-    ShackHartmann, Source, SourceBuilder, WavefrontSensor,
+    cu::Double, wavefrontsensor::Geometric, Builder, Cu, Gmt, Propagation, ShackHartmann, Source,
+    WavefrontSensor,
 };
 use log;
 use std::ops::Range;

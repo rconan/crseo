@@ -1,6 +1,6 @@
-use crate::FromBuilder;
+use crate::{builders::source::SourceBuilder, FromBuilder};
 
-use super::{cu, Builder, Cu, Propagation, Result, Source, SourceBuilder};
+use super::{cu, Builder, Cu, Propagation, Result, Source};
 use ffi::pssn;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use std::fmt;

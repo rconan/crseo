@@ -1,10 +1,11 @@
 pub mod builder;
+use crate::builders::source::SourceBuilder;
 pub use builder::GeomShackBuilder;
 mod geom_shack;
 pub use geom_shack::GeomShack;
 
 pub use super::data_processing;
-use crate::{SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
+use crate::{SegmentWiseSensorBuilder, WavefrontSensor, WavefrontSensorBuilder};
 
 impl WavefrontSensorBuilder for GeomShackBuilder {
     fn guide_stars(&self, gs: Option<SourceBuilder>) -> SourceBuilder {

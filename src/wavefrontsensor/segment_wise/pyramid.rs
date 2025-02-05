@@ -1,4 +1,5 @@
 mod builder;
+use crate::builders::source::SourceBuilder;
 pub use builder::PyramidBuilder;
 mod pyramid;
 pub use pyramid::{Pyramid, PyramidCalibration};
@@ -6,7 +7,7 @@ mod piston_sensor;
 
 pub use super::data_processing;
 
-use crate::{SegmentWiseSensorBuilder, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder};
+use crate::{SegmentWiseSensorBuilder, WavefrontSensor, WavefrontSensorBuilder};
 
 #[derive(Default, Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 struct Modulation {

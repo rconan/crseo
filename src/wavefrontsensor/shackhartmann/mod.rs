@@ -1,9 +1,8 @@
 use super::{Diffractive, Geometric, Model};
 use crate::{
-    imaging::NoiseDataSheet,
-    imaging::{Detector, LensletArray},
-    Builder, Cu, FromBuilder, Result, Source, SourceBuilder, WavefrontSensor,
-    WavefrontSensorBuilder,
+    builders::source::SourceBuilder,
+    imaging::{Detector, LensletArray, NoiseDataSheet},
+    Builder, Cu, FromBuilder, Result, Source, WavefrontSensor, WavefrontSensorBuilder,
 };
 pub mod sensor;
 pub use sensor::ShackHartmann;

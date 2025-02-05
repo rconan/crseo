@@ -1,3 +1,4 @@
+use crate::builders::source::SourceBuilder;
 use std::ops::Mul;
 
 use ffi::dev2host_int;
@@ -75,7 +76,7 @@ impl Propagation for PistonSensor {
 impl SegmentWiseSensor for PistonSensor {
     fn calibrate_segment(
         &mut self,
-        _src_builder: Option<crate::SourceBuilder>,
+        _src_builder: Option<SourceBuilder>,
         _sid: usize,
         _n_mode: usize,
         _pb: Option<indicatif::ProgressBar>,
@@ -137,7 +138,7 @@ impl SegmentWiseSensor for PistonSensor {
         self.pupil_sampling
     }
 
-    fn zeroed_segment(&mut self, sid: usize, src_builder: Option<crate::SourceBuilder>) -> DataRef {
+    fn zeroed_segment(&mut self, sid: usize, src_builder: Option<SourceBuilder>) -> DataRef {
         let mut gmt = Gmt::builder().build().unwrap();
         gmt.keep(&[sid as i32]);
 

@@ -3,8 +3,9 @@ use std::ops::Mul;
 use indicatif::ProgressBar;
 
 use crate::{
+    builders::source::SourceBuilder,
     wavefrontsensor::{GeomShack, PistonSensor},
-    FromBuilder, Propagation, SegmentWiseSensor, SourceBuilder,
+    FromBuilder, Propagation, SegmentWiseSensor,
 };
 
 use super::{

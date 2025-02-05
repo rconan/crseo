@@ -1,7 +1,8 @@
 use crate::{
+    builders::source::SourceBuilder,
     imaging::LensletArray,
     wavefrontsensor::{segment_wise::GmtSegmentation, Pyramid, PyramidBuilder},
-    Builder, CrseoError, FromBuilder, Gmt, SourceBuilder, WavefrontSensor, WavefrontSensorBuilder,
+    Builder, CrseoError, FromBuilder, Gmt, WavefrontSensor, WavefrontSensorBuilder,
 };
 use serde::{Deserialize, Serialize};
 use std::io::{self, Write};

@@ -1,3 +1,4 @@
+use crate::builders::source::SourceBuilder;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -36,7 +37,7 @@ impl SegmentWiseSensorBuilder for PhaseSensorBuilder {
     fn calibrate(
         self,
         segment: crate::wavefrontsensor::SegmentCalibration,
-        src: crate::SourceBuilder,
+        src: SourceBuilder,
     ) -> Calibration
     where
         Self::Component: crate::SegmentWiseSensor,

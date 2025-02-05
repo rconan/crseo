@@ -3,8 +3,9 @@ use std::ops::Range;
 use indicatif::ProgressBar;
 // use serde::{Deserialize, Serialize};
 use crate::{
+    builders::source::SourceBuilder,
     wavefrontsensor::{Slopes, SlopesArray},
-    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
+    Builder, FromBuilder, Gmt, Propagation, SegmentWiseSensor,
 };
 
 /* #[derive(Default, Debug, Clone, Serialize, Deserialize)]

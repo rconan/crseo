@@ -7,11 +7,9 @@ use std::path::PathBuf;
 use indicatif::ProgressBar;
 use nalgebra::{DMatrix, DVector};
 
+use crate::builders::source::SourceBuilder;
 use crate::imaging::LensletArray;
-use crate::{
-    Builder, Frame, FromBuilder, Gmt, Propagation, SegmentWiseSensor, SourceBuilder,
-    WavefrontSensor,
-};
+use crate::{Builder, Frame, FromBuilder, Gmt, Propagation, SegmentWiseSensor, WavefrontSensor};
 
 use super::data_processing::{Calibration, DataRef, Slopes, SlopesArray};
 use super::piston_sensor::PistonSensor;
