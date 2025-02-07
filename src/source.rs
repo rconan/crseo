@@ -497,10 +497,10 @@ impl Source {
         self
     }
     /// Returns the wavefront phase \[m\] in the exit pupil of the telescope
-    pub fn phase(&mut self) -> &Vec<f32> {
+    pub fn phase(&self) -> &Vec<f32> {
         unsafe {
             dev2host(
-                self._phase.as_mut_ptr(),
+                self._phase.as_ptr() as *mut _,
                 self._c_.wavefront.phase,
                 self._c_.wavefront.N_PX,
             );
