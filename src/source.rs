@@ -22,7 +22,7 @@
 //! let mut src = ceo!(Source, size = [3] , on_ring = [8f32.from_arcmin()]);
 //! ```
 
-use crate::{builders::source::SourceBuilder, utilities::Mask};
+use crate::{builders::source::SourceBuilder, cu::Int, utilities::Mask};
 
 use super::{cu::Double, cu::Single, Centroiding, Cu, FromBuilder};
 use ffi::{bundle, dev2host, dev2host_int, source, vector};
@@ -668,6 +668,17 @@ impl Rays {
         Mask {
             _c_: UnsafeCell::new(rays.V),
         }
+    }
+    /// Returns the segment mask
+    ///
+    /// The segment mask is equal to 0 outside the mask and equal to the
+    /// segment ID inside the mask
+    pub fn segment(&self) -> Vec<i32> {
+        let rays = unsafe { &mut *self._c_.get() };
+        let n = rays.N_RAY_TOTAL as usize;
+        let mut d_s = Cu::<Int>::vector(n);
+        d_s.from_ptr(unsafe { &mut *self._c_.get() }.d__piston_mask);
+        Vec::<i32>::from(d_s)
     }
 }
 /* #[cfg(test)]

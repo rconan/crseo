@@ -1,8 +1,9 @@
-use ffi::{gpu_double, gpu_float};
+use ffi::{gpu_double, gpu_float, gpu_int};
 use std::ops::{AddAssign, Mul, SubAssign};
 
 pub type Single = gpu_float;
 pub type Double = gpu_double;
+pub type Int = gpu_int;
 
 pub trait CuType {
     fn new() -> Self;
@@ -10,6 +11,7 @@ pub trait CuType {
     fn malloc(&mut self);
     fn assign_f32(&mut self, _ptr: *const f32) {}
     fn assign_f64(&mut self, _ptr: *mut f64) {}
+    fn assign_i32(&mut self, _ptr: *mut i32) {}
     fn drop(&mut self);
 }
 impl CuType for Double {
@@ -27,6 +29,29 @@ impl CuType for Double {
         }
     }
     fn assign_f64(&mut self, ptr: *mut f64) {
+        self.dev_data = ptr;
+    }
+    fn drop(&mut self) {
+        unsafe {
+            self.free_dev();
+        }
+    }
+}
+impl CuType for Int {
+    fn new() -> Self {
+        Default::default()
+    }
+    fn build(&mut self, size: i32) {
+        unsafe {
+            self.setup1(size);
+        }
+    }
+    fn malloc(&mut self) {
+        unsafe {
+            self.dev_malloc();
+        }
+    }
+    fn assign_i32(&mut self, ptr: *mut i32) {
         self.dev_data = ptr;
     }
     fn drop(&mut self) {
@@ -111,6 +136,13 @@ impl<T: CuType> Cu<T> {
         self._c_.malloc();
         self.dev_alloc = true;
         self
+    }
+}
+impl Cu<Int> {
+    pub fn from_ptr(&mut self, ptr: *mut i32) {
+        let s = self.size();
+        self._c_.build(s as i32);
+        self._c_.assign_i32(ptr);
     }
 }
 impl Cu<Single> {
@@ -309,6 +341,16 @@ impl From<&mut Cu<Single>> for Vec<f32> {
     }
 }
 
+impl Cu<Int> {
+    pub fn from_dev(&mut self) -> Vec<i32> {
+        let mut v = vec![0i32; self.size()];
+        unsafe {
+            self._c_.host_data = v.as_mut_ptr();
+            self._c_.dev2host();
+        }
+        v
+    }
+}
 impl Cu<Double> {
     pub fn from_dev(&mut self) -> Vec<f64> {
         let mut v = vec![0f64; self.size()];
@@ -354,6 +396,12 @@ impl From<Vec<Vec<f64>>> for Cu<Double> {
 }
 impl From<Cu<Double>> for Vec<f64> {
     fn from(item: Cu<Double>) -> Self {
+        let mut q = item;
+        q.from_dev()
+    }
+}
+impl From<Cu<Int>> for Vec<i32> {
+    fn from(item: Cu<Int>) -> Self {
         let mut q = item;
         q.from_dev()
     }
