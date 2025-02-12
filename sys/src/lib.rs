@@ -3,9 +3,9 @@
 #![allow(non_snake_case)]
 #![allow(improper_ctypes)]
 
-// #[cfg(bindings)]
-// include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-// #[cfg(docs_rs)]
+#[cfg(bindings)]
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+#[cfg(docs_rs)]
 include!("bindings.rs");
 
 use std::ptr;
@@ -663,6 +663,22 @@ impl Default for stats {
 unsafe impl Send for gpu_double {}
 unsafe impl Sync for gpu_double {}
 impl Default for gpu_double {
+    fn default() -> Self {
+        Self {
+            dev_data: ptr::null_mut(),
+            host_data: ptr::null_mut(),
+            N: 0,
+            nb: 0,
+            S: Default::default(),
+            stat: 0,
+            handle: ptr::null_mut(),
+            cusolverH: ptr::null_mut(),
+        }
+    }
+}
+unsafe impl Send for gpu_int {}
+unsafe impl Sync for gpu_int {}
+impl Default for gpu_int {
     fn default() -> Self {
         Self {
             dev_data: ptr::null_mut(),

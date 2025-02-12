@@ -1,4 +1,7 @@
-use std::{env, path::PathBuf};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 fn main() {
     if env::var("DOCS_RS").is_ok() {
@@ -32,6 +35,7 @@ fn main() {
         .clang_arg("-v")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .allowlist_type("gpu_float")
+        .allowlist_type("gpu_int")
         .allowlist_type("gpu_double")
         .allowlist_type("mask")
         .allowlist_function("set_device")
@@ -68,4 +72,11 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+    fs::copy(
+        out_path.join("bindings.rs"),
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("bindings.rs"),
+    )
+    .expect("failed to copy bindings to src");
 }
