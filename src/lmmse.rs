@@ -1,5 +1,5 @@
 use crate::{
-    builders::{atmosphere::AtmosphereBuilder, source::SourceBuilder},
+    builders::{AtmosphereBuilder, SourceBuilder},
     cu::Single,
     Atmosphere, Builder, Conversion, Cu, FromBuilder, GeometricShackHartmann as WFS, Gmt, Mask,
     Result, Source,

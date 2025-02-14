@@ -1,5 +1,5 @@
 mod builder;
-use crate::builders::source::SourceBuilder;
+use crate::builders::SourceBuilder;
 pub use builder::PyramidBuilder;
 mod pyramid;
 pub use pyramid::{Pyramid, PyramidCalibration};

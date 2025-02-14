@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use skyangle::Conversion;
 
 use crate::{
-    builders::{gmt::GmtBuilder, source::SourceBuilder},
+    builders::{GmtBuilder, SourceBuilder},
     Builder,
 };
 

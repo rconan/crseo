@@ -5,8 +5,8 @@ use std::{
 
 use super::{Model, ShackHartmann};
 use crate::{
-    builders::source::SourceBuilder, wavefrontsensor::ShackHartmannBuilder, Builder, FromBuilder,
-    Result, WavefrontSensorBuilder,
+    builders::SourceBuilder, wavefrontsensor::ShackHartmannBuilder, Builder, FromBuilder, Result,
+    WavefrontSensorBuilder,
 };
 
 /// `ShackHartmann` "SH24" builder for GMT AGWS model

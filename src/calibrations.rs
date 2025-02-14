@@ -1,4 +1,4 @@
-use crate::builders::{gmt::GmtBuilder, source::SourceBuilder};
+use crate::builders::{GmtBuilder, SourceBuilder};
 
 use super::{
     cu::Double, wavefrontsensor::Geometric, Builder, Cu, Gmt, Propagation, ShackHartmann, Source,

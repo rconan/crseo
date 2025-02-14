@@ -1,4 +1,4 @@
-use crate::builders::source::SourceBuilder;
+use crate::builders::SourceBuilder;
 use serde::{Deserialize, Serialize};
 
 use crate::{

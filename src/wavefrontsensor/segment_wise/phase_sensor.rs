@@ -1,5 +1,5 @@
 mod builder;
-use crate::builders::source::SourceBuilder;
+use crate::builders::SourceBuilder;
 pub use builder::PhaseSensorBuilder;
 mod phase_sensor;
 pub use phase_sensor::PhaseSensor;

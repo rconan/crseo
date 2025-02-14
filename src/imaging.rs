@@ -1,4 +1,4 @@
-use crate::builders::imaging::ImagingBuilder;
+use crate::builders::ImagingBuilder;
 use crate::{Cu, FromBuilder};
 
 use super::Propagation;

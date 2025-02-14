@@ -1,7 +1,7 @@
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 
-use crate::{builders::source::SourceBuilder, Builder, WavefrontSensor, WavefrontSensorBuilder};
+use crate::{builders::SourceBuilder, Builder, WavefrontSensor, WavefrontSensorBuilder};
 
 pub mod data_processing;
 pub mod differential_piston_sensor;

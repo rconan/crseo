@@ -1,6 +1,6 @@
 use super::{Diffractive, Geometric, Model};
 use crate::{
-    builders::source::SourceBuilder,
+    builders::SourceBuilder,
     imaging::{Detector, LensletArray, NoiseDataSheet},
     Builder, Cu, FromBuilder, Result, Source, WavefrontSensor, WavefrontSensorBuilder,
 };

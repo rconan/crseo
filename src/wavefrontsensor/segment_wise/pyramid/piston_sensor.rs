@@ -1,5 +1,5 @@
 use crate::{
-    builders::source::SourceBuilder,
+    builders::SourceBuilder,
     imaging::LensletArray,
     wavefrontsensor::{segment_wise::GmtSegmentation, Pyramid, PyramidBuilder},
     Builder, CrseoError, FromBuilder, Gmt, WavefrontSensor, WavefrontSensorBuilder,

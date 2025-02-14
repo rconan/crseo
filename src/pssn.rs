@@ -1,4 +1,4 @@
-use crate::{builders::source::SourceBuilder, FromBuilder};
+use crate::{builders::SourceBuilder, FromBuilder};
 
 use super::{cu, Builder, Cu, Propagation, Result, Source};
 use ffi::pssn;

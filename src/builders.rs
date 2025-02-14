@@ -1,5 +1,11 @@
-pub mod atmosphere;
-pub mod centroiding;
-pub mod gmt;
-pub mod imaging;
-pub mod source;
+mod atmosphere;
+mod centroiding;
+mod gmt;
+mod imaging;
+mod source;
+
+pub use atmosphere::{AtmosphereBuilder, AtmosphereBuilderError};
+pub use centroiding::CentroidingBuilder;
+pub use gmt::{GmtBuilder, GmtMirrorBuilder, GmtModesError, MirrorBuilder};
+pub use imaging::ImagingBuilder;
+pub use source::SourceBuilder;

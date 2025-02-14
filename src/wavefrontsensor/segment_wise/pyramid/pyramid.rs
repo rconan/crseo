@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use indicatif::ProgressBar;
 use nalgebra::{DMatrix, DVector};
 
-use crate::builders::source::SourceBuilder;
+use crate::builders::SourceBuilder;
 use crate::imaging::LensletArray;
 use crate::{Builder, Frame, FromBuilder, Gmt, Propagation, SegmentWiseSensor, WavefrontSensor};
 

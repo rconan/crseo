@@ -1,5 +1,5 @@
 pub mod builder;
-use crate::builders::source::SourceBuilder;
+use crate::builders::SourceBuilder;
 pub use builder::GeomShackBuilder;
 mod geom_shack;
 pub use geom_shack::GeomShack;

@@ -19,7 +19,7 @@
 //! ```
 
 use crate::{
-    builders::gmt::{GmtBuilder, GmtModesError, MirrorBuilder},
+    builders::{GmtBuilder, GmtModesError, MirrorBuilder},
     FromBuilder, Propagation, Source,
 };
 use ffi::{gmt_m1, gmt_m2, vector};

@@ -7,7 +7,7 @@ use std::{
     path::Path,
 };
 
-use crate::builders::atmosphere::{AtmosphereBuilder, AtmosphereBuilderError};
+use crate::builders::{AtmosphereBuilder, AtmosphereBuilderError};
 
 use super::{Cu, FromBuilder, Propagation, Single, Source};
 use ffi::atmosphere;

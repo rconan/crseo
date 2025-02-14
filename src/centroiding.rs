@@ -1,4 +1,4 @@
-use crate::{builders::centroiding::CentroidingBuilder, Builder, FromBuilder};
+use crate::{builders::CentroidingBuilder, Builder, FromBuilder};
 
 use ffi::{centroiding, dev2host, host2dev_char, mask};
 

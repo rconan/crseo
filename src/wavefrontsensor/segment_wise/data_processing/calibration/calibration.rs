@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use slopes::Slopes;
 
 use crate::{
-    builders::source::SourceBuilder,
+    builders::SourceBuilder,
     wavefrontsensor::{
         segment_wise::data_processing::{
             slopes, slopes_array::SlopesArrayError, TruncatedPseudoInverse,
