@@ -83,6 +83,7 @@ impl CuType for Single {
         }
     }
 }
+#[derive(Default)]
 pub struct Cu<T: CuType> {
     _c_: T,
     /// number of rows

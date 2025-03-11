@@ -86,20 +86,22 @@ impl SegmentPistonSensor {
         Frame {
             dev: cu,
             n_px_camera: self._c_.camera.N_PX_CAMERA as usize,
-            resolution: resolution,
+            resolution,
             n_frame: 1,
+            idx: self._c_.camera.N_FRAME as usize,
         }
     }
     /// Returns the FFT frame
     pub fn fft_frame(&self) -> Frame {
-        let n = self.fft_size();
-        let mut cu = Cu::<Single>::vector(n.pow(2));
+        let resolution = self.fft_size();
+        let mut cu = Cu::<Single>::vector(resolution.pow(2));
         cu.from_ptr(self._c_.FFT.d__frame);
         Frame {
             dev: cu,
             n_px_camera: self._c_.FFT.N_PX_CAMERA as usize,
-            resolution: n,
+            resolution,
             n_frame: 1,
+            idx: self._c_.FFT.N_FRAME as usize,
         }
     }
     /// Resets both the camera and FFT frames

@@ -157,24 +157,25 @@ impl Default for NoiseDataSheet {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Frame {
     pub dev: Cu<Single>,
     pub n_px_camera: usize,
     pub resolution: usize,
     pub n_frame: usize,
+    pub idx: usize,
 }
 
-impl Default for Frame {
-    fn default() -> Self {
-        Self {
-            dev: Cu::new(),
-            n_px_camera: Default::default(),
-            resolution: Default::default(),
-            n_frame: Default::default(),
-        }
-    }
-}
+// impl Default for Frame {
+//     fn default() -> Self {
+//         Self {
+//             dev: Cu::new(),
+//             n_px_camera: Default::default(),
+//             resolution: Default::default(),
+//             n_frame: Default::default(),
+//         }
+//     }
+// }
 impl From<&mut Frame> for Vec<f32> {
     fn from(value: &mut Frame) -> Self {
         value.dev.from_dev()
@@ -205,6 +206,7 @@ impl From<Vec<f32>> for Frame {
             n_px_camera: sqrt_n,
             resolution: sqrt_n,
             n_frame: 1,
+            idx: 1,
         }
     }
 }
@@ -216,7 +218,11 @@ impl Frame {
             n_px_camera,
             resolution,
             n_frame: 1,
+            idx: 1,
         }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.idx == 0
     }
     pub fn roi(&self) -> (usize, usize) {
         (self.resolution, self.resolution)
@@ -300,6 +306,7 @@ impl Imaging {
             n_px_camera: self._c_.N_PX_CAMERA as usize,
             resolution: self.resolution() as usize,
             n_frame: self._c_.N_SOURCE as usize,
+            idx: self._c_.N_FRAME as usize,
         }
     }
     /// Resets the detector frame to zero
