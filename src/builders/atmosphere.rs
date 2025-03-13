@@ -191,7 +191,7 @@ impl Builder for AtmosphereBuilder {
             },
             Some(rtc) => match &rtc.filepath {
                 Some(file) => unsafe {
-                    let path = Path::new(dbg!(file))
+                    let path = Path::new(file)
                         .with_extension("")
                         .with_extension("toml");
                     if path
