@@ -102,7 +102,7 @@ impl SourceBuilder {
                 .iter()
                 .find(|photometry| band == **photometry)
                 .is_some(),
-            "found photometric band {band}, expected V, R, I, J, H or K"
+            "found photometric band {band}, expected V, R, I, R+I, J, H or K"
         );
         Self {
             band: band.to_owned(),

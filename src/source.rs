@@ -37,7 +37,7 @@ use std::{
     usize,
 };
 
-pub(crate) const PHOTOMETRY: [&str; 6] = ["V", "R", "I", "J", "H", "K"];
+pub(crate) const PHOTOMETRY: [&str; 9] = ["V", "R", "I", "J", "H", "K", "Ks", "R+I", "VIS"];
 
 /// A system that mutates `Source` arguments should implement the `Propagation` trait
 pub trait Propagation {
