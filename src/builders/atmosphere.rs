@@ -5,9 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    atmosphere::TurbulenceProfile, Atmosphere, AtmosphereError, Builder, CrseoError, RayTracing,
-};
+use crate::{atmosphere::TurbulenceProfile, Atmosphere, Builder, CrseoError, RayTracing};
 
 /// [`CEO`](../struct.CEO.html#impl-6) [`Atmosphere`](../struct.Atmosphere.html) builder type
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -55,6 +53,8 @@ pub enum AtmosphereBuilderError {
     Load(#[from] toml::de::Error),
     #[error("cannot serialize `::crseo::AtmosphereBuilder` into toml")]
     Save(#[from] toml::ser::Error),
+    #[error("cannot find atmosphere toml file: {1}")]
+    Toml(#[source] std::io::Error, PathBuf),
 }
 
 /// ## `Atmosphere` builder
@@ -191,16 +191,22 @@ impl Builder for AtmosphereBuilder {
             },
             Some(rtc) => match &rtc.filepath {
                 Some(file) => unsafe {
-                    let path = Path::new(file).with_extension("").with_extension("toml");
-                    if let Ok(builder) = Self::load(&path) {
-                        if builder != self {
-                            panic!(
-                                "{:?} does not match the definition of the AtmosphereBuilder",
-                                path
-                            );
-                        }
+                    let path = Path::new(dbg!(file))
+                        .with_extension("")
+                        .with_extension("toml");
+                    if path
+                        .try_exists()
+                        .map_err(|e| AtmosphereBuilderError::Toml(e, path.clone()))?
+                    {
+                        log::info!("Looking up atmosphere model properties from {:?}", path);
+                        assert_eq!(
+                            Self::load(&path)?,
+                            self,
+                            "{:?} does not match the definition of the AtmosphereBuilder",
+                            path
+                        );
                     } else {
-                        self.save(&path).map_err(|e| AtmosphereError::from(e))?;
+                        self.save(&path)?;
                     }
                     log::info!("Looking up phase screen from file {}", file);
                     atm._c_.setup2(

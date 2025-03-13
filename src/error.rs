@@ -1,3 +1,5 @@
+use crate::builders::AtmosphereBuilderError;
+
 #[derive(Debug, thiserror::Error)]
 pub enum CrseoError {
     #[error("The path {0} does not exist, set the environment variable GMT_MODES_PATH to the path to the directory that contains the files with the modes.")]
@@ -5,7 +7,7 @@ pub enum CrseoError {
     #[error("FFI null panic")]
     FFI(#[from] std::ffi::NulError),
     #[error("cannot build `::crseo::Atmosphere`")]
-    Atmosphere(#[from] crate::AtmosphereError),
+    Atmosphere(#[from] AtmosphereBuilderError),
     #[error("cannot build `::crseo::Gmt`")]
     Gmt(#[from] crate::GmtError),
 }

@@ -59,12 +59,12 @@ impl Default for TurbulenceProfile {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[doc(hidden)]
 pub struct RayTracing {
-    pub width: f32,
-    pub n_width_px: i32,
-    pub field_size: f32,
-    pub duration: f32,
-    pub filepath: Option<String>,
-    pub n_duration: Option<i32>,
+    pub(crate) width: f32,
+    pub(crate) n_width_px: i32,
+    pub(crate) field_size: f32,
+    pub(crate) duration: f32,
+    pub(crate) filepath: Option<String>,
+    pub(crate) n_duration: Option<i32>,
 }
 /// Default properties:
 ///  * width        : 25.5m
