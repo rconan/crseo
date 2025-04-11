@@ -343,12 +343,12 @@ impl Imaging {
         );
         self
     }
-    /// Sets the pixel scale
+    /* /// Sets the pixel scale
     pub fn set_pixel_scalep(&mut self, src: &mut Source) -> &mut Self {
         self._c_.pixel_scale = (src.wavelength() / src.pupil_size / self.dft_osf as f64) as f32
             * (self._c_.N_SIDE_LENSLET * self._c_.BIN_IMAGE) as f32;
         self
-    }
+    } */
     /// Returns the detector pixel scale
     pub fn pixel_scale(&self, src: &Source) -> f32 {
         (src.wavelength() / src.pupil_size / self.dft_osf as f64) as f32
@@ -358,15 +358,30 @@ impl Imaging {
     pub fn field_of_view(&self, src: &Source) -> f32 {
         self.pixel_scale(src) * (self._c_.N_PX_CAMERA as f32)
     }
-    /// Sets the detector pointing direction
+    /// Sets the detector pointing direction error relative to the guide star
+    ///
+    /// The error is given in cartesian coordinates and in radians units
     pub fn pointing(
         &mut self,
-        mut zen: Vec<f32>,
-        mut azi: Vec<f32>,
-        pixel_scale: f64,
+        xy: &[(f64, f64)],
+        src: &Source, // mut zen: Vec<f32>,
+                      // mut azi: Vec<f32>,
+                      // pixel_scale: f64,
     ) -> &mut Self {
         unsafe {
-            self._c_.pixel_scale = pixel_scale as f32;
+            assert_eq!(xy.len(), src.size as usize);
+            let za = src.zenith.iter().zip(&src.azimuth);
+            let (mut zen, mut azi): (Vec<_>, Vec<_>) = xy
+                .iter()
+                .zip(za)
+                .map(|((x, y), (&z, a))| {
+                    let (sa, ca) = a.sin_cos();
+                    let (x, y) = (*x as f32 + z * ca, *y as f32 + z * sa);
+                    (x.hypot(y), y.atan2(x))
+                })
+                .unzip();
+            self._c_.pixel_scale = (src.wavelength() / src.pupil_size / self.dft_osf as f64) as f32
+                * (self._c_.N_SIDE_LENSLET) as f32;
             self._c_.absolute_pointing = 1;
             self._c_
                 .set_pointing_direction(zen.as_mut_ptr(), azi.as_mut_ptr());
