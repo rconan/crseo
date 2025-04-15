@@ -306,7 +306,10 @@ impl Gmt {
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
     pub fn m1_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
-        assert!(sid > 0 && sid < 8, "Segment ID must be in the range [1,7]!");
+        assert!(
+            sid > 0 && sid < 8,
+            "segment ID ({sid}) must be in the range [1,7]!"
+        );
         let t_xyz = vector {
             x: t_xyz[0],
             y: t_xyz[1],
