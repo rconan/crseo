@@ -1,4 +1,7 @@
-use crate::{builders::SourceBuilder, FromBuilder};
+use crate::{
+    builders::{AtmosphereBuilder, SourceBuilder},
+    FromBuilder,
+};
 
 use super::{cu, Builder, Cu, Propagation, Result, Source};
 use ffi::pssn;
@@ -42,6 +45,38 @@ impl<T: PSSnErrors> PartialEq for PSSnBuilder<T> {
             && self.oscale == other.oscale
             && self.zenith_angle == other.zenith_angle
             && self.src == other.src
+    }
+}
+impl<T: PSSnErrors> From<AtmosphereBuilder> for PSSnBuilder<T> {
+    fn from(atm: AtmosphereBuilder) -> Self {
+        let AtmosphereBuilder {
+            r0_at_zenith,
+            oscale,
+            zenith_angle,
+            ..
+        } = atm;
+        Self {
+            r0_at_zenith,
+            oscale,
+            zenith_angle,
+            ..Default::default()
+        }
+    }
+}
+impl<T: PSSnErrors> From<&AtmosphereBuilder> for PSSnBuilder<T> {
+    fn from(atm: &AtmosphereBuilder) -> Self {
+        let &AtmosphereBuilder {
+            r0_at_zenith,
+            oscale,
+            zenith_angle,
+            ..
+        } = atm;
+        Self {
+            r0_at_zenith,
+            oscale,
+            zenith_angle,
+            ..Default::default()
+        }
     }
 }
 /// Default properties:
