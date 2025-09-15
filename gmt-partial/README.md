@@ -1,4 +1,5 @@
 # GMT partial PSF
 
-GMT PSF with a few segments removes:
+GMT PSF with a few segments removed:
+
 ![gmt-partial.gif](gmt-partial.gif)
