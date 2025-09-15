@@ -1,0 +1,10 @@
+[package]
+name = "gmt-partial"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.99"
+colorous = "1.0.16"
+crseo = { version = "2.5.2", path = ".." }
+image = "0.25.8"
