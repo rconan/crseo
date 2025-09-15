@@ -5,7 +5,6 @@ Cargo.lock
 *.bin
 *.pkl
 *.png
-*.gif
 *.svg
  markdown-code-fontification:rustic-mode
 /data
