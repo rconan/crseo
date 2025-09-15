@@ -1,3 +1,17 @@
+/*!
+# GMT PSF from 1 to 7 segments
+
+Compute each image with
+```shell
+cargo r -r
+```
+and then build the gif with
+```shell
+convert -delay 200 -loop 0 image_*.png gmt-partial.gif
+convert gmt-partial.gif -coalesce -duplicate 1,-2-1 -set loop 0 gmt-partial.gif
+```
+*/
+
 use crseo::{Builder, FromBuilder, Gmt, Imaging, Source, imaging::Detector};
 use image::{Rgb, RgbImage, imageops};
 
