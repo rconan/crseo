@@ -396,7 +396,7 @@ impl Display for Imaging {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "Imaging (x{}): {}x{} lenslets, {}x{} pixels, osf {}, {}x{} binning",
+            "Imaging (x{}): {}x{} lenslets, {}x{} pixels, osf {}, {}x{} binning, flux threshold: {:.2}",
             self._c_.N_SOURCE,
             self._c_.N_SIDE_LENSLET,
             self._c_.N_SIDE_LENSLET,
@@ -404,7 +404,7 @@ impl Display for Imaging {
             self._c_.N_PX_CAMERA,
             self.dft_osf,
             self._c_.BIN_IMAGE,
-            self._c_.BIN_IMAGE
+            self._c_.BIN_IMAGE,self.fluxlet_threshold
         )
     }
 }

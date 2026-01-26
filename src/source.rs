@@ -92,12 +92,22 @@ pub struct Source {
 }
 impl Display for Source {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(
-            f,
-            "Source(x{}) @ λ={:.0}nm",
-            self.size,
-            self.wavelength() * 1e9
-        )?;
+        if self._c_.fwhm>0.0 {
+            writeln!(
+                f,
+                "Source({}px x{}) @ λ={:.0}nm",
+                self._c_.fwhm,
+                self.size,
+                self.wavelength() * 1e9
+            )?;
+        } else {
+            writeln!(
+                f,
+                "Source(x{}) @ λ={:.0}nm",
+                self.size,
+                self.wavelength() * 1e9
+            )?;
+        }
         writeln!(
             f,
             "  zenith: {:.2?}arcsec",
