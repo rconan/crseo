@@ -105,11 +105,11 @@ impl DispersedFringeSensor {
 
         let x = (0..n)
             .flat_map(move |i| repeat(i).take(n))
-            .map(move |x| (x as f32 - 0.5 * (n - 1) as f32));
+            .map(move |x| x as f32 - 0.5 * (n - 1) as f32 );
         let y = (0..n)
             .cycle()
             .take(n * n)
-            .map(move |x| (x as f32 - 0.5 * (n - 1) as f32));
+            .map(move |x| x as f32 - 0.5 * (n - 1) as f32 );
 
         x.zip(y).map(move |(x, y)| {
             let (so, co) = O[i].sin_cos();

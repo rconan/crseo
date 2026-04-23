@@ -73,6 +73,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 pub struct ShackHartmann24x24<T: Model>(ShackHartmann<T>);
 impl<T: Model> Deref for ShackHartmann24x24<T> {
     type Target = ShackHartmann<T>;
