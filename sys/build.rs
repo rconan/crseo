@@ -58,6 +58,7 @@ fn main() {
         .allowlist_type("pyramid")
         .allowlist_type("conic")
         .allowlist_type("segmentPistonSensor")
+        .allowlist_type("zernikeS")
         .allowlist_function("transform_to_S")
         .allowlist_function("transform_to_R")
         .allowlist_function("intersect")

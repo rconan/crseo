@@ -36,6 +36,7 @@ pub mod raytracing;
 pub mod segment_piston_sensor;
 pub mod source;
 pub mod wavefrontsensor;
+pub mod zernikes;
 
 #[doc(inline)]
 pub use atmosphere::{Atmosphere, AtmosphereError, RayTracing};
@@ -71,6 +72,8 @@ pub use wavefrontsensor::{
     Diffractive, Frame, Geometric, Pyramid, SegmentWiseSensor, SegmentWiseSensorBuilder,
     ShackHartmann, Stroke, SH24, SH48,
 };
+#[doc(inline)]
+pub use zernikes::ZernikeS;
 
 pub type GeometricShackHartmann = ShackHartmann<wavefrontsensor::Geometric>;
 

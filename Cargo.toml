@@ -42,6 +42,7 @@ nanorand = "0.8.0"
 complot = "0.3.5"
 criterion = "0.8.2"
 env_logger = "0.11.10"
+triangle-rs = "0.1.2"
 
 [features]
 analytic = []

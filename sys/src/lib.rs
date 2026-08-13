@@ -791,3 +791,33 @@ impl std::fmt::Display for gmt_m2 {
         write!(f, "M2")
     }
 }
+
+impl Default for zernikeS {
+    fn default() -> Self {
+        Self {
+            max_n: Default::default(),
+            j: Default::default(),
+            n: Default::default(),
+            m: Default::default(),
+            n_mode: Default::default(),
+            a: Default::default(),
+            d__a: Default::default(),
+            bx: Default::default(),
+            by: Default::default(),
+            d__bx: Default::default(),
+            d__by: Default::default(),
+            bx_row_idx: Default::default(),
+            bx_col_ptr: Default::default(),
+            by_row_idx: Default::default(),
+            by_col_ptr: Default::default(),
+            bx_nnz: Default::default(),
+            by_nnz: Default::default(),
+            cx: Default::default(),
+            d__cx: Default::default(),
+            cy: Default::default(),
+            d__cy: Default::default(),
+            N: Default::default(),
+            ref_frame: Default::default(),
+        }
+    }
+}
