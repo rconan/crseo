@@ -1,4 +1,8 @@
-use std::{fmt::Display, mem};
+use std::{
+    fmt::Display,
+    mem,
+    ops::{Index, IndexMut},
+};
 
 use ffi::zernikeS;
 
@@ -43,16 +47,18 @@ impl ZernikeS {
         self.n_mode as usize
     }
     /// Updates the Zernike coefficients
-    pub fn update(&mut self, a: impl Into<Vec<f64>>) -> &mut Self {
-        let a = a.into();
-        assert_eq!(
-            a.len(),
-            self.n_mode as usize,
-            "expected {} Zernike coefficients, found {}",
-            self.n_mode,
-            a.len()
-        );
-        let _ = mem::replace(&mut self.a, a);
+    pub fn update(&mut self, a: Option<impl Into<Vec<f64>>>) -> &mut Self {
+        if let Some(a) = a {
+            let a = a.into();
+            assert_eq!(
+                a.len(),
+                self.n_mode as usize,
+                "expected {} Zernike coefficients, found {}",
+                self.n_mode,
+                a.len()
+            );
+            let _ = mem::replace(&mut self.a, a);
+        }
         unsafe {
             self._c_.update(self.a.as_mut_ptr());
         }
@@ -82,6 +88,19 @@ impl ZernikeS {
             }
         }
         surface.into()
+    }
+}
+
+impl Index<usize> for ZernikeS {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.a[index]
+    }
+}
+impl IndexMut<usize> for ZernikeS {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.a[index]
     }
 }
 
@@ -120,10 +139,12 @@ mod test {
         let mut zs = ZernikeS::builder().n_radial_order(11).build().unwrap();
         println!("{zs}");
 
-        let mut a = vec![0f64; zs.n_mode()];
-        a[65] = 1f64;
-        zs.update(a);
-
+        // let mut a = vec![0f64; zs.n_mode()];
+        // a[65] = 1f64;
+        // zs.update(a);
+        zs[6] = 1f64;
+        zs.update(Option::<Vec<_>>::None);
+        
         let n = 101;
         let ps: Vec<_> = (0..n)
             .flat_map(|i| {
@@ -143,10 +164,16 @@ mod test {
         let mut cu_r = Cu::<Double>::from(r);
         let mut cu_o = Cu::<Double>::from(o);
         let s = zs.surface(&mut cu_r, &mut cu_o);
-        let red_s: Vec<_> = mesh.triangle_iter().map(|idx| (s[idx[0]]+s[idx[1]]+s[idx[2]])/3f64).collect();
+        let red_s: Vec<_> = mesh
+            .triangle_iter()
+            .map(|idx| (s[idx[0]] + s[idx[1]] + s[idx[2]]) / 3f64)
+            .collect();
         let iter = mesh.triangle_vertex_iter();
         let _ = complot::tri::Mesh::from((iter, None));
-        let iter = mesh.triangle_vertex_iter().zip(&red_s).map(|(xy, s)| (xy, *s));
+        let iter = mesh
+            .triangle_vertex_iter()
+            .zip(&red_s)
+            .map(|(xy, s)| (xy, *s));
         let _ = complot::tri::Heatmap::from((iter, None));
     }
 }
