@@ -1,13 +1,12 @@
 use crate::{
-    gmt::{GmtM1, GmtM2, GmtMx},
-    Builder, CrseoError, Gmt, GmtError,
+    Builder, CrseoError, Gmt, GmtError, gmt::{GmtM1, GmtM2, GmtMx, ModeType}
 };
 use serde::{Deserialize, Serialize};
 use std::{env, ffi::CString, path::Path};
 
 #[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct MirrorBuilder {
-    pub mode_type: String,
+    pub mode_type: ModeType,
     pub n_mode: usize,
     pub a: Vec<f64>,
 }
@@ -187,7 +186,7 @@ pub enum GmtModesError {
 
 impl MirrorBuilder {
     fn mode_path(&self) -> std::result::Result<String, GmtModesError> {
-        let mode_type = Path::new(&self.mode_type).with_extension("ceo");
+        let mode_type = Path::new(&self.mode_type.to_string()).with_extension("ceo");
         if mode_type.is_file() {
             Ok(mode_type.to_str().unwrap().to_owned())
         } else {

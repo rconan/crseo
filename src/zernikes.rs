@@ -9,6 +9,7 @@ use ffi::zernikeS;
 use crate::{builders::ZernikeSBuilder, cu::Double, Builder, Cu, FromBuilder};
 
 /// Zernike surface
+#[derive(Debug)]
 pub struct ZernikeS {
     pub(crate) _c_: zernikeS,
     pub(crate) max_n: usize,

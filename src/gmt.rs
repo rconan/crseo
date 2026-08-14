@@ -19,10 +19,10 @@
 //! ```
 
 use crate::{
-    builders::{GmtBuilder, GmtModesError, MirrorBuilder},
-    FromBuilder, Propagation, Source,
+    FromBuilder, Propagation, Source, ZernikeS, builders::{GmtBuilder, GmtModesError, MirrorBuilder}
 };
 use ffi::{gmt_m1, gmt_m2, vector};
+use serde::{Deserialize, Serialize};
 use std::{
     ffi::CStr,
     fmt::{Debug, Display},
@@ -135,11 +135,39 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum ModeType {
+    CeoFile(String),
+    Zernike,
+}
+impl Default for ModeType {
+    fn default() -> Self {
+        Self::CeoFile(String::new())
+    }
+}
+impl Display for ModeType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ModeType::CeoFile(name) => write!(f, "{name}"),
+            ModeType::Zernike => write!(f, "zernike"),
+        }
+    }
+}
+impl From<&str> for ModeType {
+    fn from(value: &str) -> Self {
+        Self::CeoFile(value.into())
+    }
+}
+impl From<String> for ModeType {
+    fn from(value: String) -> Self {
+        Self::CeoFile(value)
+    }
+}
 #[derive(Debug, Default)]
 pub struct Mirror<M: GmtMx> {
     pub _c_: M,
     /// mirror mode shapes name
-    pub mode_type: String,
+    pub mode_type: ModeType,
     /// number of modes per segment
     pub n_mode: usize,
     // modes coefficients
@@ -243,7 +271,7 @@ impl FromBuilder for Gmt {
 }
 impl Gmt {
     /// Returns `Gmt` M1 mode type
-    pub fn get_m1_mode_type(&self) -> String {
+    pub fn get_m1_mode_type(&self) -> ModeType {
         unsafe {
             String::from(
                 CStr::from_ptr(self.m1.BS.filename.as_ptr())
@@ -251,6 +279,7 @@ impl Gmt {
                     .expect("CStr::to_str failed"),
             )
         }
+        .into()
     }
     /// Returns `Gmt` M1 properties
     pub fn get_m1(&self) -> MirrorBuilder {
@@ -269,7 +298,7 @@ impl Gmt {
         }
     }
     /// Returns `Gmt` M2 mode type
-    pub fn get_m2_mode_type(&self) -> String {
+    pub fn get_m2_mode_type(&self) -> ModeType {
         unsafe {
             String::from(
                 CStr::from_ptr(self.m2.BS.filename.as_ptr())
@@ -277,6 +306,7 @@ impl Gmt {
                     .expect("CStr::to_str failed"),
             )
         }
+        .into()
     }
     /// Resets M1 and M2 to their aligned states
     pub fn reset(&mut self) -> &mut Self {
@@ -772,4 +802,3 @@ mod tests {
     }
     */
 }
-
