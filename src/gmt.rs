@@ -579,20 +579,20 @@ impl Propagation for Gmt {
     }
 }
 
-/* #[cfg(test)]
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::{Builder, FromBuilder};
 
     #[test]
     fn gmt_new() {
-        Gmt::builder().m1.n_mode(27).m2.n_mode(123).build().unwrap();
+        Gmt::builder().m1_n_mode(27).m2_n_mode(123).build().unwrap();
     }
 
-    #[test]
-    fn gmt_new_with_macro() {
-        crate::ceo!(GmtBuilder, m1.n_mode = [27], m2.n_mode = [123]);
-    }
+    // #[test]
+    // fn gmt_new_with_macro() {
+    //     crate::ceo!(GmtBuilder, m1.n_mode = [27], m2.n_mode = [123]);
+    // }
 
     #[test]
     fn gmt_optical_alignment() {
@@ -772,4 +772,4 @@ mod tests {
     }
     */
 }
- */
+
