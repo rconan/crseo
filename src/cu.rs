@@ -312,6 +312,13 @@ impl From<&[f64]> for Cu<Single> {
         this
     }
 }
+impl From<&[f64]> for Cu<Double> {
+    fn from(item: &[f64]) -> Self {
+        let mut this = Cu::<Double>::vector(item.len());
+        this.to_dev(&mut item.into_iter().map(|x| *x).collect::<Vec<f64>>());
+        this
+    }
+}
 impl From<Vec<Vec<f32>>> for Cu<Single> {
     fn from(item: Vec<Vec<f32>>) -> Self {
         let n_cols = item.len();
