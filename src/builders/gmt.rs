@@ -1,14 +1,19 @@
 use crate::{
-    Builder, CrseoError, Gmt, GmtError, gmt::{GmtM1, GmtM2, GmtMx, ModeType}
+    Builder, CrseoError, Gmt, GmtError,
+    gmt::{GmtM1, GmtM2, GmtMx, Mirror, ModeKind, ModeType, SurfaceMode},
 };
 use serde::{Deserialize, Serialize};
-use std::{env, ffi::CString, path::Path};
+use std::{env, ffi::CString, marker::PhantomData, path::Path};
 
 #[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct MirrorBuilder {
+pub struct MirrorBuilder<K = SurfaceMode>
+where
+    K: ModeKind,
+{
     pub mode_type: ModeType,
     pub n_mode: usize,
     pub a: Vec<f64>,
+    pub(crate) mode_kind: PhantomData<K>,
 }
 impl MirrorBuilder {
     /// Sets the type of mirror modes
@@ -200,35 +205,53 @@ impl MirrorBuilder {
         }
     }
 }
+impl TryFrom<MirrorBuilder> for Mirror<GmtM1> {
+    type Error = GmtError;
+    fn try_from(builder: MirrorBuilder) -> Result<Self, Self::Error> {
+        let mode_path = builder.mode_path();
+        let mut mirror = Self {
+            _c_: Default::default(),
+            mode_type: builder.mode_type,
+            n_mode: builder.n_mode,
+            a: builder.a,
+            mode_kind: PhantomData,
+        };
+        let mode_type = CString::new(mode_path.map_err(|e| GmtError::from(e))?)?;
+        unsafe {
+            let n_mode = mirror.n_mode;
+            mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+        }
+        Ok(mirror)
+    }
+}
+impl TryFrom<MirrorBuilder> for Mirror<GmtM2> {
+    type Error = GmtError;
+    fn try_from(builder: MirrorBuilder) -> Result<Self, Self::Error> {
+        let mode_path = builder.mode_path().map_err(|e| GmtError::from(e))?;
+        let mut mirror = Self {
+            _c_: Default::default(),
+            mode_type: builder.mode_type,
+            n_mode: builder.n_mode,
+            a: builder.a,
+            mode_kind: PhantomData,
+        };
+        let mode_type = CString::new(mode_path)?;
+        unsafe {
+            let n_mode = mirror.n_mode;
+            mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+        }
+        Ok(mirror)
+    }
+}
 impl Builder for GmtBuilder {
     type Component = Gmt;
     fn build(self) -> std::result::Result<Gmt, CrseoError> {
-        let m1_mode_type = CString::new(self.m1.mode_path().map_err(|e| GmtError::from(e))?)?;
-        let m2_mode_type = CString::new(self.m2.mode_path().map_err(|e| GmtError::from(e))?)?;
-
         let mut gmt = Gmt {
-            m1: self.m1.into(),
-            m2: self.m2.into(),
-            // m1_n_mode: 0,
-            // m2_n_mode: 0,
-            // m2_max_n: 0,
-            // a1: self.m1.a.clone(),
-            // a2: self.m2.a.clone(),
+            m1: self.m1.try_into()?,
+            m2: self.m2.try_into()?,
             pointing_error: self.pointing_error,
             m1_truss_projection: self.m1_truss_projection,
         };
-
-        // gmt.m1_n_mode = self.m1.n_mode;
-        unsafe {
-            let n_mode = gmt.m1.n_mode;
-            gmt.m1.setup1(m1_mode_type.into_raw(), 7, n_mode as i32);
-        }
-
-        // gmt.m2_n_mode = self.m2.n_mode;
-        unsafe {
-            let n_mode = gmt.m2.n_mode;
-            gmt.m2.setup1(m2_mode_type.into_raw(), 7, n_mode as i32);
-        }
         gmt.reset();
         Ok(gmt)
     }

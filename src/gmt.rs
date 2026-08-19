@@ -26,8 +26,9 @@ use crate::{
 };
 use ffi::{gmt_m1, gmt_m2, vector};
 use std::{
-    ffi::CStr,
+    ffi::{CStr, NulError},
     fmt::{Debug, Display},
+    marker::PhantomData,
 };
 
 pub use mirror::{
@@ -47,6 +48,8 @@ pub enum GmtError {
     SegmentDof,
     #[error("mirror modes file not found")]
     Modes(#[from] GmtModesError),
+    #[error("modes name conversion to C-string failed")]
+    ModesName(#[from] NulError),
 }
 
 // pub trait GmtMirror<M: GmtMx> {
@@ -121,6 +124,7 @@ impl Gmt {
             mode_type: self.get_m1_mode_type(),
             n_mode: self.m1.n_mode,
             a: self.m1.a.clone(),
+            mode_kind: PhantomData,
         }
     }
     /// Returns `Gmt` M2 properties
@@ -129,6 +133,7 @@ impl Gmt {
             mode_type: self.get_m2_mode_type(),
             n_mode: self.m2.n_mode,
             a: self.m2.a.clone(),
+            mode_kind: PhantomData,
         }
     }
     /// Returns `Gmt` M2 mode type

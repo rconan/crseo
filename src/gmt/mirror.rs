@@ -14,9 +14,11 @@ pub type GmtM1 = gmt_m1;
 pub type GmtM2 = gmt_m2;
 
 pub trait ModeKind {}
-pub enum ZernikeMode {}
+#[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ZernikeMode;
 impl ModeKind for ZernikeMode {}
-pub enum SurfaceMode {}
+#[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct SurfaceMode; 
 impl ModeKind for SurfaceMode {}
 
 pub trait GmtMx<K = SurfaceMode>
@@ -177,7 +179,7 @@ where
     pub n_mode: usize,
     // modes coefficients
     pub a: Vec<f64>,
-    mode_kind: PhantomData<K>,
+    pub(crate) mode_kind: PhantomData<K>,
 }
 
 impl<M: GmtMx + Display> Display for Mirror<M> {
@@ -186,17 +188,17 @@ impl<M: GmtMx + Display> Display for Mirror<M> {
     }
 }
 
-impl<M: GmtMx + Default> From<MirrorBuilder> for Mirror<M> {
-    fn from(builder: MirrorBuilder) -> Self {
-        Self {
-            _c_: Default::default(),
-            mode_type: builder.mode_type,
-            n_mode: builder.n_mode,
-            a: builder.a,
-            mode_kind: PhantomData,
-        }
-    }
-}
+// impl<M: GmtMx + Default> From<MirrorBuilder> for Mirror<M> {
+//     fn from(builder: MirrorBuilder) -> Self {
+//         Self {
+//             _c_: Default::default(),
+//             mode_type: builder.mode_type,
+//             n_mode: builder.n_mode,
+//             a: builder.a,
+//             mode_kind: PhantomData,
+//         }
+//     }
+// }
 // impl Mirror<GmtM1> {
 //     fn global_tiptilt(&mut self, tip: f64, tilt: f64) {
 //         unsafe { self._c_.global_tiptilt(tip as f32, tilt as f32) };
