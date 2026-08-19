@@ -18,19 +18,21 @@
 //! let mut gmt = ceo!(Gmt, m1_n_mode = [27]);
 //! ```
 
+mod mirror;
+
 use crate::{
-    FromBuilder, Propagation, Source, ZernikeS, builders::{GmtBuilder, GmtModesError, MirrorBuilder}
+    FromBuilder, Propagation, Source, ZernikeS,
+    builders::{GmtBuilder, GmtModesError, MirrorBuilder},
 };
 use ffi::{gmt_m1, gmt_m2, vector};
-use serde::{Deserialize, Serialize};
 use std::{
     ffi::CStr,
     fmt::{Debug, Display},
-    ops::{Deref, DerefMut},
 };
 
-pub type GmtM1 = gmt_m1;
-pub type GmtM2 = gmt_m2;
+pub use mirror::{
+    GmtM1, GmtM2, GmtMx, Mirror, MirrorGetSet, ModeKind, ModeType, SurfaceMode, ZernikeMode,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum GmtError {
@@ -47,200 +49,39 @@ pub enum GmtError {
     Modes(#[from] GmtModesError),
 }
 
-pub trait GmtMx {
-    fn modes_as_mut(&mut self) -> &mut ffi::modes;
-    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int);
-}
+// pub trait GmtMirror<M: GmtMx> {
+//     fn as_mut(&mut self) -> &mut Mirror<M>;
+//     fn to_string(&self) -> String;
+// }
 
-impl GmtMx for gmt_m1 {
-    #[inline]
-    fn modes_as_mut(&mut self) -> &mut ffi::modes {
-        &mut self.BS
-    }
-    #[inline]
-    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
-        unsafe { self.update(origin_, euler_angles_, idx) }
-    }
-}
-impl GmtMx for gmt_m2 {
-    #[inline]
-    fn modes_as_mut(&mut self) -> &mut ffi::modes {
-        &mut self.BS
-    }
-    #[inline]
-    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
-        unsafe { self.update(origin_, euler_angles_, idx) }
-    }
-}
-
-pub trait MirrorGetSet {
-    /// Sets M2 modal coefficients
-    ///
-    /// The coefficients are given segment wise
-    /// with the same number of modes per segment
-    fn set_modes(&mut self, a: &[f64]) -> &mut Self;
-    /// Setsmodal coefficients for segment #`sid` (0 < `sid` < 8)
-    fn set_segment_modes(&mut self, sid: u8, a: &[f64]) -> &mut Self;
-    /// Sets M1 segment rigid body motion with:
-    ///
-    /// * `sid` - the segment ID number in the range \[1,7\]
-    /// * `t_xyz` - the 3 translations Tx, Ty and Tz
-    /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
-    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64]) -> &mut Self;
-}
-
-impl<M: GmtMx> MirrorGetSet for Mirror<M> {
-    fn set_segment_modes(&mut self, sid: u8, a: &[f64]) -> &mut Self {
-        self.a
-            .chunks_mut(self.n_mode)
-            .skip(sid as usize - 1)
-            .take(1)
-            .for_each(|a_sid: &mut [f64]| {
-                a_sid.iter_mut().zip(a).for_each(|(a_sid, a)| *a_sid = *a)
-            });
-        unsafe {
-            let m_sid_a = self.a.as_mut_ptr();
-            self._c_.modes_as_mut().update(m_sid_a);
-        }
-        self
-    }
-
-    fn set_modes(&mut self, a: &[f64]) -> &mut Self {
-        let a_n_mode = a.len() / 7;
-        self.a
-            .chunks_mut(self.n_mode)
-            .zip(a.chunks(a_n_mode))
-            .for_each(|(a_sid, a)| a_sid.iter_mut().zip(a).for_each(|(a_sid, a)| *a_sid = *a));
-        unsafe {
-            let m_sid_a = self.a.as_mut_ptr();
-            self.modes_as_mut().update(m_sid_a);
-        }
-        self
-    }
-
-    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64]) -> &mut Self {
-        assert!(sid > 0 && sid < 8, "Segment ID must be in the range [1,7]!");
-        let t_xyz = vector {
-            x: tr_xyz[0],
-            y: tr_xyz[1],
-            z: tr_xyz[2],
-        };
-        let r_xyz = vector {
-            x: tr_xyz[3],
-            y: tr_xyz[4],
-            z: tr_xyz[5],
-        };
-        self.update(t_xyz, r_xyz, sid as i32);
-        self
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub enum ModeType {
-    CeoFile(String),
-    Zernike,
-}
-impl Default for ModeType {
-    fn default() -> Self {
-        Self::CeoFile(String::new())
-    }
-}
-impl Display for ModeType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ModeType::CeoFile(name) => write!(f, "{name}"),
-            ModeType::Zernike => write!(f, "zernike"),
-        }
-    }
-}
-impl From<&str> for ModeType {
-    fn from(value: &str) -> Self {
-        Self::CeoFile(value.into())
-    }
-}
-impl From<String> for ModeType {
-    fn from(value: String) -> Self {
-        Self::CeoFile(value)
-    }
-}
-#[derive(Debug, Default)]
-pub struct Mirror<M: GmtMx> {
-    pub _c_: M,
-    /// mirror mode shapes name
-    pub mode_type: ModeType,
-    /// number of modes per segment
-    pub n_mode: usize,
-    // modes coefficients
-    pub a: Vec<f64>,
-}
-
-impl<M: GmtMx + Display> Display for Mirror<M> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} ({},{})", self._c_, self.mode_type, self.n_mode)
-    }
-}
-
-impl<M: GmtMx + Default> From<MirrorBuilder> for Mirror<M> {
-    fn from(builder: MirrorBuilder) -> Self {
-        Self {
-            _c_: Default::default(),
-            mode_type: builder.mode_type,
-            n_mode: builder.n_mode,
-            a: builder.a,
-        }
-    }
-}
-// impl Mirror<GmtM1> {
-//     fn global_tiptilt(&mut self, tip: f64, tilt: f64) {
-//         unsafe { self._c_.global_tiptilt(tip as f32, tilt as f32) };
+// impl GmtMirror<gmt_m1> for Gmt {
+//     fn as_mut(&mut self) -> &mut Mirror<gmt_m1> {
+//         &mut self.m1
+//     }
+//     fn to_string(&self) -> String {
+//         self.m1._c_.to_string()
 //     }
 // }
-// impl Mirror<GmtM2> {
-//     fn global_tiptilt(&mut self, tip: f64, tilt: f64) {
-//         unsafe { self._c_.global_tiptilt(tip as f32, tilt as f32) };
+
+// impl GmtMirror<gmt_m2> for Gmt {
+//     fn as_mut(&mut self) -> &mut Mirror<gmt_m2> {
+//         &mut self.m2
+//     }
+//     fn to_string(&self) -> String {
+//         self.m2._c_.to_string()
 //     }
 // }
-impl<M: GmtMx> Deref for Mirror<M> {
-    type Target = M;
-
-    fn deref(&self) -> &Self::Target {
-        &self._c_
-    }
-}
-
-impl<M: GmtMx> DerefMut for Mirror<M> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self._c_
-    }
-}
-
-pub trait GmtMirror<M: GmtMx> {
-    fn as_mut(&mut self) -> &mut Mirror<M>;
-    fn to_string(&self) -> String;
-}
-
-impl GmtMirror<gmt_m1> for Gmt {
-    fn as_mut(&mut self) -> &mut Mirror<gmt_m1> {
-        &mut self.m1
-    }
-    fn to_string(&self) -> String {
-        self.m1._c_.to_string()
-    }
-}
-
-impl GmtMirror<gmt_m2> for Gmt {
-    fn as_mut(&mut self) -> &mut Mirror<gmt_m2> {
-        &mut self.m2
-    }
-    fn to_string(&self) -> String {
-        self.m2._c_.to_string()
-    }
-}
 
 /// GMT wrapper
-pub struct Gmt {
-    pub m1: Mirror<gmt_m1>,
-    pub m2: Mirror<gmt_m2>,
+pub struct Gmt<K1 = SurfaceMode, K2 = SurfaceMode>
+where
+    K1: ModeKind,
+    K2: ModeKind,
+    gmt_m1: GmtMx<K1>,
+    gmt_m2: GmtMx<K2>,
+{
+    pub m1: Mirror<gmt_m1, K1>,
+    pub m2: Mirror<gmt_m2, K2>,
     /*     /// M1 number of bending modes per segment
        pub m1.n_mode: usize,
        /// M2 number of bending modes per segment
@@ -272,14 +113,7 @@ impl FromBuilder for Gmt {
 impl Gmt {
     /// Returns `Gmt` M1 mode type
     pub fn get_m1_mode_type(&self) -> ModeType {
-        unsafe {
-            String::from(
-                CStr::from_ptr(self.m1.BS.filename.as_ptr())
-                    .to_str()
-                    .expect("CStr::to_str failed"),
-            )
-        }
-        .into()
+        self.m1.get_mode_type()
     }
     /// Returns `Gmt` M1 properties
     pub fn get_m1(&self) -> MirrorBuilder {
@@ -313,10 +147,16 @@ impl Gmt {
         unsafe {
             self.m1.reset();
             self.m2.reset();
-            let a = self.m1.a.as_mut_ptr();
-            self.m1.BS.update(a);
-            let a = self.m2.a.as_mut_ptr();
-            self.m2.BS.update(a);
+        }
+        if let n = self.m1.a.len()
+            && n > 0
+        {
+            self.m1.set_modes(&vec![0f64; self.m1.a.len()]);
+        }
+        if let n = self.m2.a.len()
+            && n > 0
+        {
+            self.m2.set_modes(&vec![0f64; self.m2.a.len()]);
         }
         self
     }
@@ -379,73 +219,33 @@ impl Gmt {
     /// The coefficients are given segment wise
     /// with the same number of modes per segment
     pub fn m1_modes(&mut self, a: &[f64]) {
-        let a_n_mode = a.len() / 7;
-        self.m1
-            .a
-            .chunks_mut(self.m1.n_mode)
-            .zip(a.chunks(a_n_mode))
-            .for_each(|(a1, a)| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
-        unsafe {
-            let m1_a = self.m1.a.as_mut_ptr();
-            self.m1.BS.update(m1_a);
-        }
+        self.m1.set_modes(a);
     }
     /// Sets M1 modal coefficients for segment #`sid` (0 < `sid` < 8)
     pub fn m1_segment_modes(&mut self, sid: u8, a: &[f64]) {
-        self.m1
-            .a
-            .chunks_mut(self.m1.n_mode)
-            .skip(sid as usize - 1)
-            .take(1)
-            .for_each(|a1| a1.iter_mut().zip(a).for_each(|(a1, a)| *a1 = *a));
-        unsafe {
-            let m1_a = self.m1.a.as_mut_ptr();
-            self.m1.BS.update(m1_a);
-        }
+        self.m1.set_segment_modes(sid, a);
     }
     pub fn m1_modes_ij(&mut self, i: usize, j: usize, value: f64) {
-        let mut a = vec![0f64; 7 * self.m1.n_mode];
-        a[i * self.m1.n_mode + j] = value;
-        unsafe {
-            self.m1.BS.update(a.as_mut_ptr());
-        }
+        let mut a = vec![0f64; self.m1.n_mode];
+        a[j] = value;
+        self.m1_segment_modes(i as u8 + 1, &a);
     }
     /// Sets M2 modal coefficients
     ///
     /// The coefficients are given segment wise
     /// with the same number of modes per segment
     pub fn m2_modes(&mut self, a: &[f64]) {
-        let a_n_mode = a.len() / 7;
-        self.m2
-            .a
-            .chunks_mut(self.m2.n_mode)
-            .zip(a.chunks(a_n_mode))
-            .for_each(|(a2, a)| a2.iter_mut().zip(a).for_each(|(a2, a)| *a2 = *a));
-        unsafe {
-            let m2_a = self.m2.a.as_mut_ptr();
-            self.m2.BS.update(m2_a);
-        }
+        self.m2.set_modes(a);
     }
     /// Sets M2 modal coefficients for segment #`sid` (0 < `sid` < 8)
     pub fn m2_segment_modes(&mut self, sid: u8, a: &[f64]) {
-        self.m2
-            .a
-            .chunks_mut(self.m2.n_mode)
-            .skip(sid as usize - 1)
-            .take(1)
-            .for_each(|a2| a2.iter_mut().zip(a).for_each(|(a2, a)| *a2 = *a));
-        unsafe {
-            let m2_a = self.m2.a.as_mut_ptr();
-            self.m2.BS.update(m2_a);
-        }
+        self.m2.set_segment_modes(sid, a);
     }
     /// Reset the segment modes to 0 and sets M2 modal coefficient #`j` for segment #`i`
     pub fn m2_modes_ij(&mut self, i: usize, j: usize, value: f64) {
-        let mut a = vec![0f64; 7 * self.m2.n_mode];
-        a[i * self.m2.n_mode + j] = value;
-        unsafe {
-            self.m2.BS.update(a.as_mut_ptr());
-        }
+        let mut a = vec![0f64; self.m2.n_mode];
+        a[j] = value;
+        self.m2_segment_modes(i as u8 + 1, &a);
     }
     /// Updates M1 and M1 rigid body motion and M1 model coefficients
     pub fn update(
@@ -546,12 +346,18 @@ impl Gmt {
         self
     }
 }
-impl Drop for Gmt {
+impl<K1, K2> Drop for Gmt<K1, K2>
+where
+    K1: ModeKind,
+    K2: ModeKind,
+    gmt_m1: GmtMx<K1>,
+    gmt_m2: GmtMx<K2>,
+{
     /// Frees CEO memory before dropping `Gmt`
     fn drop(&mut self) {
         unsafe {
-            self.m1.cleanup();
-            self.m2.cleanup();
+            self.m1._c_.cleanup();
+            self.m2._c_.cleanup();
         }
     }
 }
@@ -747,6 +553,43 @@ mod tests {
                 .push(1e6 * (seg_tts[0][k] - seg_tts0[0][k]).hypot(seg_tts[1][k] - seg_tts0[1][k]));
         }
         assert!(delta.iter().all(|x| (x - 0.25).abs() < 1e-2));
+    }
+    #[cfg(feature = "complot")]
+    #[test]
+    fn gmt_m1_bending_modes() {
+        use crate::Source;
+        let mut src = Source::builder().build().unwrap();
+        let mut gmt = Gmt::builder().m1_n_mode(27).build().unwrap();
+        gmt.m1_modes_ij(0, 0, 1e-5);
+        let phase: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .phase()
+            .iter()
+            .map(|x| x * 1e9)
+            .collect();
+        let _ = complot::Heatmap::from(((phase.as_slice(), (512, 512)), None));
+        // gmt.m1_modes_ij(1, 0, 1e-5);
+        gmt.reset();
+        let phase: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .phase()
+            .iter()
+            .map(|x| x * 1e9)
+            .collect();
+        let _ = complot::Heatmap::from(((phase.as_slice(), (512, 512)), None));
+        gmt.m1_modes_ij(0, 0, 1e-5);
+        gmt.m1_modes_ij(1, 1, 1e-5);
+        gmt.m1_modes_ij(2, 2, 1e-5);
+        let phase: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .phase()
+            .iter()
+            .map(|x| x * 1e9)
+            .collect();
+        let _ = complot::Heatmap::from(((phase.as_slice(), (512, 512)), None));
     }
 
     /*
