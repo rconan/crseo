@@ -4796,7 +4796,8 @@ pub struct gmt_m1 {
     pub height: rtd,
     pub V: *mut mask,
     pub idx_offset: ::std::os::raw::c_int,
-    pub ZS: *mut zernikeS,
+    pub ZS: zernikeS,
+    pub zs: bool,
     pub d__piston_mask: *mut ::std::os::raw::c_int,
     pub TT_CS: coordinate_system,
     pub d__C: *mut f64,
@@ -4808,7 +4809,7 @@ pub struct gmt_m1 {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of gmt_m1"][::std::mem::size_of::<gmt_m1>() - 1192usize];
+    ["Size of gmt_m1"][::std::mem::size_of::<gmt_m1>() - 1432usize];
     ["Alignment of gmt_m1"][::std::mem::align_of::<gmt_m1>() - 8usize];
     ["Offset of field: gmt_m1::M_ID"][::std::mem::offset_of!(gmt_m1, M_ID) - 0usize];
     ["Offset of field: gmt_m1::D_assembly"][::std::mem::offset_of!(gmt_m1, D_assembly) - 8usize];
@@ -4842,17 +4843,18 @@ const _: () = {
     ["Offset of field: gmt_m1::V"][::std::mem::offset_of!(gmt_m1, V) - 672usize];
     ["Offset of field: gmt_m1::idx_offset"][::std::mem::offset_of!(gmt_m1, idx_offset) - 680usize];
     ["Offset of field: gmt_m1::ZS"][::std::mem::offset_of!(gmt_m1, ZS) - 688usize];
+    ["Offset of field: gmt_m1::zs"][::std::mem::offset_of!(gmt_m1, zs) - 928usize];
     ["Offset of field: gmt_m1::d__piston_mask"]
-        [::std::mem::offset_of!(gmt_m1, d__piston_mask) - 696usize];
-    ["Offset of field: gmt_m1::TT_CS"][::std::mem::offset_of!(gmt_m1, TT_CS) - 704usize];
-    ["Offset of field: gmt_m1::d__C"][::std::mem::offset_of!(gmt_m1, d__C) - 792usize];
-    ["Offset of field: gmt_m1::d__D"][::std::mem::offset_of!(gmt_m1, d__D) - 800usize];
-    ["Offset of field: gmt_m1::handle"][::std::mem::offset_of!(gmt_m1, handle) - 808usize];
+        [::std::mem::offset_of!(gmt_m1, d__piston_mask) - 936usize];
+    ["Offset of field: gmt_m1::TT_CS"][::std::mem::offset_of!(gmt_m1, TT_CS) - 944usize];
+    ["Offset of field: gmt_m1::d__C"][::std::mem::offset_of!(gmt_m1, d__C) - 1032usize];
+    ["Offset of field: gmt_m1::d__D"][::std::mem::offset_of!(gmt_m1, d__D) - 1040usize];
+    ["Offset of field: gmt_m1::handle"][::std::mem::offset_of!(gmt_m1, handle) - 1048usize];
     ["Offset of field: gmt_m1::d__valid_segments"]
-        [::std::mem::offset_of!(gmt_m1, d__valid_segments) - 816usize];
-    ["Offset of field: gmt_m1::BS"][::std::mem::offset_of!(gmt_m1, BS) - 824usize];
+        [::std::mem::offset_of!(gmt_m1, d__valid_segments) - 1056usize];
+    ["Offset of field: gmt_m1::BS"][::std::mem::offset_of!(gmt_m1, BS) - 1064usize];
     ["Offset of field: gmt_m1::d__segment_reflectivity"]
-        [::std::mem::offset_of!(gmt_m1, d__segment_reflectivity) - 1184usize];
+        [::std::mem::offset_of!(gmt_m1, d__segment_reflectivity) - 1424usize];
 };
 unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m15setupEv"]
@@ -4870,6 +4872,10 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m15setupEP8zernikeS"]
     pub fn gmt_m1_setup2(this: *mut gmt_m1, ZS: *mut zernikeS);
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}_ZN6gmt_m15setupEiPd"]
+    pub fn gmt_m1_setup3(this: *mut gmt_m1, max_n: ::std::os::raw::c_int, a: *mut rtd);
 }
 unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m17cleanupEv"]
@@ -4983,6 +4989,10 @@ impl gmt_m1 {
     #[inline]
     pub unsafe fn setup2(&mut self, ZS: *mut zernikeS) {
         gmt_m1_setup2(self, ZS)
+    }
+    #[inline]
+    pub unsafe fn setup3(&mut self, max_n: ::std::os::raw::c_int, a: *mut rtd) {
+        gmt_m1_setup3(self, max_n, a)
     }
     #[inline]
     pub unsafe fn cleanup(&mut self) {
@@ -5105,7 +5115,8 @@ pub struct gmt_m2 {
     pub height: rtd,
     pub V: *mut mask,
     pub idx_offset: ::std::os::raw::c_int,
-    pub ZS: *mut zernikeS,
+    pub ZS: zernikeS,
+    pub zs: bool,
     pub d__piston_mask: *mut ::std::os::raw::c_int,
     pub TT_CS: coordinate_system,
     pub d__C: *mut f64,
@@ -5117,7 +5128,7 @@ pub struct gmt_m2 {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of gmt_m2"][::std::mem::size_of::<gmt_m2>() - 1192usize];
+    ["Size of gmt_m2"][::std::mem::size_of::<gmt_m2>() - 1432usize];
     ["Alignment of gmt_m2"][::std::mem::align_of::<gmt_m2>() - 8usize];
     ["Offset of field: gmt_m2::M_ID"][::std::mem::offset_of!(gmt_m2, M_ID) - 0usize];
     ["Offset of field: gmt_m2::D_assembly"][::std::mem::offset_of!(gmt_m2, D_assembly) - 8usize];
@@ -5151,17 +5162,18 @@ const _: () = {
     ["Offset of field: gmt_m2::V"][::std::mem::offset_of!(gmt_m2, V) - 672usize];
     ["Offset of field: gmt_m2::idx_offset"][::std::mem::offset_of!(gmt_m2, idx_offset) - 680usize];
     ["Offset of field: gmt_m2::ZS"][::std::mem::offset_of!(gmt_m2, ZS) - 688usize];
+    ["Offset of field: gmt_m2::zs"][::std::mem::offset_of!(gmt_m2, zs) - 928usize];
     ["Offset of field: gmt_m2::d__piston_mask"]
-        [::std::mem::offset_of!(gmt_m2, d__piston_mask) - 696usize];
-    ["Offset of field: gmt_m2::TT_CS"][::std::mem::offset_of!(gmt_m2, TT_CS) - 704usize];
-    ["Offset of field: gmt_m2::d__C"][::std::mem::offset_of!(gmt_m2, d__C) - 792usize];
-    ["Offset of field: gmt_m2::d__D"][::std::mem::offset_of!(gmt_m2, d__D) - 800usize];
-    ["Offset of field: gmt_m2::handle"][::std::mem::offset_of!(gmt_m2, handle) - 808usize];
+        [::std::mem::offset_of!(gmt_m2, d__piston_mask) - 936usize];
+    ["Offset of field: gmt_m2::TT_CS"][::std::mem::offset_of!(gmt_m2, TT_CS) - 944usize];
+    ["Offset of field: gmt_m2::d__C"][::std::mem::offset_of!(gmt_m2, d__C) - 1032usize];
+    ["Offset of field: gmt_m2::d__D"][::std::mem::offset_of!(gmt_m2, d__D) - 1040usize];
+    ["Offset of field: gmt_m2::handle"][::std::mem::offset_of!(gmt_m2, handle) - 1048usize];
     ["Offset of field: gmt_m2::d__valid_segments"]
-        [::std::mem::offset_of!(gmt_m2, d__valid_segments) - 816usize];
-    ["Offset of field: gmt_m2::BS"][::std::mem::offset_of!(gmt_m2, BS) - 824usize];
+        [::std::mem::offset_of!(gmt_m2, d__valid_segments) - 1056usize];
+    ["Offset of field: gmt_m2::BS"][::std::mem::offset_of!(gmt_m2, BS) - 1064usize];
     ["Offset of field: gmt_m2::d__segment_reflectivity"]
-        [::std::mem::offset_of!(gmt_m2, d__segment_reflectivity) - 1184usize];
+        [::std::mem::offset_of!(gmt_m2, d__segment_reflectivity) - 1424usize];
 };
 unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m25setupEv"]
@@ -5179,6 +5191,10 @@ unsafe extern "C" {
 unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m25setupEP8zernikeS"]
     pub fn gmt_m2_setup2(this: *mut gmt_m2, ZS: *mut zernikeS);
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}_ZN6gmt_m25setupEiPd"]
+    pub fn gmt_m2_setup3(this: *mut gmt_m2, max_n: ::std::os::raw::c_int, a: *mut rtd);
 }
 unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m27cleanupEv"]
@@ -5292,6 +5308,10 @@ impl gmt_m2 {
     #[inline]
     pub unsafe fn setup2(&mut self, ZS: *mut zernikeS) {
         gmt_m2_setup2(self, ZS)
+    }
+    #[inline]
+    pub unsafe fn setup3(&mut self, max_n: ::std::os::raw::c_int, a: *mut rtd) {
+        gmt_m2_setup3(self, max_n, a)
     }
     #[inline]
     pub unsafe fn cleanup(&mut self) {
