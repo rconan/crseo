@@ -149,6 +149,7 @@ mod test {
         println!("{zs}");
     }
 
+    #[cfg(feature = "complot")]
     #[test]
     pub fn surface() {
         let mut zs = ZernikeS::builder().n_radial_order(11).build().unwrap();
@@ -190,6 +191,7 @@ mod test {
         let _ = complot::tri::Heatmap::from((iter, None));
     }
 
+    #[cfg(feature = "complot")]
     #[test]
     pub fn surfaces() {
         let n_surf = 2;
