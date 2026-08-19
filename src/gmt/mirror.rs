@@ -8,8 +8,6 @@ use std::{
 use ffi::{gmt_m1, gmt_m2, vector};
 use serde::{Deserialize, Serialize};
 
-use crate::builders::MirrorBuilder;
-
 pub type GmtM1 = gmt_m1;
 pub type GmtM2 = gmt_m2;
 
@@ -18,7 +16,7 @@ pub trait ModeKind {}
 pub struct ZernikeMode;
 impl ModeKind for ZernikeMode {}
 #[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct SurfaceMode; 
+pub struct SurfaceMode;
 impl ModeKind for SurfaceMode {}
 
 pub trait GmtMx<K = SurfaceMode>
