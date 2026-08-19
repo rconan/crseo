@@ -2,7 +2,7 @@
 name = "crseo"
 version = "2.5.3"
 authors = ["Rod Conan <rconan@gmto.org>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 description = "Cuda Engined Optics Rust Interface"
 repository = "https://github.com/rconan/crseo"

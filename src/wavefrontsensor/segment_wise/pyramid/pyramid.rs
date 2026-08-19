@@ -292,7 +292,7 @@ impl From<(&DataRef, &Pyramid)> for Slopes {
         let iter = sx.into_iter().zip(sy.into_iter()).zip(&a);
         let mut sxy: Vec<_> = if let Some(mask) = qc.mask.as_ref() {
             iter.zip(mask)
-                .filter(|(_, &m)| m)
+                .filter(|&(_, &m)| m)
                 .flat_map(|(((sx, sy), a), _)| vec![sx / a, sy / a])
                 .collect()
         } else {

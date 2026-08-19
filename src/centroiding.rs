@@ -271,7 +271,7 @@ mod tests {
 
     #[test]
     fn shackhartmann() {
-        env::set_var("GMT_MODES_PATH", "/home/ubuntu/CEO/gmtMirrors/");
+        unsafe { env::set_var("GMT_MODES_PATH", "/home/ubuntu/CEO/gmtMirrors/") };
 
         let n_side_lenslet = 6;
         let n_px_lenslet = 16;
