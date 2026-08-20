@@ -18,19 +18,21 @@
 //! let mut gmt = ceo!(Gmt, m1_n_mode = [27]);
 //! ```
 
+mod generic;
 mod mirror;
 
 use crate::{
-    FromBuilder, Propagation, Source, ZernikeS,
+    FromBuilder, Propagation, Source,
     builders::{GmtBuilder, GmtModesError, MirrorBuilder},
 };
-use ffi::{gmt_m1, gmt_m2, vector};
+use ffi::{gmt_m1, gmt_m2};
 use std::{
     ffi::{CStr, NulError},
     fmt::{Debug, Display},
     marker::PhantomData,
 };
 
+pub use generic::GmtGeneric;
 pub use mirror::{
     GmtM1, GmtM2, GmtMx, Mirror, MirrorGetSet, ModeKind, ModeType, SurfaceMode, ZernikeMode,
 };
@@ -75,31 +77,7 @@ pub enum GmtError {
 //     }
 // }
 
-/// GMT wrapper
-pub struct Gmt<K1 = SurfaceMode, K2 = SurfaceMode>
-where
-    K1: ModeKind,
-    K2: ModeKind,
-    gmt_m1: GmtMx<K1>,
-    gmt_m2: GmtMx<K2>,
-{
-    pub m1: Mirror<gmt_m1, K1>,
-    pub m2: Mirror<gmt_m2, K2>,
-    /*     /// M1 number of bending modes per segment
-       pub m1.n_mode: usize,
-       /// M2 number of bending modes per segment
-       pub m2.n_mode: usize,
-       /// M2 largest Zernike radial order per segment
-       pub m2_max_n: usize,
-    // default M1 coefs values: Vec of 0f64
-    pub a1: Vec<f64>,
-    // default M2 coefs values: Vec of 0f64
-    pub a2: Vec<f64>,
-    */
-    // pointing error
-    pub pointing_error: Option<(f64, f64)>,
-    pub(crate) m1_truss_projection: bool,
-}
+pub type Gmt = GmtGeneric;
 impl Display for Gmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.m1_truss_projection {
@@ -113,7 +91,10 @@ impl Display for Gmt {
 impl FromBuilder for Gmt {
     type ComponentBuilder = GmtBuilder;
 }
-impl Gmt {
+impl FromBuilder for GmtGeneric<ZernikeMode, SurfaceMode> {
+    type ComponentBuilder = GmtBuilder<ZernikeMode, SurfaceMode>;
+}
+impl GmtGeneric {
     /// Returns `Gmt` M1 mode type
     pub fn get_m1_mode_type(&self) -> ModeType {
         self.m1.get_mode_type()
@@ -125,15 +106,7 @@ impl Gmt {
             n_mode: self.m1.n_mode,
             a: self.m1.a.clone(),
             mode_kind: PhantomData,
-        }
-    }
-    /// Returns `Gmt` M2 properties
-    pub fn get_m2(&self) -> MirrorBuilder {
-        MirrorBuilder {
-            mode_type: self.get_m2_mode_type(),
-            n_mode: self.m2.n_mode,
-            a: self.m2.a.clone(),
-            mode_kind: PhantomData,
+            ..Default::default()
         }
     }
     /// Returns `Gmt` M2 mode type
@@ -147,12 +120,29 @@ impl Gmt {
         }
         .into()
     }
+    /// Returns `Gmt` M2 properties
+    pub fn get_m2(&self) -> MirrorBuilder {
+        MirrorBuilder {
+            mode_type: self.get_m2_mode_type(),
+            n_mode: self.m2.n_mode,
+            a: self.m2.a.clone(),
+            mode_kind: PhantomData,
+            ..Default::default()
+        }
+    }
+}
+impl<K1, K2> GmtGeneric<K1, K2>
+where
+    K1: ModeKind,
+    K2: ModeKind,
+    GmtM1: GmtMx<K1>,
+    GmtM2: GmtMx<K2>,
+{
     /// Resets M1 and M2 to their aligned states
     pub fn reset(&mut self) -> &mut Self {
-        unsafe {
-            self.m1.reset();
-            self.m2.reset();
-        }
+        self.m1.reset();
+        self.m2.reset();
+
         if let n = self.m1.a.len()
             && n > 0
         {
@@ -169,10 +159,8 @@ impl Gmt {
     ///
     /// * `sid` - vector of segment ID numbers in the range \[1,7\]
     pub fn keep(&mut self, sid: &[i32]) -> &mut Self {
-        unsafe {
-            self.m1.keep(sid.as_ptr() as *mut _, sid.len() as i32);
-            self.m2.keep(sid.as_ptr() as *mut _, sid.len() as i32);
-        }
+        self.m1.keep(sid);
+        self.m2.keep(sid);
         self
     }
     /// Sets M1 segment rigid body motion with:
@@ -181,23 +169,25 @@ impl Gmt {
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
     pub fn m1_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
-        assert!(
-            sid > 0 && sid < 8,
-            "segment ID ({sid}) must be in the range [1,7]!"
-        );
-        let t_xyz = vector {
-            x: t_xyz[0],
-            y: t_xyz[1],
-            z: t_xyz[2],
-        };
-        let r_xyz = vector {
-            x: r_xyz[0],
-            y: r_xyz[1],
-            z: r_xyz[2],
-        };
-        unsafe {
-            self.m1.update(t_xyz, r_xyz, sid);
-        }
+        // assert!(
+        //     sid > 0 && sid < 8,
+        //     "segment ID ({sid}) must be in the range [1,7]!"
+        // );
+        // let t_xyz = vector {
+        //     x: t_xyz[0],
+        //     y: t_xyz[1],
+        //     z: t_xyz[2],
+        // };
+        // let r_xyz = vector {
+        //     x: r_xyz[0],
+        //     y: r_xyz[1],
+        //     z: r_xyz[2],
+        // };
+        // unsafe {
+        //     self.m1.update(t_xyz, r_xyz, sid);
+        // }
+        let tr_xyz = [t_xyz, r_xyz].concat();
+        <Mirror<GmtM1, K1> as MirrorGetSet>::set_rigid_body_motions(&mut self.m1, sid, &tr_xyz);
     }
     /// Sets M2 segment rigid body motion with:
     ///
@@ -205,19 +195,21 @@ impl Gmt {
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
     pub fn m2_segment_state(&mut self, sid: i32, t_xyz: &[f64], r_xyz: &[f64]) {
-        let t_xyz = vector {
-            x: t_xyz[0],
-            y: t_xyz[1],
-            z: t_xyz[2],
-        };
-        let r_xyz = vector {
-            x: r_xyz[0],
-            y: r_xyz[1],
-            z: r_xyz[2],
-        };
-        unsafe {
-            self.m2.update(t_xyz, r_xyz, sid);
-        }
+        // let t_xyz = vector {
+        //     x: t_xyz[0],
+        //     y: t_xyz[1],
+        //     z: t_xyz[2],
+        // };
+        // let r_xyz = vector {
+        //     x: r_xyz[0],
+        //     y: r_xyz[1],
+        //     z: r_xyz[2],
+        // };
+        // unsafe {
+        //     self.m2.update(t_xyz, r_xyz, sid);
+        // }
+        let tr_xyz = [t_xyz, r_xyz].concat();
+        <Mirror<GmtM2, K2> as MirrorGetSet>::set_rigid_body_motions(&mut self.m2, sid, &tr_xyz);
     }
     /// Sets M1 modal coefficients
     ///
@@ -324,7 +316,7 @@ impl Gmt {
             self.m1_segment_state(sid as i32, &t_xyz, &r_xyz);
             if self.m1.n_mode > 0 {
                 for k_bm in 0..self.m1.n_mode {
-                    let idx = id * self.m1.n_mode as usize + k_bm as usize;
+                    lei32idx = id * self.m1.n_mode as usize + k_bm as usize;
                     a[idx as usize] = gstate.bm[[id, k_bm as usize]] as f64;
                 }
             }
@@ -344,14 +336,14 @@ impl Gmt {
         unsafe {
             src.as_raw_mut_ptr().reset_rays();
             let rays = &mut src.as_raw_mut_ptr().rays;
-            self.m1.traceall(rays);
-            self.m2.traceall(rays);
+            self.m1.trace_all(rays);
+            self.m2.trace_all(rays);
             rays.to_sphere1(-5.830, 2.197173);
         }
         self
     }
 }
-impl<K1, K2> Drop for Gmt<K1, K2>
+impl<K1, K2> Drop for GmtGeneric<K1, K2>
 where
     K1: ModeKind,
     K2: ModeKind,
@@ -366,7 +358,13 @@ where
         }
     }
 }
-impl Propagation for Gmt {
+impl<K1, K2> Propagation for GmtGeneric<K1, K2>
+where
+    K1: ModeKind,
+    K2: ModeKind,
+    gmt_m1: GmtMx<K1>,
+    gmt_m2: GmtMx<K2>,
+{
     /// Ray traces a `Source` through `Gmt`, ray tracing stops at the exit pupil
     fn propagate(&mut self, src: &mut Source) {
         if let Some((pz, pa)) = self.pointing_error {
@@ -595,6 +593,29 @@ mod tests {
             .map(|x| x * 1e9)
             .collect();
         let _ = complot::Heatmap::from(((phase.as_slice(), (512, 512)), None));
+    }
+    #[cfg(feature = "complot")]
+    #[test]
+    fn gmt_m1_zernike_modes() {
+        use crate::Source;
+        let mut src = Source::builder().build().unwrap();
+        let mut gmt = GmtGeneric::<ZernikeMode, _>::builder()
+            .m1_builder(MirrorBuilder::new().radial_order(3))
+            .build()
+            .unwrap();
+        (0..7).for_each(|i| gmt.m1_modes_ij(i, i, 1e-6));
+        src.through(&mut gmt);
+        let phase: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .phase()
+            .iter()
+            .map(|x| x * 1e9)
+            .collect();
+        let _ = complot::Heatmap::from((
+            (phase.as_slice(), (512, 512)),
+            Some(complot::Config::new().filename("m1_zernike_modes.png")),
+        ));
     }
 
     /*

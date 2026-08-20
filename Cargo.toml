@@ -18,7 +18,7 @@ members = ["gmt-partial", "gni"]
 anyhow = "1.0.99"
 
 [dependencies]
-ffi = { version = "1.3.2", path = "sys", package = "crseo-sys" }
+ffi = {  path = "sys", package = "crseo-sys" }
 rand = "0.10"
 serde = { version = "1", features = ["derive"] }
 libm = "0.2.16"

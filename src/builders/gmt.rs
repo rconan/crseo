@@ -1,6 +1,6 @@
 use crate::{
     Builder, CrseoError, Gmt,
-    gmt::{GmtM1, GmtM2, GmtMx},
+    gmt::{GmtGeneric, GmtM1, GmtM2, GmtMx, ModeKind, SurfaceMode, ZernikeMode},
 };
 use serde::{Deserialize, Serialize};
 
@@ -60,13 +60,17 @@ impl GmtMirrorBuilder<GmtM2> for GmtBuilder {
 /// let mut gmt = Gmt::builder().m1_n_mode(27).build();
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct GmtBuilder {
-    pub m1: MirrorBuilder,
-    pub m2: MirrorBuilder,
+pub struct GmtBuilder<K1 = SurfaceMode, K2 = SurfaceMode>
+where
+    K1: ModeKind,
+    K2: ModeKind,
+{
+    pub m1: MirrorBuilder<K1>,
+    pub m2: MirrorBuilder<K2>,
     pub pointing_error: Option<(f64, f64)>,
     pub m1_truss_projection: bool,
 }
-impl Default for GmtBuilder {
+impl<K1: ModeKind, K2: ModeKind> Default for GmtBuilder<K1, K2> {
     fn default() -> Self {
         GmtBuilder {
             m1: MirrorBuilder {
@@ -80,6 +84,42 @@ impl Default for GmtBuilder {
             pointing_error: None,
             m1_truss_projection: true,
         }
+    }
+}
+impl<K1: ModeKind, K2: ModeKind> GmtBuilder<K1, K2> {
+    pub fn m1_builder(mut self, builder: MirrorBuilder<K1>) -> Self {
+        self.m1 = builder;
+        self
+    }
+    pub fn m2_builder(mut self, builder: MirrorBuilder<K2>) -> Self {
+        self.m2 = builder;
+        self
+    }
+    /// Turns the truss projection on M1 on (`true`) or off (`false`)
+    pub fn m1_truss_projection(mut self, m1_truss_projection: bool) -> Self {
+        self.m1_truss_projection = m1_truss_projection;
+        self
+    }
+    /// Set the default M1 modal coefficients
+    pub fn m1_default_state(self, a: Vec<f64>) -> Self {
+        Self {
+            m1: self.m1.default_state(a),
+            ..self
+        }
+    }
+    /// Set the default M2 modal coefficients
+    pub fn m2_default_state(self, a: Vec<f64>) -> Self {
+        Self {
+            m2: self.m2.default_state(a),
+            ..self
+        }
+    }
+    /// Set the pointing error
+    ///
+    /// The pointing error is given as the pair (delta_zenith, azimuth) in radians
+    pub fn pointing_error(mut self, pointing_error: (f64, f64)) -> Self {
+        self.pointing_error = Some(pointing_error);
+        self
     }
 }
 impl GmtBuilder {
@@ -103,18 +143,6 @@ impl GmtBuilder {
             ..self
         }
     }
-    /// Turns the truss projection on M1 on (`true`) or off (`false`)
-    pub fn m1_truss_projection(mut self, m1_truss_projection: bool) -> Self {
-        self.m1_truss_projection = m1_truss_projection;
-        self
-    }
-    /// Set the default M1 modal coefficients
-    pub fn m1_default_state(self, a: Vec<f64>) -> Self {
-        Self {
-            m1: self.m1.default_state(a),
-            ..self
-        }
-    }
     /// Set the type and number of modes of M2
     pub fn m2(self, mode_type: &str, n_mode: usize) -> Self {
         Self {
@@ -129,20 +157,6 @@ impl GmtBuilder {
             ..self
         }
     }
-    /// Set the default M2 modal coefficients
-    pub fn m2_default_state(self, a: Vec<f64>) -> Self {
-        Self {
-            m2: self.m2.default_state(a),
-            ..self
-        }
-    }
-    /// Set the pointing error
-    ///
-    /// The pointing error is given as the pair (delta_zenith, azimuth) in radians
-    pub fn pointing_error(mut self, pointing_error: (f64, f64)) -> Self {
-        self.pointing_error = Some(pointing_error);
-        self
-    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -151,14 +165,29 @@ pub enum GmtModesError {
     Path(String),
     #[error(r#"the environment variable "GMT_MODES_PATH" is not set"#)]
     EnvVar(#[from] std::env::VarError),
+    #[error("missing the modes radial order")]
+    RadialOrder,
 }
 
 impl Builder for GmtBuilder {
     type Component = Gmt;
-    fn build(self) -> std::result::Result<Gmt, CrseoError> {
-        let mut gmt = Gmt {
-            m1: self.m1.try_into()?,
-            m2: self.m2.try_into()?,
+    fn build(self) -> std::result::Result<Self::Component, CrseoError> {
+        let mut gmt: Gmt = Gmt {
+            m1: self.m1.try_into().unwrap(),
+            m2: self.m2.try_into().unwrap(),
+            pointing_error: self.pointing_error,
+            m1_truss_projection: self.m1_truss_projection,
+        };
+        gmt.reset();
+        Ok(gmt)
+    }
+}
+impl Builder for GmtBuilder<ZernikeMode, SurfaceMode> {
+    type Component = GmtGeneric<ZernikeMode, SurfaceMode>;
+    fn build(self) -> std::result::Result<Self::Component, CrseoError> {
+        let mut gmt: GmtGeneric<ZernikeMode, SurfaceMode> = GmtGeneric {
+            m1: self.m1.try_into().unwrap(),
+            m2: self.m2.try_into().unwrap(),
             pointing_error: self.pointing_error,
             m1_truss_projection: self.m1_truss_projection,
         };

@@ -5,13 +5,13 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use ffi::{gmt_m1, gmt_m2, vector};
+use ffi::{bundle, gmt_m1, gmt_m2, vector, zernikeS};
 use serde::{Deserialize, Serialize};
 
 pub type GmtM1 = gmt_m1;
 pub type GmtM2 = gmt_m2;
 
-pub trait ModeKind {}
+pub trait ModeKind: Default {}
 #[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ZernikeMode;
 impl ModeKind for ZernikeMode {}
@@ -23,12 +23,20 @@ pub trait GmtMx<K = SurfaceMode>
 where
     K: ModeKind,
 {
+    type Modes;
     fn mode_type(&self) -> ModeType;
-    fn modes_as_mut(&mut self) -> &mut ffi::modes;
+    fn modes_as_mut(&mut self) -> &mut Self::Modes;
     fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int);
+    fn update_modes(&mut self, a: *mut f64);
+    fn reset(&mut self);
+    fn keep(&mut self, sid: &[i32]);
+    fn blocking(&mut self, rays: *mut bundle);
+    fn trace(&mut self, rays: *mut bundle);
+    fn trace_all(&mut self, rays: *mut bundle);
 }
 
 impl GmtMx for gmt_m1 {
+    type Modes = ffi::modes;
     fn mode_type(&self) -> ModeType {
         unsafe {
             String::from(
@@ -40,15 +48,92 @@ impl GmtMx for gmt_m1 {
         .into()
     }
     #[inline]
-    fn modes_as_mut(&mut self) -> &mut ffi::modes {
+    fn modes_as_mut(&mut self) -> &mut Self::Modes {
         &mut self.BS
     }
     #[inline]
     fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
         unsafe { self.update(origin_, euler_angles_, idx) }
+    }
+    fn update_modes(&mut self, a: *mut f64) {
+        unsafe {
+            self.BS.update(a);
+        }
+    }
+    fn reset(&mut self) {
+        unsafe {
+            self.reset();
+        }
+    }
+    fn keep(&mut self, sid: &[i32]) {
+        unsafe {
+            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
+        }
+    }
+
+    fn trace_all(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.traceall(rays);
+        }
+    }
+    fn trace(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.trace(rays);
+        }
+    }
+    fn blocking(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.blocking(rays);
+        }
+    }
+}
+impl GmtMx<ZernikeMode> for gmt_m1 {
+    type Modes = ffi::zernikeS;
+    fn mode_type(&self) -> ModeType {
+        ModeType::Zernike(self.ZS.max_n as usize)
+    }
+    #[inline]
+    fn modes_as_mut(&mut self) -> &mut Self::Modes {
+        &mut self.ZS
+    }
+    #[inline]
+    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
+        unsafe { self.update(origin_, euler_angles_, idx) }
+    }
+    fn update_modes(&mut self, a: *mut f64) {
+        unsafe {
+            self.ZS.update(a);
+        }
+    }
+
+    fn reset(&mut self) {
+        unsafe {
+            self.reset();
+        }
+    }
+    fn keep(&mut self, sid: &[i32]) {
+        unsafe {
+            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
+        }
+    }
+    fn trace_all(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.traceall(rays);
+        }
+    }
+    fn trace(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.trace(rays);
+        }
+    }
+    fn blocking(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.blocking(rays);
+        }
     }
 }
 impl GmtMx for gmt_m2 {
+    type Modes = ffi::modes;
     fn mode_type(&self) -> ModeType {
         unsafe {
             String::from(
@@ -60,12 +145,43 @@ impl GmtMx for gmt_m2 {
         .into()
     }
     #[inline]
-    fn modes_as_mut(&mut self) -> &mut ffi::modes {
+    fn modes_as_mut(&mut self) -> &mut Self::Modes {
         &mut self.BS
     }
     #[inline]
     fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
         unsafe { self.update(origin_, euler_angles_, idx) }
+    }
+    fn update_modes(&mut self, a: *mut f64) {
+        unsafe {
+            self.BS.update(a);
+        }
+    }
+
+    fn reset(&mut self) {
+        unsafe {
+            self.reset();
+        }
+    }
+    fn keep(&mut self, sid: &[i32]) {
+        unsafe {
+            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
+        }
+    }
+    fn trace_all(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.traceall(rays);
+        }
+    }
+    fn trace(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.trace(rays);
+        }
+    }
+    fn blocking(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.blocking(rays);
+        }
     }
 }
 
@@ -83,10 +199,15 @@ pub trait MirrorGetSet {
     /// * `sid` - the segment ID number in the range \[1,7\]
     /// * `t_xyz` - the 3 translations Tx, Ty and Tz
     /// * `r_xyz` - the 3 rotations Rx, Ry and Rz
-    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64]) -> &mut Self;
+    fn set_rigid_body_motions(&mut self, sid: i32, tr_xyz: &[f64]) -> &mut Self;
+    fn reset(&mut self) -> &mut Self;
+    fn keep(&mut self, sids: &[i32]) -> &mut Self;
+    fn blocking(&mut self, rays: *mut bundle) -> &mut Self;
+    fn trace(&mut self, rays: *mut bundle) -> &mut Self;
+    fn trace_all(&mut self, rays: *mut bundle) -> &mut Self;
 }
 
-impl<M: GmtMx> MirrorGetSet for Mirror<M> {
+impl<M: GmtMx<K>, K: ModeKind> MirrorGetSet for Mirror<M, K> {
     fn get_mode_type(&self) -> ModeType {
         self._c_.mode_type()
     }
@@ -98,10 +219,11 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
             .for_each(|a_sid: &mut [f64]| {
                 a_sid.iter_mut().zip(a).for_each(|(a_sid, a)| *a_sid = *a)
             });
-        unsafe {
-            let m_sid_a = self.a.as_mut_ptr();
-            self._c_.modes_as_mut().update(m_sid_a);
-        }
+
+        let m_sid_a = self.a.as_mut_ptr();
+        // self._c_.modes_as_mut().update(m_sid_a);
+        self._c_.update_modes(m_sid_a);
+
         self
     }
 
@@ -111,14 +233,15 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
             .chunks_mut(self.n_mode)
             .zip(a.chunks(a_n_mode))
             .for_each(|(a_sid, a)| a_sid.iter_mut().zip(a).for_each(|(a_sid, a)| *a_sid = *a));
-        unsafe {
-            let m_sid_a = self.a.as_mut_ptr();
-            self.modes_as_mut().update(m_sid_a);
-        }
+
+        let m_sid_a = self.a.as_mut_ptr();
+        // self.modes_as_mut().update(m_sid_a);
+        self._c_.update_modes(m_sid_a);
+
         self
     }
 
-    fn set_rigid_body_motions(&mut self, sid: u8, tr_xyz: &[f64]) -> &mut Self {
+    fn set_rigid_body_motions(&mut self, sid: i32, tr_xyz: &[f64]) -> &mut Self {
         assert!(sid > 0 && sid < 8, "Segment ID must be in the range [1,7]!");
         let t_xyz = vector {
             x: tr_xyz[0],
@@ -130,8 +253,31 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
             y: tr_xyz[4],
             z: tr_xyz[5],
         };
-        self.update(t_xyz, r_xyz, sid as i32);
+        <M as GmtMx<K>>::update(&mut self._c_, t_xyz, r_xyz, sid as i32);
         //     unsafe { self.update(origin_, euler_angles_, idx) }
+        self
+    }
+
+    fn reset(&mut self) -> &mut Self {
+        <M as GmtMx<K>>::reset(&mut self._c_);
+        self
+    }
+
+    fn keep(&mut self, sids: &[i32]) -> &mut Self {
+        <M as GmtMx<K>>::keep(&mut self._c_, sids);
+        self
+    }
+
+    fn trace_all(&mut self, rays: *mut bundle) -> &mut Self {
+        <M as GmtMx<K>>::trace_all(&mut self._c_, rays);
+        self
+    }
+    fn trace(&mut self, rays: *mut bundle) -> &mut Self {
+        <M as GmtMx<K>>::trace(&mut self._c_, rays);
+        self
+    }
+    fn blocking(&mut self, rays: *mut bundle) -> &mut Self {
+        <M as GmtMx<K>>::blocking(&mut self._c_, rays);
         self
     }
 }

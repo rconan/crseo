@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     GmtError,
-    gmt::{GmtM1, GmtM2, Mirror, ModeKind, ModeType, SurfaceMode},
+    gmt::{GmtM1, GmtM2, Mirror, ModeKind, ModeType, SurfaceMode, ZernikeMode},
 };
 
 #[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -16,6 +16,7 @@ where
     pub n_mode: usize,
     pub a: Vec<f64>,
     pub(crate) mode_kind: PhantomData<K>,
+    pub max_n: Option<usize>,
 }
 impl MirrorBuilder {
     /// Sets the type of mirror modes
@@ -24,6 +25,11 @@ impl MirrorBuilder {
             mode_type: mode_type.into(),
             ..self
         }
+    }
+}
+impl<K: ModeKind> MirrorBuilder<K> {
+    pub fn new() -> Self {
+        Default::default()
     }
     /// Sets the number of modes
     pub fn n_mode(self, n_mode: usize) -> Self {
@@ -42,6 +48,19 @@ impl MirrorBuilder {
             a.len()
         );
         Self { a, ..self }
+    }
+}
+impl MirrorBuilder<ZernikeMode> {
+    /// Sets the modes largest radial order and the number of modes
+    pub fn radial_order(self, value: usize) -> Self {
+        let n_mode = (value + 1) * (value + 2) / 2;
+        Self {
+            mode_type: ModeType::Zernike(value),
+            n_mode,
+            a: vec![0f64; 7 * n_mode],
+            mode_kind: PhantomData,
+            max_n: Some(value),
+        }
     }
 }
 use super::GmtModesError;
@@ -75,7 +94,26 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM1> {
         let mode_type = CString::new(mode_path.map_err(|e| GmtError::from(e))?)?;
         unsafe {
             let n_mode = mirror.n_mode;
-            mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+            mirror._c_.setup1(mode_type.into_raw(), 7, n_mode as i32);
+        }
+        Ok(mirror)
+    }
+}
+impl TryFrom<MirrorBuilder<ZernikeMode>> for Mirror<GmtM1, ZernikeMode> {
+    type Error = GmtError;
+    fn try_from(builder: MirrorBuilder<ZernikeMode>) -> Result<Self, Self::Error> {
+        // let mode_path = builder.mode_path();
+        let mut mirror = Self {
+            _c_: Default::default(),
+            mode_type: builder.mode_type,
+            n_mode: builder.n_mode,
+            a: builder.a,
+            mode_kind: PhantomData,
+        };
+        let ro = builder.max_n.ok_or(GmtModesError::RadialOrder)? as i32;
+        let a = mirror.a.as_mut_ptr();
+        unsafe {
+            mirror._c_.setup3(ro, a);
         }
         Ok(mirror)
     }
@@ -94,7 +132,7 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM2> {
         let mode_type = CString::new(mode_path)?;
         unsafe {
             let n_mode = mirror.n_mode;
-            mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+            mirror._c_.setup1(mode_type.into_raw(), 7, n_mode as i32);
         }
         Ok(mirror)
     }
