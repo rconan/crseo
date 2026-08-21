@@ -5,7 +5,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use ffi::{bundle, gmt_m1, gmt_m2, vector, zernikeS};
+use ffi::{bundle, gmt_m1, gmt_m2, vector};
 use serde::{Deserialize, Serialize};
 
 pub type GmtM1 = gmt_m1;
@@ -19,20 +19,94 @@ impl ModeKind for ZernikeMode {}
 pub struct SurfaceMode;
 impl ModeKind for SurfaceMode {}
 
-pub trait GmtMx<K = SurfaceMode>
+pub trait GmtMxCommon {
+    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int);
+    fn reset(&mut self);
+    fn keep(&mut self, sid: &[i32]);
+    fn blocking(&mut self, rays: *mut bundle);
+    fn trace(&mut self, rays: *mut bundle);
+    fn trace_all(&mut self, rays: *mut bundle);
+}
+impl GmtMxCommon for gmt_m1 {
+    #[inline]
+    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
+        unsafe { self.update(origin_, euler_angles_, idx) }
+    }
+    #[inline]
+    fn reset(&mut self) {
+        unsafe {
+            self.reset();
+        }
+    }
+    #[inline]
+    fn keep(&mut self, sid: &[i32]) {
+        unsafe {
+            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
+        }
+    }
+    #[inline]
+    fn trace_all(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.traceall(rays);
+        }
+    }
+    #[inline]
+    fn trace(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.trace(rays);
+        }
+    }
+    #[inline]
+    fn blocking(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.blocking(rays);
+        }
+    }
+}
+impl GmtMxCommon for gmt_m2 {
+    #[inline]
+    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
+        unsafe { self.update(origin_, euler_angles_, idx) }
+    }
+    #[inline]
+    fn reset(&mut self) {
+        unsafe {
+            self.reset();
+        }
+    }
+    #[inline]
+    fn keep(&mut self, sid: &[i32]) {
+        unsafe {
+            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
+        }
+    }
+    #[inline]
+    fn trace_all(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.traceall(rays);
+        }
+    }
+    #[inline]
+    fn trace(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.trace(rays);
+        }
+    }
+    #[inline]
+    fn blocking(&mut self, rays: *mut bundle) {
+        unsafe {
+            self.blocking(rays);
+        }
+    }
+}
+pub trait GmtMx<K = SurfaceMode>: GmtMxCommon
 where
     K: ModeKind,
 {
     type Modes;
     fn mode_type(&self) -> ModeType;
     fn modes_as_mut(&mut self) -> &mut Self::Modes;
-    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int);
     fn update_modes(&mut self, a: *mut f64);
-    fn reset(&mut self);
-    fn keep(&mut self, sid: &[i32]);
-    fn blocking(&mut self, rays: *mut bundle);
-    fn trace(&mut self, rays: *mut bundle);
-    fn trace_all(&mut self, rays: *mut bundle);
 }
 
 impl GmtMx for gmt_m1 {
@@ -52,38 +126,9 @@ impl GmtMx for gmt_m1 {
         &mut self.BS
     }
     #[inline]
-    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
-        unsafe { self.update(origin_, euler_angles_, idx) }
-    }
     fn update_modes(&mut self, a: *mut f64) {
         unsafe {
             self.BS.update(a);
-        }
-    }
-    fn reset(&mut self) {
-        unsafe {
-            self.reset();
-        }
-    }
-    fn keep(&mut self, sid: &[i32]) {
-        unsafe {
-            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
-        }
-    }
-
-    fn trace_all(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.traceall(rays);
-        }
-    }
-    fn trace(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.trace(rays);
-        }
-    }
-    fn blocking(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.blocking(rays);
         }
     }
 }
@@ -97,38 +142,9 @@ impl GmtMx<ZernikeMode> for gmt_m1 {
         &mut self.ZS
     }
     #[inline]
-    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
-        unsafe { self.update(origin_, euler_angles_, idx) }
-    }
     fn update_modes(&mut self, a: *mut f64) {
         unsafe {
             self.ZS.update(a);
-        }
-    }
-
-    fn reset(&mut self) {
-        unsafe {
-            self.reset();
-        }
-    }
-    fn keep(&mut self, sid: &[i32]) {
-        unsafe {
-            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
-        }
-    }
-    fn trace_all(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.traceall(rays);
-        }
-    }
-    fn trace(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.trace(rays);
-        }
-    }
-    fn blocking(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.blocking(rays);
         }
     }
 }
@@ -149,38 +165,9 @@ impl GmtMx for gmt_m2 {
         &mut self.BS
     }
     #[inline]
-    fn update(&mut self, origin_: vector, euler_angles_: vector, idx: ::std::os::raw::c_int) {
-        unsafe { self.update(origin_, euler_angles_, idx) }
-    }
     fn update_modes(&mut self, a: *mut f64) {
         unsafe {
             self.BS.update(a);
-        }
-    }
-
-    fn reset(&mut self) {
-        unsafe {
-            self.reset();
-        }
-    }
-    fn keep(&mut self, sid: &[i32]) {
-        unsafe {
-            self.keep(sid.as_ptr() as *mut _, sid.len() as i32);
-        }
-    }
-    fn trace_all(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.traceall(rays);
-        }
-    }
-    fn trace(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.trace(rays);
-        }
-    }
-    fn blocking(&mut self, rays: *mut bundle) {
-        unsafe {
-            self.blocking(rays);
         }
     }
 }
@@ -253,31 +240,31 @@ impl<M: GmtMx<K>, K: ModeKind> MirrorGetSet for Mirror<M, K> {
             y: tr_xyz[4],
             z: tr_xyz[5],
         };
-        <M as GmtMx<K>>::update(&mut self._c_, t_xyz, r_xyz, sid as i32);
+        <M as GmtMxCommon>::update(&mut self._c_, t_xyz, r_xyz, sid as i32);
         //     unsafe { self.update(origin_, euler_angles_, idx) }
         self
     }
 
     fn reset(&mut self) -> &mut Self {
-        <M as GmtMx<K>>::reset(&mut self._c_);
+        <M as GmtMxCommon>::reset(&mut self._c_);
         self
     }
 
     fn keep(&mut self, sids: &[i32]) -> &mut Self {
-        <M as GmtMx<K>>::keep(&mut self._c_, sids);
+        <M as GmtMxCommon>::keep(&mut self._c_, sids);
         self
     }
 
     fn trace_all(&mut self, rays: *mut bundle) -> &mut Self {
-        <M as GmtMx<K>>::trace_all(&mut self._c_, rays);
+        <M as GmtMxCommon>::trace_all(&mut self._c_, rays);
         self
     }
     fn trace(&mut self, rays: *mut bundle) -> &mut Self {
-        <M as GmtMx<K>>::trace(&mut self._c_, rays);
+        <M as GmtMxCommon>::trace(&mut self._c_, rays);
         self
     }
     fn blocking(&mut self, rays: *mut bundle) -> &mut Self {
-        <M as GmtMx<K>>::blocking(&mut self._c_, rays);
+        <M as GmtMxCommon>::blocking(&mut self._c_, rays);
         self
     }
 }
