@@ -149,8 +149,6 @@ impl TryFrom<MirrorBuilder<ZernikeMode>> for Mirror<GmtM2, ZernikeMode> {
             mode_kind: PhantomData,
         };
         let ro = builder.max_n.ok_or(GmtModesError::RadialOrder)? as i32;
-        dbg!(ro);
-        dbg!(mirror.a.len());
         let a = mirror.a.as_mut_ptr();
         unsafe {
             mirror._c_.setup3(ro, a);

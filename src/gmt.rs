@@ -28,11 +28,11 @@ use crate::{
 use ffi::{gmt_m1, gmt_m2};
 use std::{
     ffi::{CStr, NulError},
-    fmt::{Debug, Display},
+    fmt::Debug,
     marker::PhantomData,
 };
 
-pub use generic::GmtGeneric;
+pub use generic::{Gmt, GmtGeneric, ZernikeGmt};
 pub use mirror::{
     GmtM1, GmtM2, GmtMx, Mirror, MirrorGetSet, ModeKind, ModeType, SurfaceMode, ZernikeMode,
 };
@@ -77,17 +77,6 @@ pub enum GmtError {
 //     }
 // }
 
-pub type Gmt = GmtGeneric;
-impl Display for Gmt {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.m1_truss_projection {
-            writeln!(f, "GMT: {}, {}", self.m1, self.m2)?;
-        } else {
-            writeln!(f, "GMT (no trusses): {}, {}", self.m1, self.m2)?;
-        };
-        Ok(())
-    }
-}
 impl FromBuilder for Gmt {
     type ComponentBuilder = GmtBuilder;
 }
@@ -656,9 +645,7 @@ mod tests {
             .m2_builder(MirrorBuilder::new().radial_order(3))
             .build()
             .unwrap();
-        (0..7)
-            .step_by(2)
-            .for_each(|i| gmt.m1_modes_ij(i, i, 1e-6));
+        (0..7).step_by(2).for_each(|i| gmt.m1_modes_ij(i, i, 1e-6));
         (0..7)
             .skip(1)
             .step_by(2)

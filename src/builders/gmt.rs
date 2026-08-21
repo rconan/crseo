@@ -158,6 +158,14 @@ impl GmtBuilder {
         }
     }
 }
+impl GmtBuilder<ZernikeMode, ZernikeMode> {
+    pub fn m1_radial_order(self, value: usize) -> Self {
+        self.m1_builder(MirrorBuilder::new().radial_order(value))
+    }
+    pub fn m2_radial_order(self, value: usize) -> Self {
+        self.m2_builder(MirrorBuilder::new().radial_order(value))
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum GmtModesError {

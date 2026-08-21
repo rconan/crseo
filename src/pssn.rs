@@ -349,10 +349,10 @@ impl<S> fmt::Display for PSSn<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "[{}]",
+            "PSSn: [{}]",
             self.estimates
                 .iter()
-                .map(|x| format!("{:.4}", x))
+                .map(|x| format!("{:.6}", x))
                 .collect::<Vec<String>>()
                 .as_slice()
                 .join(",")

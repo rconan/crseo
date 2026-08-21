@@ -315,8 +315,9 @@ impl From<String> for ModeType {
 }
 
 #[derive(Debug, Default)]
-pub struct Mirror<M: GmtMx<K>, K = SurfaceMode>
+pub struct Mirror<M, K = SurfaceMode>
 where
+    M: GmtMx<K>,
     K: ModeKind,
 {
     pub _c_: M,
@@ -329,9 +330,13 @@ where
     pub(crate) mode_kind: PhantomData<K>,
 }
 
-impl<M: GmtMx + Display> Display for Mirror<M> {
+impl<M, K> Display for Mirror<M, K>
+where
+    M: GmtMx<K> + Display,
+    K: ModeKind,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} ({})", self._c_, self.n_mode)
+        write!(f, "{} {}({})", self._c_, self.mode_type, self.n_mode)
     }
 }
 

@@ -58,3 +58,7 @@ harness = false
 [[bin]]
 name = "analytic"
 required-features = ["analytic"]
+
+[[bin]]
+name = "zern2pssn"
+path = "src/bin/zern2pssn.rs"
