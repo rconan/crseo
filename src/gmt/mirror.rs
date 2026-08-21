@@ -171,6 +171,22 @@ impl GmtMx for gmt_m2 {
         }
     }
 }
+impl GmtMx<ZernikeMode> for gmt_m2 {
+    type Modes = ffi::zernikeS;
+    fn mode_type(&self) -> ModeType {
+        ModeType::Zernike(self.ZS.max_n as usize)
+    }
+    #[inline]
+    fn modes_as_mut(&mut self) -> &mut Self::Modes {
+        &mut self.ZS
+    }
+    #[inline]
+    fn update_modes(&mut self, a: *mut f64) {
+        unsafe {
+            self.ZS.update(a);
+        }
+    }
+}
 
 pub trait MirrorGetSet {
     fn get_mode_type(&self) -> ModeType;

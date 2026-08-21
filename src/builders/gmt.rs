@@ -195,6 +195,19 @@ impl Builder for GmtBuilder<ZernikeMode, SurfaceMode> {
         Ok(gmt)
     }
 }
+impl Builder for GmtBuilder<SurfaceMode, ZernikeMode> {
+    type Component = GmtGeneric<SurfaceMode, ZernikeMode>;
+    fn build(self) -> std::result::Result<Self::Component, CrseoError> {
+        let mut gmt: GmtGeneric<SurfaceMode, ZernikeMode> = GmtGeneric {
+            m1: self.m1.try_into().unwrap(),
+            m2: self.m2.try_into().unwrap(),
+            pointing_error: self.pointing_error,
+            m1_truss_projection: self.m1_truss_projection,
+        };
+        gmt.reset();
+        Ok(gmt)
+    }
+}
 impl From<&Gmt> for GmtBuilder {
     fn from(gmt: &Gmt) -> Self {
         Self {

@@ -94,6 +94,9 @@ impl FromBuilder for Gmt {
 impl FromBuilder for GmtGeneric<ZernikeMode, SurfaceMode> {
     type ComponentBuilder = GmtBuilder<ZernikeMode, SurfaceMode>;
 }
+impl FromBuilder for GmtGeneric<SurfaceMode, ZernikeMode> {
+    type ComponentBuilder = GmtBuilder<SurfaceMode, ZernikeMode>;
+}
 impl GmtGeneric {
     /// Returns `Gmt` M1 mode type
     pub fn get_m1_mode_type(&self) -> ModeType {
@@ -615,6 +618,29 @@ mod tests {
         let _ = complot::Heatmap::from((
             (phase.as_slice(), (512, 512)),
             Some(complot::Config::new().filename("m1_zernike_modes.png")),
+        ));
+    }
+    #[cfg(feature = "complot")]
+    #[test]
+    fn gmt_m2_zernike_modes() {
+        use crate::Source;
+        let mut src = Source::builder().build().unwrap();
+        let mut gmt = GmtGeneric::<SurfaceMode, ZernikeMode>::builder()
+            .m2_builder(MirrorBuilder::new().radial_order(3))
+            .build()
+            .unwrap();
+        (0..7).for_each(|i| gmt.m2_modes_ij(i, i, 1e-6));
+        src.through(&mut gmt);
+        let phase: Vec<_> = src
+            .through(&mut gmt)
+            .xpupil()
+            .phase()
+            .iter()
+            .map(|x| x * 1e9)
+            .collect();
+        let _ = complot::Heatmap::from((
+            (phase.as_slice(), (512, 512)),
+            Some(complot::Config::new().filename("m2_zernike_modes.png")),
         ));
     }
 

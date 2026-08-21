@@ -137,3 +137,24 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM2> {
         Ok(mirror)
     }
 }
+impl TryFrom<MirrorBuilder<ZernikeMode>> for Mirror<GmtM2, ZernikeMode> {
+    type Error = GmtError;
+    fn try_from(builder: MirrorBuilder<ZernikeMode>) -> Result<Self, Self::Error> {
+        // let mode_path = builder.mode_path();
+        let mut mirror = Self {
+            _c_: Default::default(),
+            mode_type: builder.mode_type,
+            n_mode: builder.n_mode,
+            a: builder.a,
+            mode_kind: PhantomData,
+        };
+        let ro = builder.max_n.ok_or(GmtModesError::RadialOrder)? as i32;
+        dbg!(ro);
+        dbg!(mirror.a.len());
+        let a = mirror.a.as_mut_ptr();
+        unsafe {
+            mirror._c_.setup3(ro, a);
+        }
+        Ok(mirror)
+    }
+}
