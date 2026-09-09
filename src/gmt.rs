@@ -21,7 +21,7 @@
 mod mirror;
 
 use crate::{
-    FromBuilder, Propagation, Source, ZernikeS,
+    FromBuilder, Propagation, Source,
     builders::{GmtBuilder, GmtModesError, MirrorBuilder},
 };
 use ffi::{gmt_m1, gmt_m2, vector};

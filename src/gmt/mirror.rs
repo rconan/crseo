@@ -139,6 +139,14 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum ModeType {
     CeoFile(String),
+    DataSet {
+        n_sample: usize,
+        width: f64,
+        n_set: usize,
+        n_mode: usize,
+        s2b: [i32;7],
+        data: Vec<f64>,
+    },
     Zernike(usize),
 }
 impl Default for ModeType {
@@ -151,6 +159,16 @@ impl Display for ModeType {
         match self {
             ModeType::CeoFile(name) => write!(f, "{name}"),
             ModeType::Zernike(_) => write!(f, "zernike"),
+            ModeType::DataSet {
+                n_sample,
+                width,
+                n_set,
+                n_mode,
+                ..
+            } => write!(
+                f,
+                "{n_set} set of {n_mode} segment figures ({n_sample}px,{width}m)"
+            ),
         }
     }
 }

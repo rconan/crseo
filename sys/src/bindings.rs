@@ -4878,6 +4878,20 @@ unsafe extern "C" {
     pub fn gmt_m1_setup3(this: *mut gmt_m1, max_n: ::std::os::raw::c_int, a: *mut rtd);
 }
 unsafe extern "C" {
+    #[link_name = "\u{1}_ZN6gmt_m15setupEidiiPiPdii"]
+    pub fn gmt_m1_setup4(
+        this: *mut gmt_m1,
+        _BM_N_SAMPLE_: ::std::os::raw::c_int,
+        _BM_radius_: f64,
+        _N_SET_: ::std::os::raw::c_int,
+        _N_MODE_: ::std::os::raw::c_int,
+        s2b: *mut ::std::os::raw::c_int,
+        buffer: *mut f64,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    );
+}
+unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m17cleanupEv"]
     pub fn gmt_m1_cleanup(this: *mut gmt_m1);
 }
@@ -4993,6 +5007,30 @@ impl gmt_m1 {
     #[inline]
     pub unsafe fn setup3(&mut self, max_n: ::std::os::raw::c_int, a: *mut rtd) {
         gmt_m1_setup3(self, max_n, a)
+    }
+    #[inline]
+    pub unsafe fn setup4(
+        &mut self,
+        _BM_N_SAMPLE_: ::std::os::raw::c_int,
+        _BM_radius_: f64,
+        _N_SET_: ::std::os::raw::c_int,
+        _N_MODE_: ::std::os::raw::c_int,
+        s2b: *mut ::std::os::raw::c_int,
+        buffer: *mut f64,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    ) {
+        gmt_m1_setup4(
+            self,
+            _BM_N_SAMPLE_,
+            _BM_radius_,
+            _N_SET_,
+            _N_MODE_,
+            s2b,
+            buffer,
+            _N_,
+            _n_mode_,
+        )
     }
     #[inline]
     pub unsafe fn cleanup(&mut self) {
@@ -5197,6 +5235,20 @@ unsafe extern "C" {
     pub fn gmt_m2_setup3(this: *mut gmt_m2, max_n: ::std::os::raw::c_int, a: *mut rtd);
 }
 unsafe extern "C" {
+    #[link_name = "\u{1}_ZN6gmt_m25setupEidiiPiPdii"]
+    pub fn gmt_m2_setup4(
+        this: *mut gmt_m2,
+        _BM_N_SAMPLE_: ::std::os::raw::c_int,
+        _BM_radius_: f64,
+        _N_SET_: ::std::os::raw::c_int,
+        _N_MODE_: ::std::os::raw::c_int,
+        s2b: *mut ::std::os::raw::c_int,
+        buffer: *mut f64,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    );
+}
+unsafe extern "C" {
     #[link_name = "\u{1}_ZN6gmt_m27cleanupEv"]
     pub fn gmt_m2_cleanup(this: *mut gmt_m2);
 }
@@ -5312,6 +5364,30 @@ impl gmt_m2 {
     #[inline]
     pub unsafe fn setup3(&mut self, max_n: ::std::os::raw::c_int, a: *mut rtd) {
         gmt_m2_setup3(self, max_n, a)
+    }
+    #[inline]
+    pub unsafe fn setup4(
+        &mut self,
+        _BM_N_SAMPLE_: ::std::os::raw::c_int,
+        _BM_radius_: f64,
+        _N_SET_: ::std::os::raw::c_int,
+        _N_MODE_: ::std::os::raw::c_int,
+        s2b: *mut ::std::os::raw::c_int,
+        buffer: *mut f64,
+        _N_: ::std::os::raw::c_int,
+        _n_mode_: ::std::os::raw::c_int,
+    ) {
+        gmt_m2_setup4(
+            self,
+            _BM_N_SAMPLE_,
+            _BM_radius_,
+            _N_SET_,
+            _N_MODE_,
+            s2b,
+            buffer,
+            _N_,
+            _n_mode_,
+        )
     }
     #[inline]
     pub unsafe fn cleanup(&mut self) {

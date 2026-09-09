@@ -19,7 +19,7 @@ where
 }
 impl MirrorBuilder {
     /// Sets the type of mirror modes
-    pub fn mode_type(self, mode_type: &str) -> Self {
+    pub fn mode_type(self, mode_type: impl Into<ModeType>) -> Self {
         Self {
             mode_type: mode_type.into(),
             ..self
@@ -65,37 +65,131 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM1> {
     type Error = GmtError;
     fn try_from(builder: MirrorBuilder) -> Result<Self, Self::Error> {
         let mode_path = builder.mode_path();
-        let mut mirror = Self {
-            _c_: Default::default(),
-            mode_type: builder.mode_type,
-            n_mode: builder.n_mode,
-            a: builder.a,
-            mode_kind: PhantomData,
-        };
-        let mode_type = CString::new(mode_path.map_err(|e| GmtError::from(e))?)?;
-        unsafe {
-            let n_mode = mirror.n_mode;
-            mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+        let MirrorBuilder {
+            mode_type,
+            n_mode,
+            a,
+            ..
+        } = builder;
+        match mode_type {
+            ModeType::CeoFile(_) => {
+                let mut mirror = Self {
+                    _c_: Default::default(),
+                    mode_type,
+                    n_mode,
+                    a,
+                    mode_kind: PhantomData,
+                };
+                let mode_type = CString::new(mode_path.map_err(|e| GmtError::from(e))?)?;
+                unsafe {
+                    let n_mode = mirror.n_mode;
+                    mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+                }
+                return Ok(mirror);
+            }
+            mut ds @ ModeType::DataSet {
+                n_sample,
+                width,
+                n_set,
+                n_mode,
+                ..
+            } => {
+                let (s2b, data) = if let ModeType::DataSet { s2b, data, .. } = &mut ds {
+                    (s2b.as_mut_ptr(), data.as_mut_ptr())
+                } else {
+                    unreachable!()
+                };
+                let mut mirror = Self {
+                    _c_: Default::default(),
+                    mode_type: ds,
+                    n_mode: builder.n_mode,
+                    a,
+                    mode_kind: PhantomData,
+                };
+                unsafe {
+                    mirror.setup4(
+                        n_sample as i32,
+                        width,
+                        n_set as i32,
+                        n_mode as i32,
+                        s2b,
+                        data,
+                        7,
+                        n_mode as i32,
+                    );
+                }
+                return Ok(mirror);
+            }
+
+            ModeType::Zernike(_) => {
+                unimplemented!("Zernike modes are available in the `zernike` git branch")
+            }
         }
-        Ok(mirror)
     }
 }
 impl TryFrom<MirrorBuilder> for Mirror<GmtM2> {
     type Error = GmtError;
     fn try_from(builder: MirrorBuilder) -> Result<Self, Self::Error> {
-        let mode_path = builder.mode_path().map_err(|e| GmtError::from(e))?;
-        let mut mirror = Self {
-            _c_: Default::default(),
-            mode_type: builder.mode_type,
-            n_mode: builder.n_mode,
-            a: builder.a,
-            mode_kind: PhantomData,
-        };
-        let mode_type = CString::new(mode_path)?;
-        unsafe {
-            let n_mode = mirror.n_mode;
-            mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+        let mode_path = builder.mode_path();
+        let MirrorBuilder {
+            mode_type,
+            n_mode,
+            a,
+            ..
+        } = builder;
+        match mode_type {
+            ModeType::CeoFile(_) => {
+                let mut mirror = Self {
+                    _c_: Default::default(),
+                    mode_type,
+                    n_mode,
+                    a,
+                    mode_kind: PhantomData,
+                };
+                let mode_type = CString::new(mode_path.map_err(|e| GmtError::from(e))?)?;
+                unsafe {
+                    let n_mode = mirror.n_mode;
+                    mirror.setup1(mode_type.into_raw(), 7, n_mode as i32);
+                }
+                return Ok(mirror);
+            }
+            mut ds @ ModeType::DataSet {
+                n_sample,
+                width,
+                n_set,
+                n_mode,
+                ..
+            } => {
+                let (s2b, data) = if let ModeType::DataSet { s2b, data, .. } = &mut ds {
+                    (s2b.as_mut_ptr(), data.as_mut_ptr())
+                } else {
+                    unreachable!()
+                };
+                let mut mirror = Self {
+                    _c_: Default::default(),
+                    mode_type: ds,
+                    n_mode: builder.n_mode,
+                    a,
+                    mode_kind: PhantomData,
+                };
+                unsafe {
+                    mirror.setup4(
+                        n_sample as i32,
+                        width,
+                        n_set as i32,
+                        n_mode as i32,
+                        s2b,
+                        data,
+                        7,
+                        n_mode as i32,
+                    );
+                }
+                return Ok(mirror);
+            }
+
+            ModeType::Zernike(_) => {
+                unimplemented!("Zernike modes are available in the `zernike` git branch")
+            }
         }
-        Ok(mirror)
     }
 }

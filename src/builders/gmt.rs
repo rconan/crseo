@@ -1,6 +1,6 @@
 use crate::{
     Builder, CrseoError, Gmt,
-    gmt::{GmtM1, GmtM2, GmtMx},
+    gmt::{GmtM1, GmtM2, GmtMx, ModeType},
 };
 use serde::{Deserialize, Serialize};
 
@@ -100,6 +100,27 @@ impl GmtBuilder {
     pub fn m1_n_mode(self, n_mode: usize) -> Self {
         Self {
             m1: self.m1.n_mode(n_mode),
+            ..self
+        }
+    }
+    pub fn m1_modes(
+        self,
+        n_sample: usize,
+        width: f64,
+        n_set: usize,
+        n_mode: usize,
+        s2b: [i32; 7],
+        data: Vec<f64>,
+    ) -> Self {
+        Self {
+            m1: self.m1.mode_type(ModeType::DataSet {
+                n_sample,
+                width,
+                n_set,
+                n_mode,
+                s2b,
+                data,
+            }),
             ..self
         }
     }
