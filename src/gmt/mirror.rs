@@ -5,7 +5,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crseo_modes_set::ModesSet;
+use crseo_modes_set::ModesSets;
 use ffi::{gmt_m1, gmt_m2, vector};
 use serde::{Deserialize, Serialize};
 
@@ -183,16 +183,16 @@ impl From<String> for ModeType {
         Self::CeoFile(value)
     }
 }
-impl From<ModesSet> for ModeType {
-    fn from(modes_set: ModesSet) -> Self {
+impl From<ModesSets> for ModeType {
+    fn from(modes_set: ModesSets) -> Self {
         let Some(n_mode) = modes_set.max_n_mode() else {
             panic!("failed to convert ModesSet to ModeType, no modes found")
         };
-        let ModesSet {
+        let ModesSets {
             n_sample,
             width,
             sets,
-            surf2mode: surf2mod,
+            segment2set: surf2mod,
         } = modes_set;
         let n_set = sets.len();
         let mut dataset: Vec<_> = sets.into_iter().map(|(k,mut data)|{
