@@ -119,7 +119,7 @@ impl GmtBuilder {
                 n_set,
                 n_mode,
                 s2b,
-                data,
+                data: data.into(),
             }),
             ..self
         }

@@ -5,6 +5,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
+use crseo_modes_set::ModesSet;
 use ffi::{gmt_m1, gmt_m2, vector};
 use serde::{Deserialize, Serialize};
 
@@ -144,8 +145,8 @@ pub enum ModeType {
         width: f64,
         n_set: usize,
         n_mode: usize,
-        s2b: [i32;7],
-        data: Vec<f64>,
+        s2b: [i32; 7],
+        data: Box<[f64]>,
     },
     Zernike(usize),
 }
@@ -180,6 +181,37 @@ impl From<&str> for ModeType {
 impl From<String> for ModeType {
     fn from(value: String) -> Self {
         Self::CeoFile(value)
+    }
+}
+impl From<ModesSet> for ModeType {
+    fn from(modes_set: ModesSet) -> Self {
+        let Some(n_mode) = modes_set.max_n_mode() else {
+            panic!("failed to convert ModesSet to ModeType, no modes found")
+        };
+        let ModesSet {
+            n_sample,
+            width,
+            sets,
+            surf2mode: surf2mod,
+        } = modes_set;
+        let n_set = sets.len();
+        let mut dataset: Vec<_> = sets.into_iter().map(|(k,mut data)|{
+            (0..(n_mode - data.len())).for_each(|_| data.push(vec![0f64; n_sample]));
+            (k,data)
+            
+        }).collect();
+        dataset.sort_by_key(|(k, _)| *k);
+        Self::DataSet {
+            n_sample,
+            width,
+            n_set,
+            n_mode,
+            s2b: surf2mod,
+            data: dataset
+                .into_iter()
+                .flat_map(|(_, v)| v.into_iter().flatten())
+                .collect(),
+        }
     }
 }
 
