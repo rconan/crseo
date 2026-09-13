@@ -19,6 +19,7 @@
 //! ```
 
 mod mirror;
+mod mode_type;
 
 use crate::{
     FromBuilder, Propagation, Source,
@@ -31,9 +32,8 @@ use std::{
     marker::PhantomData,
 };
 
-pub use mirror::{
-    GmtM1, GmtM2, GmtMx, Mirror, MirrorGetSet, ModeKind, ModeType, SurfaceMode, ZernikeMode,
-};
+pub use mirror::{GmtM1, GmtM2, GmtMx, Mirror, MirrorGetSet, ModeKind, SurfaceMode, ZernikeMode};
+pub use mode_type::ModeType;
 
 #[derive(Debug, thiserror::Error)]
 pub enum GmtError {

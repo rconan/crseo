@@ -49,6 +49,7 @@ triangle-rs = "0.1.2"
 
 [features]
 analytic = []
+spade = []
 
 [[bench]]
 name = "ceo_benchmark"

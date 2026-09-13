@@ -84,11 +84,24 @@ impl Default for GmtBuilder {
 }
 impl GmtBuilder {
     /// Set the type and number of modes of M1
-    pub fn m1(self, mode_type: &str, n_mode: usize) -> Self {
+    pub fn m1(self, mode_type: impl Into<ModeType>, n_mode: usize) -> Self {
         Self {
             m1: self.m1.mode_type(mode_type).n_mode(n_mode),
             ..self
         }
+    }
+    pub fn try_m1<T>(
+        self,
+        mode_type: T,
+        n_mode: usize,
+    ) -> Result<Self, <ModeType as TryFrom<T>>::Error>
+    where
+        ModeType: TryFrom<T>,
+    {
+        Ok(Self {
+            m1: self.m1.try_mode_type(mode_type)?.n_mode(n_mode),
+            ..self
+        })
     }
     pub fn n_mode<M: GmtMx>(self, n_mode: usize) -> Self
     where

@@ -1,13 +1,21 @@
 //! A container for sets of modes for the GMT segments
 
+#[cfg(feature = "delaunay")]
+mod delaunay;
+
 use std::{collections::HashMap, fmt::Display};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModesSetError {
     #[error("index {0} is missing in `segment2set`")]
-    Insert(usize),
+    MissingSet(usize),
+    #[error("index {0} is empty")]
+    EmptySet(usize),
+    #[cfg(feature = "delaunay")]
+    #[error("Delaunay triangulation failed")]
+    Delaunay(#[from] delaunay::TriangulationError),
 }
-type ModesSetsResult<T> = Result<T, ModesSetError>;
+pub(crate) type ModesSetsResult<T> = Result<T, ModesSetError>;
 
 /// Sets of mirror modes
 #[derive(Debug, Default, Clone)]
@@ -44,13 +52,16 @@ impl ModesSets {
             ..Default::default()
         }
     }
+    fn check_set_index(&self, idx: usize) -> ModesSetsResult<()> {
+        self.segment2set
+            .contains(&(idx as i32))
+            .ok_or(ModesSetError::MissingSet(idx))
+    }
     /// Inserts a mode into a particular set
     ///
     /// `idx` is the set index, returns an error if it is not found into `segment2set`
     pub fn insert(&mut self, idx: usize, mode: impl Into<Vec<f64>>) -> ModesSetsResult<&mut Self> {
-        self.segment2set
-            .contains(&(idx as i32))
-            .ok_or(ModesSetError::Insert(idx))?;
+        self.check_set_index(idx)?;
         self.sets.entry(idx).or_insert(vec![]).push(mode.into());
         Ok(self)
     }
@@ -62,9 +73,7 @@ impl ModesSets {
         idx: usize,
         modes: impl Iterator<Item = T>,
     ) -> ModesSetsResult<&mut Self> {
-        self.segment2set
-            .contains(&(idx as i32))
-            .ok_or(ModesSetError::Insert(idx))?;
+        self.check_set_index(idx)?;
         for mode in modes {
             self.sets.entry(idx).or_insert(vec![]).push(mode.into());
         }

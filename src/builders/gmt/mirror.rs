@@ -25,6 +25,15 @@ impl MirrorBuilder {
             ..self
         }
     }
+    pub fn try_mode_type<T>(self, mode_type: T) -> Result<Self, <ModeType as TryFrom<T>>::Error>
+    where
+        ModeType: TryFrom<T>,
+    {
+        Ok(Self {
+            mode_type: mode_type.try_into()?,
+            ..self
+        })
+    }
     /// Sets the number of modes
     pub fn n_mode(self, n_mode: usize) -> Self {
         Self {
