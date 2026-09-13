@@ -87,8 +87,8 @@ impl TryFrom<ModesSets> for ModeType {
             .collect();
         dataset.sort_by_key(|(k, _)| *k);
         let n2 = n_sample * n_sample;
-        for (idx, data) in dataset.iter() {
-            for (i, mode) in data.iter().enumerate() {
+        for (idx, set) in dataset.iter() {
+            for (i, mode) in set.iter().enumerate() {
                 (mode.len() == n2)
                     .ok_or_else(|| ModeTypeError::ModeSampling(n2, mode.len(), i, *idx))?;
             }

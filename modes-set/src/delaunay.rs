@@ -4,7 +4,10 @@ use spade::{
     DelaunayTriangulation, FloatTriangulation, HasPosition, InsertionError, Point2, Triangulation,
 };
 
-use crate::{ModesSetError, ModesSets, ModesSetsResult};
+use crate::{
+    InterpolationMethod, ModesSets, ModesSetsResult, Set,
+    delaunay::TriangulationError::MissingNativeCoordinate,
+};
 
 type SurfaceTriangulation = DelaunayTriangulation<Surface>;
 
@@ -32,43 +35,56 @@ pub enum TriangulationError {
     },
     #[error("failed to interpolate mode #{0} from set {1}")]
     Interpolation(usize, usize),
+    #[error("missing modes native [x,y] coordinates from set {0}")]
+    MissingNativeCoordinate(usize),
 }
 
 impl ModesSets {
-    /// Interpolates the modes of set `idx` on the regular grid defined by `n_sample` and `width`
+    /// Interpolates all the modes of all the sets on the regular grid defined by `n_sample` and `width`
     ///
     /// `xy` iterates over the modes coordinates
-    pub fn gridding_set(
+    pub fn gridding(&mut self) -> ModesSetsResult<&mut Self> {
+        let keys: Vec<_> = self.sets.keys().cloned().collect();
+        let n_sample = self.n_sample;
+        let width = self.width;
+        let method = self.interpolation_method.clone().unwrap_or_default();
+        for idx in keys {
+            self.get_mut(idx)?.gridding(idx, n_sample, width, method.clone())?;
+        }
+        Ok(self)
+    }
+}
+
+impl Set {
+    // Interpolates the modes of set `idx` on the regular grid defined by `n_sample` and `width`
+    fn gridding(
         &mut self,
         idx: usize,
-        xy: impl Iterator<Item = [f64; 2]> + Clone,
+        n_sample: usize,
+        width: f64,
+        method: InterpolationMethod,
     ) -> ModesSetsResult<&mut Self> {
-        self.check_set_index(idx)?;
-        for (i, mode) in self
-            .sets
-            .get_mut(&idx)
-            .ok_or_else(|| ModesSetError::EmptySet(idx))?
-            .iter_mut()
-            .enumerate()
-        {
+        let xy = self.xy.take().ok_or_else(|| MissingNativeCoordinate(idx))?;
+
+        for (i, mode) in self.data.iter_mut().enumerate() {
             let mut tri = SurfaceTriangulation::new();
-            xy.clone()
+            xy.iter()
                 .zip(mode.iter_mut())
-                .map(|(point, &mut height)| tri.insert(Surface { point, height }))
+                .map(|(&point, &mut height)| tri.insert(Surface { point, height }))
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(|e| TriangulationError::Triangulation {
                     mode: i,
                     set: idx,
                     source: e,
                 })?;
-            let d = self.width / (self.n_sample - 1) as f64;
-            let interp_mode = (0..self.n_sample * self.n_sample)
+            let d = width / (n_sample - 1) as f64;
+            let interp_mode = (0..n_sample * n_sample)
                 .into_iter()
                 .map(|k| {
-                    let x = (k / self.n_sample) as f64 * d - 0.5 * self.width;
-                    let y = (k % self.n_sample) as f64 * d - 0.5 * self.width;
+                    let x = (k / n_sample) as f64 * d - 0.5 * width;
+                    let y = (k % n_sample) as f64 * d - 0.5 * width;
                     let p = Point2::new(x, y);
-                    match self.interpolation_method.clone().unwrap_or_default() {
+                    match method {
                         crate::InterpolationMethod::Barycentric => {
                             let byc = tri.barycentric();
                             byc.interpolate(|p| p.data().height, p)
@@ -90,19 +106,6 @@ impl ModesSets {
                 .collect::<Option<Vec<_>>>()
                 .ok_or(TriangulationError::Interpolation(i, idx))?;
             let _ = mem::replace(mode, interp_mode);
-        }
-        Ok(self)
-    }
-    /// Interpolates all the modes of all the sets on the regular grid defined by `n_sample` and `width`
-    ///
-    /// `xy` iterates over the modes coordinates
-    pub fn gridding(
-        &mut self,
-        xy: impl Iterator<Item = [f64; 2]> + Clone,
-    ) -> ModesSetsResult<&mut Self> {
-        let keys: Vec<_> = self.sets.keys().cloned().collect();
-        for idx in keys {
-            self.gridding_set(idx, xy.clone())?;
         }
         Ok(self)
     }

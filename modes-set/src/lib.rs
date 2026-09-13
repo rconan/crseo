@@ -25,13 +25,70 @@ pub enum InterpolationMethod {
     NaturalNeighborWithGradients,
 }
 
+#[derive(Debug, Default, Clone)]
+pub struct Set {
+    xy: Option<Vec<[f64; 2]>>,
+    data: Vec<Vec<f64>>,
+}
+impl Set {
+    pub fn new(data: &[Vec<f64>]) -> Self {
+        Self {
+            data: data.to_vec(),
+            ..Default::default()
+        }
+    }
+    pub fn xy(mut self, xy: impl IntoIterator<Item = [f64; 2]>) -> Self {
+        self.xy = Some(xy.into_iter().collect());
+        self
+    }
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+    pub fn push(&mut self, value: impl Into<Vec<f64>>) {
+        self.data.push(value.into());
+    }
+    pub fn iter(&self) -> impl Iterator<Item = &[f64]> {
+        self.data.iter().map(|x| x.as_slice())
+    }
+    pub fn into_iter(self) -> impl Iterator<Item = Vec<f64>> {
+        self.data.into_iter()
+    }
+}
+
+impl<A> FromIterator<A> for Set
+where
+    Vec<f64>: From<A>,
+{
+    fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
+        Self {
+            data: iter.into_iter().map(|x| x.into()).collect(),
+            ..Default::default()
+        }
+    }
+}
+
+impl<T> From<T> for Set
+where
+    Vec<f64>: From<T>,
+{
+    fn from(value: T) -> Self {
+        Self {
+            data: vec![value.into()],
+            ..Default::default()
+        }
+    }
+}
+
 /// Sets of mirror modes
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ModesSets {
     pub n_sample: usize,
     pub width: f64,
-    pub sets: HashMap<usize, Vec<Vec<f64>>>,
+    pub sets: HashMap<usize, Set>,
     pub segment2set: [i32; 7],
     interpolation_method: Option<InterpolationMethod>,
 }
@@ -83,15 +140,26 @@ impl ModesSets {
             .contains(&(idx as i32))
             .ok_or(ModesSetError::MissingSet(idx))
     }
+    pub fn get(&self, idx: usize) -> ModesSetsResult<&Set> {
+        self.sets
+            .get(&idx)
+            .ok_or_else(|| ModesSetError::MissingSet(idx))
+    }
+    pub fn get_mut(&mut self, idx: usize) -> ModesSetsResult<&mut Set> {
+        self.sets
+            .get_mut(&idx)
+            .ok_or_else(|| ModesSetError::MissingSet(idx))
+    }
     /// Inserts a mode into a particular set
     ///
     /// `idx` is the set index, returns an error if it is not found into `segment2set`
-    pub fn insert(&mut self, idx: usize, mode: impl Into<Vec<f64>>) -> ModesSetsResult<&mut Self> {
+    pub fn insert(&mut self, idx: usize, set: impl Into<Set>) -> ModesSetsResult<&mut Self> {
         self.check_set_index(idx)?;
-        self.sets.entry(idx).or_insert(vec![]).push(mode.into());
+        // self.sets.entry(idx).or_insert(vec![]).push(mode.into());
+        let _ = self.sets.insert(idx, set.into());
         Ok(self)
     }
-    /// Inserts several modes into a particular set
+    /* /// Inserts several modes into a particular set
     ///
     /// `idx` is the set index, returns an error if it is not found into `segment2set`
     pub fn inserts<T: Into<Vec<f64>>>(
@@ -104,7 +172,7 @@ impl ModesSets {
             self.sets.entry(idx).or_insert(vec![]).push(mode.into());
         }
         Ok(self)
-    }
+    } */
     /// Returns the number of modes in each set in ascending order
     pub fn n_mode(&self) -> Vec<usize> {
         let mut idxs: Vec<_> = self.sets.keys().collect();
