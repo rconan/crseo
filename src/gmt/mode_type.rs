@@ -75,6 +75,7 @@ impl TryFrom<ModesSets> for ModeType {
             width,
             sets,
             segment2set: surf2mod,
+            ..
         } = modes_set;
         let n_set = sets.len();
         let mut dataset: Vec<_> = sets

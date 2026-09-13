@@ -1,12 +1,14 @@
 use std::mem;
 
-use spade::{DelaunayTriangulation, HasPosition, InsertionError, Point2, Triangulation};
+use spade::{
+    DelaunayTriangulation, FloatTriangulation, HasPosition, InsertionError, Point2, Triangulation,
+};
 
 use crate::{ModesSetError, ModesSets, ModesSetsResult};
 
 type SurfaceTriangulation = DelaunayTriangulation<Surface>;
 
-/// Segment surface representation
+/// Mode surface representation
 #[derive(Debug, Default, Clone)]
 pub struct Surface {
     point: [f64; 2],
@@ -33,10 +35,13 @@ pub enum TriangulationError {
 }
 
 impl ModesSets {
+    /// Interpolates the modes of set `idx` on the regular grid defined by `n_sample` and `width`
+    ///
+    /// `xy` iterates over the modes coordinates
     pub fn gridding_set(
         &mut self,
         idx: usize,
-        xy: impl Iterator<Item =  [f64; 2]> + Clone,
+        xy: impl Iterator<Item = [f64; 2]> + Clone,
     ) -> ModesSetsResult<&mut Self> {
         self.check_set_index(idx)?;
         for (i, mode) in self
@@ -63,9 +68,24 @@ impl ModesSets {
                     let x = (k / self.n_sample) as f64 * d - 0.5 * self.width;
                     let y = (k % self.n_sample) as f64 * d - 0.5 * self.width;
                     let p = Point2::new(x, y);
-                    tri.natural_neighbor()
-                        .interpolate(|p| p.data().height, p)
-                        .or_else(|| tri.nearest_neighbor(p).map(|v| v.data().height))
+                    match self.interpolation_method.clone().unwrap_or_default() {
+                        crate::InterpolationMethod::Barycentric => {
+                            let byc = tri.barycentric();
+                            byc.interpolate(|p| p.data().height, p)
+                                .or_else(|| tri.nearest_neighbor(p).map(|v| v.data().height))
+                        }
+                        crate::InterpolationMethod::NaturalNeighbor => {
+                            let nn = tri.natural_neighbor();
+                            nn.interpolate(|p| p.data().height, p)
+                                .or_else(|| tri.nearest_neighbor(p).map(|v| v.data().height))
+                        }
+                        crate::InterpolationMethod::NaturalNeighborWithGradients => {
+                            let nn = tri.natural_neighbor();
+                            let grads = nn.estimate_gradients(|p| p.data().height);
+                            nn.interpolate_gradient(|p| p.data().height, &grads, 1.0, p)
+                                .or_else(|| tri.nearest_neighbor(p).map(|v| v.data().height))
+                        }
+                    }
                 })
                 .collect::<Option<Vec<_>>>()
                 .ok_or(TriangulationError::Interpolation(i, idx))?;
@@ -73,9 +93,12 @@ impl ModesSets {
         }
         Ok(self)
     }
+    /// Interpolates all the modes of all the sets on the regular grid defined by `n_sample` and `width`
+    ///
+    /// `xy` iterates over the modes coordinates
     pub fn gridding(
         &mut self,
-        xy: impl Iterator<Item =  [f64; 2]> + Clone,
+        xy: impl Iterator<Item = [f64; 2]> + Clone,
     ) -> ModesSetsResult<&mut Self> {
         let keys: Vec<_> = self.sets.keys().cloned().collect();
         for idx in keys {

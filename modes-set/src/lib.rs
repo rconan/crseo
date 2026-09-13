@@ -17,6 +17,14 @@ pub enum ModesSetError {
 }
 pub(crate) type ModesSetsResult<T> = Result<T, ModesSetError>;
 
+#[derive(Debug, Default, Clone)]
+pub enum InterpolationMethod {
+    Barycentric,
+    #[default]
+    NaturalNeighbor,
+    NaturalNeighborWithGradients,
+}
+
 /// Sets of mirror modes
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -25,6 +33,7 @@ pub struct ModesSets {
     pub width: f64,
     pub sets: HashMap<usize, Vec<Vec<f64>>>,
     pub segment2set: [i32; 7],
+    interpolation_method: Option<InterpolationMethod>,
 }
 impl Display for ModesSets {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -51,6 +60,23 @@ impl ModesSets {
             segment2set: segment2set.into(),
             ..Default::default()
         }
+    }
+    /// Uses the barycentric interpolation method to interpolate the mode on a regular grid
+    pub fn barycentric_interpolation(mut self) -> Self {
+        self.interpolation_method = Some(InterpolationMethod::Barycentric);
+        self
+    }
+    /// Uses the natural neighbor interpolation method to interpolate the mode on a regular grid
+    ///
+    /// This is the default interpolation method if not set explicitely
+    pub fn natural_neighbor_interpolation(mut self) -> Self {
+        self.interpolation_method = Some(InterpolationMethod::NaturalNeighbor);
+        self
+    }
+    /// Uses the natural neighbor interpolation method with gradients estimation to interpolate the mode on a regular grid
+    pub fn natural_neighbor_interpolation_with_gradients(mut self) -> Self {
+        self.interpolation_method = Some(InterpolationMethod::NaturalNeighborWithGradients);
+        self
     }
     fn check_set_index(&self, idx: usize) -> ModesSetsResult<()> {
         self.segment2set
