@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crseo_modes_set::ModesSets;
+use crseo_modes_set::{ModesSetError, ModesSets, Regular};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -61,13 +61,15 @@ pub enum ModeTypeError {
     MissingModes,
     #[error("expected {0} samples found {1} for mode #{2} in set {3}")]
     ModeSampling(usize, usize, usize, usize),
+    #[error("failed to convert ModesSets into ModeType")]
+    Conversion(#[from] ModesSetError),
 }
 
-impl TryFrom<ModesSets> for ModeType {
+impl TryFrom<ModesSets<Regular>> for ModeType {
     type Error = ModeTypeError;
 
-    fn try_from(modes_set: ModesSets) -> Result<Self, Self::Error> {
-        let Some(n_mode) = modes_set.max_n_mode() else {
+    fn try_from(modes_set: ModesSets<Regular>) -> Result<Self, Self::Error> {
+        let Some(n_mode) = modes_set.max_n_mode()? else {
             return Err(ModeTypeError::MissingModes);
         };
         let ModesSets {

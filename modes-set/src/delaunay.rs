@@ -1,11 +1,11 @@
-use std::mem;
+use std::{marker::PhantomData, mem};
 
 use spade::{
     DelaunayTriangulation, FloatTriangulation, HasPosition, InsertionError, Point2, Triangulation,
 };
 
 use crate::{
-    InterpolationMethod, ModesSets, ModesSetsResult, Set,
+    Regular, InterpolationMethod, ModesSetError, ModesSets, ModesSetsResult, Native, Set,
     delaunay::TriangulationError::MissingNativeCoordinate,
 };
 
@@ -39,19 +39,38 @@ pub enum TriangulationError {
     MissingNativeCoordinate(usize),
 }
 
-impl ModesSets {
+impl ModesSets<Native> {
     /// Interpolates all the modes of all the sets on the regular grid defined by `n_sample` and `width`
     ///
     /// `xy` iterates over the modes coordinates
-    pub fn gridding(&mut self) -> ModesSetsResult<&mut Self> {
-        let keys: Vec<_> = self.sets.keys().cloned().collect();
-        let n_sample = self.n_sample;
-        let width = self.width;
-        let method = self.interpolation_method.clone().unwrap_or_default();
+    pub fn gridding(self) -> ModesSetsResult<ModesSets<Regular>> {
+        let Self {
+            n_sample,
+            width,
+            mut sets,
+            segment2set,
+            interpolation_method,
+            ..
+        } = self;
+        let keys: Vec<_> = sets.keys().cloned().collect();
         for idx in keys {
-            self.get_mut(idx)?.gridding(idx, n_sample, width, method.clone())?;
+            sets.get_mut(&idx)
+                .ok_or_else(|| ModesSetError::MissingSet(idx))?
+                .gridding(
+                    idx,
+                    n_sample,
+                    width,
+                    interpolation_method.clone().unwrap_or_default(),
+                )?;
         }
-        Ok(self)
+        Ok(ModesSets {
+            n_sample,
+            width,
+            sets,
+            segment2set,
+            interpolation_method,
+            mesh: PhantomData,
+        })
     }
 }
 
@@ -67,6 +86,7 @@ impl Set {
         let xy = self.xy.take().ok_or_else(|| MissingNativeCoordinate(idx))?;
 
         for (i, mode) in self.data.iter_mut().enumerate() {
+            // triangulation of the mesh of the modes
             let mut tri = SurfaceTriangulation::new();
             xy.iter()
                 .zip(mode.iter_mut())
@@ -77,6 +97,7 @@ impl Set {
                     set: idx,
                     source: e,
                 })?;
+            // interpolation on the regular grid
             let d = width / (n_sample - 1) as f64;
             let interp_mode = (0..n_sample * n_sample)
                 .into_iter()
@@ -105,6 +126,7 @@ impl Set {
                 })
                 .collect::<Option<Vec<_>>>()
                 .ok_or(TriangulationError::Interpolation(i, idx))?;
+            // replacing the modes with the interpolated ones
             let _ = mem::replace(mode, interp_mode);
         }
         Ok(self)

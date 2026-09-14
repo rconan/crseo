@@ -3,7 +3,7 @@
 #[cfg(feature = "delaunay")]
 mod delaunay;
 
-use std::{collections::HashMap, fmt::Display};
+use std::{collections::HashMap, fmt::Display, marker::PhantomData};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModesSetError {
@@ -17,6 +17,7 @@ pub enum ModesSetError {
 }
 pub(crate) type ModesSetsResult<T> = Result<T, ModesSetError>;
 
+/// Interpolation method
 #[derive(Debug, Default, Clone)]
 pub enum InterpolationMethod {
     Barycentric,
@@ -25,34 +26,44 @@ pub enum InterpolationMethod {
     NaturalNeighborWithGradients,
 }
 
+/// A set of modes
 #[derive(Debug, Default, Clone)]
 pub struct Set {
-    xy: Option<Vec<[f64; 2]>>,
-    data: Vec<Vec<f64>>,
+    /// modes `x,y` mesh vertices
+    pub xy: Option<Vec<[f64; 2]>>,
+    /// modes
+    pub data: Vec<Vec<f64>>,
 }
 impl Set {
-    pub fn new(data: &[Vec<f64>]) -> Self {
+    /// Creates a new [Set] object from a vector of modes
+    pub fn new(data: impl Into<Vec<Vec<f64>>>) -> Self {
         Self {
-            data: data.to_vec(),
+            data: data.into(),
             ..Default::default()
         }
     }
+    /// Sets the `x,y` coordinates of the mesh where the modes are defined
     pub fn xy(mut self, xy: impl IntoIterator<Item = [f64; 2]>) -> Self {
         self.xy = Some(xy.into_iter().collect());
         self
     }
+    /// Returns the number of modes
     pub fn len(&self) -> usize {
         self.data.len()
     }
+    /// Checks if the set is empty
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
+    /// Pushes a mode into the set
     pub fn push(&mut self, value: impl Into<Vec<f64>>) {
         self.data.push(value.into());
     }
+    /// Returns a borrowing iterator over the modes
     pub fn iter(&self) -> impl Iterator<Item = &[f64]> {
         self.data.iter().map(|x| x.as_slice())
     }
+    /// Returns a consuming iterator over the modes
     pub fn into_iter(self) -> impl Iterator<Item = Vec<f64>> {
         self.data.into_iter()
     }
@@ -82,17 +93,26 @@ where
     }
 }
 
+#[derive(Default)]
+pub struct Native {}
+#[derive(Default)]
+pub struct Regular {}
+pub trait Mesh: Default {}
+impl Mesh for Native {}
+impl Mesh for Regular {}
+
 /// Sets of mirror modes
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ModesSets {
+pub struct ModesSets<M: Mesh> {
     pub n_sample: usize,
     pub width: f64,
     pub sets: HashMap<usize, Set>,
     pub segment2set: [i32; 7],
     interpolation_method: Option<InterpolationMethod>,
+    mesh: PhantomData<M>,
 }
-impl Display for ModesSets {
+impl<M: Mesh> Display for ModesSets<M> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -104,7 +124,7 @@ impl Display for ModesSets {
         )
     }
 }
-impl ModesSets {
+impl<M: Mesh> ModesSets<M> {
     /// Creates a new [ModesSets] object
     ///
     /// A mode is sampled on a `n_sample X n_sample` regular grid of length `width` in meters.
@@ -150,44 +170,30 @@ impl ModesSets {
             .get_mut(&idx)
             .ok_or_else(|| ModesSetError::MissingSet(idx))
     }
-    /// Inserts a mode into a particular set
+    /// Inserts a set into the collection
     ///
     /// `idx` is the set index, returns an error if it is not found into `segment2set`
     pub fn insert(&mut self, idx: usize, set: impl Into<Set>) -> ModesSetsResult<&mut Self> {
         self.check_set_index(idx)?;
-        // self.sets.entry(idx).or_insert(vec![]).push(mode.into());
         let _ = self.sets.insert(idx, set.into());
         Ok(self)
     }
-    /* /// Inserts several modes into a particular set
-    ///
-    /// `idx` is the set index, returns an error if it is not found into `segment2set`
-    pub fn inserts<T: Into<Vec<f64>>>(
-        &mut self,
-        idx: usize,
-        modes: impl Iterator<Item = T>,
-    ) -> ModesSetsResult<&mut Self> {
-        self.check_set_index(idx)?;
-        for mode in modes {
-            self.sets.entry(idx).or_insert(vec![]).push(mode.into());
-        }
-        Ok(self)
-    } */
     /// Returns the number of modes in each set in ascending order
-    pub fn n_mode(&self) -> Vec<usize> {
+    pub fn n_mode(&self) -> ModesSetsResult<Vec<usize>> {
         let mut idxs: Vec<_> = self.sets.keys().collect();
         idxs.sort();
         let mut n_mode = vec![];
         for i in idxs {
-            n_mode.push(self.sets.get(&i).map_or_else(|| 0, |modes| modes.len()));
+            n_mode.push(self.get(*i)?.len());
         }
-        n_mode
+        Ok(n_mode)
     }
     /// Returns the largest number of modes off all sets
-    pub fn max_n_mode(&self) -> Option<usize> {
-        self.n_mode()
+    pub fn max_n_mode(&self) -> ModesSetsResult<Option<usize>> {
+        Ok(self
+            .n_mode()?
             .iter()
             .max_by(|x, y| x.partial_cmp(y).unwrap())
-            .map(|n| *n)
+            .map(|n| *n))
     }
 }
