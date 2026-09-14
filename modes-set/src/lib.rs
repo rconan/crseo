@@ -2,6 +2,7 @@
 
 #[cfg(feature = "delaunay")]
 mod delaunay;
+mod filing;
 
 use std::{collections::HashMap, fmt::Display, marker::PhantomData};
 
@@ -19,6 +20,7 @@ pub(crate) type ModesSetsResult<T> = Result<T, ModesSetError>;
 
 /// Interpolation method
 #[derive(Debug, Default, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum InterpolationMethod {
     Barycentric,
     #[default]
@@ -28,6 +30,7 @@ pub enum InterpolationMethod {
 
 /// A set of modes
 #[derive(Debug, Default, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Set {
     /// modes `x,y` mesh vertices
     pub xy: Option<Vec<[f64; 2]>>,

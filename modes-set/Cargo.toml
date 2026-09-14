@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+interface = { version = "1.5.1", package = "gmt_dos-actors-clients_interface", features = ["filing"], optional = true }
 serde = { workspace = true, optional = true }
 spade = { version = "2.15.1", optional = true }
 thiserror.workspace = true
@@ -11,3 +12,5 @@ thiserror.workspace = true
 [features]
 serde = ["dep:serde"]
 delaunay = ["dep:spade"]
+interface = ["dep:interface"]
+filing = ["interface","serde"]
