@@ -4,6 +4,8 @@
 mod delaunay;
 #[cfg(feature = "filing")]
 mod filing;
+#[cfg(feature = "gmt_dos-systems_m1")]
+mod modes;
 
 use std::{collections::HashMap, fmt::Display, marker::PhantomData};
 
@@ -97,10 +99,13 @@ where
     }
 }
 
+/// Modes native irregular mesh 
 #[derive(Default)]
 pub struct Native {}
 #[derive(Default)]
+/// Modes regular grid mesh 
 pub struct Regular {}
+/// Marker trait for modes mesh types
 pub trait Mesh: Default {}
 impl Mesh for Native {}
 impl Mesh for Regular {}

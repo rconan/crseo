@@ -10,16 +10,22 @@ interface = { version = "1.5.1", package = "gmt_dos-actors-clients_interface", f
 serde = { workspace = true, optional = true }
 spade = { version = "2.15.1", optional = true }
 thiserror.workspace = true
+gmt_dos-systems_m1 = { path = "/home/rconan/projects/dos-actors/systems/m1", optional = true }
 
 [features]
 serde = ["dep:serde"]
 delaunay = ["dep:spade"]
 interface = ["dep:interface"]
 filing = ["interface", "serde"]
+gmt_dos-systems_m1 = ["dep:gmt_dos-systems_m1"]
 
 [dev-dependencies]
 anyhow.workspace = true
 complot = "0.3.5"
 crseo = { path = ".." }
-gmt_dos-systems_m1 = { path = "/home/rconan/projects/dos-actors/systems/m1" }
 serde-pickle.workspace = true
+
+[[example]]
+name = "m1_bending_modes"
+path = "examples/m1_bending_modes.rs"
+required-features = ["gmt_dos-systems_m1", "delaunay", "filing"]

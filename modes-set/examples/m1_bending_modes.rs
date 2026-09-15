@@ -1,38 +1,33 @@
+//! # M1 singular modes conversion to CEO M1 modes
+//! 
+//! `cargo r -r --example m1_bending_modes --all-features`
+
 use std::{fs::File, path::Path};
 
 use crseo::{Builder, FromBuilder, Gmt, Source};
-use crseo_modes_set::{ModesSets, Native, Set};
+use crseo_modes_set::{ModesSets, Native};
 use gmt_dos_systems_m1::SingularModes;
+use interface::filing::Filing;
 
 const N: usize = 256;
 const L: f64 = 8.5;
-const N_MODE: usize = 27;
+const RAW: bool = false;
+const N_MODE: usize = if RAW { 335 } else { 27 };
 
 fn main() -> anyhow::Result<()> {
     let path = Path::new("examples").join("m1_singular_modes.pkl");
     let m1_singular_modes: SingularModes =
         serde_pickle::from_reader(&mut File::open(path)?, Default::default())?;
-    let segments_modes = &*m1_singular_modes;
+    // let segments_modes = &*m1_singular_modes;
 
-    let mut modes_sets = ModesSets::<Native>::new(N, L, [0, 1, 2, 3, 4, 5, 6]);
-
-    for (i, segment_modes) in segments_modes.iter().enumerate() {
-        let modes = segment_modes.modes_into_mat(Some(N_MODE));
-        let set = modes
-            .column_iter()
-            .map(|c| {
-                let x = c.as_slice();
-                let mean = x.iter().sum::<f64>() / x.len() as f64;
-                let rms = ((x.iter().map(|x| *x - mean).map(|x| x * x).sum::<f64>())
-                    / x.len() as f64)
-                    .sqrt();
-                // println!("{i}: {rms:.3e}");
-                x.iter().map(|x| (*x - mean) / rms).collect::<Vec<_>>()
-            })
-            .collect::<Set>()
-            .xy(segment_modes.nodes_iter().map(|n| [n[0], n[1]]));
-        modes_sets.insert(i, set)?;
-    }
+    let mut modes_sets = ModesSets::<Native>::new(N, L, [0; 7]);
+    if !RAW {
+        modes_sets.insert_normalized_modes(&m1_singular_modes, N_MODE)
+    } else {
+        modes_sets.insert_raw_modes(&m1_singular_modes)
+    }?;
+    println!("{modes_sets}");
+    modes_sets.to_path("examples/modesets.pkl")?;
 
     let mut gmt = Gmt::builder().try_m1(modes_sets, N_MODE)?.build()?;
     let mut src = Source::builder().build()?;
