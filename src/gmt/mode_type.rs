@@ -86,15 +86,15 @@ impl TryFrom<ModesSets<Regular>> for ModeType {
             ..
         } = modes_set;
         let n_set = sets.len();
+        let n2 = n_sample * n_sample;
         let mut dataset: Vec<_> = sets
             .into_iter()
             .map(|(k, mut data)| {
-                (0..(n_mode - data.len())).for_each(|_| data.push(vec![0f64; n_sample]));
+                (0..(n_mode - data.len())).for_each(|_| data.push(vec![0f64; n2]));
                 (k, data)
             })
             .collect();
         dataset.sort_by_key(|(k, _)| *k);
-        let n2 = n_sample * n_sample;
         for (idx, set) in dataset.iter() {
             for (i, mode) in set.iter().enumerate() {
                 (mode.len() == n2)
