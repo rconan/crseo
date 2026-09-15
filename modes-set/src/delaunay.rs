@@ -5,7 +5,7 @@ use spade::{
 };
 
 use crate::{
-    Regular, InterpolationMethod, ModesSetError, ModesSets, ModesSetsResult, Native, Set,
+    InterpolationMethod, ModesSetError, ModesSets, ModesSetsResult, Native, Regular, Set,
     delaunay::TriangulationError::MissingNativeCoordinate,
 };
 
@@ -71,6 +71,13 @@ impl ModesSets<Native> {
             interpolation_method,
             mesh: PhantomData,
         })
+    }
+}
+
+impl TryFrom<ModesSets<Native>> for ModesSets<Regular> {
+    type Error = ModesSetError;
+    fn try_from(native: ModesSets<Native>) -> Result<Self, Self::Error> {
+        native.gridding()
     }
 }
 

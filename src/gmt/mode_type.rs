@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crseo_modes_set::{ModesSetError, ModesSets, Regular};
+use crseo_modes_set::{ModesSetError, ModesSets, Native, Regular};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -65,6 +65,12 @@ pub enum ModeTypeError {
     Conversion(#[from] ModesSetError),
 }
 
+impl TryFrom<ModesSets<Native>> for ModeType {
+    type Error = ModeTypeError;
+    fn try_from(modes_set: ModesSets<Native>) -> Result<Self, Self::Error> {
+        ModesSets::<Regular>::try_from(modes_set)?.try_into()
+    }
+}
 impl TryFrom<ModesSets<Regular>> for ModeType {
     type Error = ModeTypeError;
 
