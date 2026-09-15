@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-interface = { version = "1.5.1", package = "gmt_dos-actors-clients_interface", features = ["filing"], optional = true }
+interface = { version = "1.5.1", package = "gmt_dos-actors-clients_interface", features = [
+  "filing",
+], optional = true }
 serde = { workspace = true, optional = true }
 spade = { version = "2.15.1", optional = true }
 thiserror.workspace = true
@@ -13,4 +15,11 @@ thiserror.workspace = true
 serde = ["dep:serde"]
 delaunay = ["dep:spade"]
 interface = ["dep:interface"]
-filing = ["interface","serde"]
+filing = ["interface", "serde"]
+
+[dev-dependencies]
+anyhow.workspace = true
+complot = "0.3.5"
+crseo = { path = ".." }
+gmt_dos-systems_m1 = { path = "/home/rconan/projects/dos-actors/systems/m1" }
+serde-pickle.workspace = true
