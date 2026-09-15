@@ -2,6 +2,7 @@
 
 #[cfg(feature = "delaunay")]
 mod delaunay;
+#[cfg(feature = "filing")]
 mod filing;
 
 use std::{collections::HashMap, fmt::Display, marker::PhantomData};
