@@ -17,7 +17,7 @@ serde = ["dep:serde"]
 delaunay = ["dep:spade"]
 interface = ["dep:interface"]
 filing = ["interface", "serde"]
-gmt_dos-systems_m1 = ["dep:gmt_dos-systems_m1"]
+m1 = ["dep:gmt_dos-systems_m1"]
 
 [dev-dependencies]
 anyhow.workspace = true

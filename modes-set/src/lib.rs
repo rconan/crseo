@@ -1,10 +1,15 @@
 //! A container for sets of modes for the GMT segments
+//!
+//! Several functionalites are hidden behind features:
+//!  * *delaunay*: to perform interpolation to a regular mesh
+//!  * *filing*  : to save the containter to a pickle file
+//!  * *m1*      : to convert M1 singular modes to [ModesSets] (must set the environment variable `FEM_REPO` to point to the FEM model used to generate M1 singular modes)
 
 #[cfg(feature = "delaunay")]
 mod delaunay;
 #[cfg(feature = "filing")]
 mod filing;
-#[cfg(feature = "gmt_dos-systems_m1")]
+#[cfg(feature = "m1")]
 mod modes;
 
 use std::{collections::HashMap, fmt::Display, marker::PhantomData};
@@ -99,11 +104,11 @@ where
     }
 }
 
-/// Modes native irregular mesh 
+/// Modes native irregular mesh
 #[derive(Default)]
 pub struct Native {}
 #[derive(Default)]
-/// Modes regular grid mesh 
+/// Modes regular grid mesh
 pub struct Regular {}
 /// Marker trait for modes mesh types
 pub trait Mesh: Default {}
