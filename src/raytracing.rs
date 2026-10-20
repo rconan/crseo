@@ -1,5 +1,6 @@
-use super::{cu, Builder, FromBuilder, Result};
+use super::{Builder, FromBuilder, Result, cu};
 use ffi::{bundle, conic, intersect, reflect, refract, transform_to_R, transform_to_S};
+use serde::{Deserialize, Serialize};
 
 pub struct ConicBuilder {
     curvature_radius: f64,
@@ -81,6 +82,7 @@ impl Drop for Conic {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RaysBuilder {
     pub zenith: f64,
     pub azimuth: f64,

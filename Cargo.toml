@@ -36,7 +36,9 @@ serde-pickle.workspace = true
 nalgebra = { version = "0.34", features = ["serde-serialize"] }
 anyhow = "1.0.102"
 complot = { version = "0.3.5", optional = true }
-crseo_modes-set = { version = "0.1.0", path = "modes-set" }
+crseo_modes-set = { version = "0.1.0", path = "modes-set", features = [
+  "delaunay",
+] }
 
 [dev-dependencies]
 bincode = "1.3.3"
