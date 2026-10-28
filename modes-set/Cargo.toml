@@ -28,4 +28,4 @@ serde-pickle.workspace = true
 [[example]]
 name = "m1_bending_modes"
 path = "examples/m1_bending_modes.rs"
-required-features = ["gmt_dos-systems_m1", "delaunay", "filing"]
+required-features = ["m1", "delaunay", "filing"]
