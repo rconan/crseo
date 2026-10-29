@@ -52,28 +52,28 @@ pub enum GmtError {
     ModesName(#[from] NulError),
 }
 
-// pub trait GmtMirror<M: GmtMx> {
-//     fn as_mut(&mut self) -> &mut Mirror<M>;
-//     fn to_string(&self) -> String;
-// }
+pub trait GmtMirror<M: GmtMx> {
+    fn as_mut(&mut self) -> &mut Mirror<M>;
+    fn to_string(&self) -> String;
+}
 
-// impl GmtMirror<gmt_m1> for Gmt {
-//     fn as_mut(&mut self) -> &mut Mirror<gmt_m1> {
-//         &mut self.m1
-//     }
-//     fn to_string(&self) -> String {
-//         self.m1._c_.to_string()
-//     }
-// }
+impl GmtMirror<gmt_m1> for Gmt {
+    fn as_mut(&mut self) -> &mut Mirror<gmt_m1> {
+        &mut self.m1
+    }
+    fn to_string(&self) -> String {
+        self.m1._c_.to_string()
+    }
+}
 
-// impl GmtMirror<gmt_m2> for Gmt {
-//     fn as_mut(&mut self) -> &mut Mirror<gmt_m2> {
-//         &mut self.m2
-//     }
-//     fn to_string(&self) -> String {
-//         self.m2._c_.to_string()
-//     }
-// }
+impl GmtMirror<gmt_m2> for Gmt {
+    fn as_mut(&mut self) -> &mut Mirror<gmt_m2> {
+        &mut self.m2
+    }
+    fn to_string(&self) -> String {
+        self.m2._c_.to_string()
+    }
+}
 
 /// GMT wrapper
 pub struct Gmt<K1 = SurfaceMode, K2 = SurfaceMode>
