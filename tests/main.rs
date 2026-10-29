@@ -19,6 +19,7 @@ fn ray_tracing() {
     */
 }
 
+#[cfg(feature = "complot")]
 #[test]
 fn amplitude() {
     let mut src = Source::builder().build().unwrap();

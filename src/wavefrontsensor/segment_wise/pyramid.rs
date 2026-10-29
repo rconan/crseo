@@ -113,6 +113,7 @@ mod tests {
         dbg!(coefs);
     } */
 
+    #[cfg(feature = "complot")]
     #[test]
     fn calibrate_segment() {
         let n_lenslet = 90;
@@ -180,6 +181,7 @@ mod tests {
                .into();
        }
     */
+    #[cfg(feature = "complot")]
     #[test]
     fn quad_cell() {
         let sid = 2_usize;

@@ -1,9 +1,9 @@
 use std::time::Instant;
 
 use crseo::{
-    wavefrontsensor::{PhaseSensor, SegmentCalibration, Stroke},
     Atmosphere, Builder, FromBuilder, Gmt, SegmentWiseSensor, SegmentWiseSensorBuilder,
     WavefrontSensor, WavefrontSensorBuilder,
+    wavefrontsensor::{PhaseSensor, SegmentCalibration, Stroke},
 };
 
 fn main() -> anyhow::Result<()> {
@@ -63,15 +63,17 @@ fn main() -> anyhow::Result<()> {
         gmt.m2_modes(&buffer);
     }
 
-    let _: complot::Heatmap = (
-        (
-            src.phase().as_slice(),
-            (wfs.pupil_sampling(), wfs.pupil_sampling()),
-        ),
-        Some(complot::Config::new().filename("opd.png")),
-    )
-        .into();
-
+    #[cfg(feature = "complot")]
+    {
+        let _: complot::Heatmap = (
+            (
+                src.phase().as_slice(),
+                (wfs.pupil_sampling(), wfs.pupil_sampling()),
+            ),
+            Some(complot::Config::new().filename("opd.png")),
+        )
+            .into();
+    }
     Ok(())
 }
 

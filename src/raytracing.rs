@@ -12,7 +12,7 @@ pub struct ConicBuilder {
 impl Default for ConicBuilder {
     fn default() -> Self {
         Self {
-            curvature_radius: std::f64::INFINITY,
+            curvature_radius: f64::INFINITY,
             conic_cst: -1f64,
             origin: [0f64; 3],
             euler_angles: [0f64; 3],

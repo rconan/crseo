@@ -31,10 +31,8 @@ use skyangle::Conversion;
 
 use std::{
     cell::UnsafeCell,
-    f32,
     ffi::{CStr, CString},
     fmt::Display,
-    usize,
 };
 
 pub(crate) const PHOTOMETRY: [&str; 10] = ["V", "Vs", "R", "I", "J", "H", "K", "Ks", "R+I", "VIS"];

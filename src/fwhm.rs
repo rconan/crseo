@@ -2,7 +2,6 @@ use super::Source;
 use libm::j0;
 use rayon::prelude::*;
 use roots::find_root_brent;
-use std::f64;
 
 pub struct Fwhm {
     r: Vec<f64>,
@@ -51,7 +50,7 @@ impl Fwhm {
                 let scalar_eq = |e: f64| -> f64 {
                     let mut s = 0f64;
                     for (_r, _o) in self.r.iter().zip(o.chunks(2)) {
-                        let q = f64::consts::PI * e * _r;
+                        let q = std::f64::consts::PI * e * _r;
                         let g = j0(q);
                         s += f64::from(_o[0]) * (0.5f64 - g) + f64::from(_o[1]) * g;
                     }

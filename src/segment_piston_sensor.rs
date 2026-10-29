@@ -5,7 +5,7 @@ pub use builder::SegmentPistonSensorBuilder;
 use skyangle::Conversion;
 pub mod processing;
 
-use crate::{cu::Single, imaging::Frame, Cu, FromBuilder, Propagation};
+use crate::{Cu, FromBuilder, Propagation, cu::Single, imaging::Frame};
 
 /// GMT AGWS dispersed fringe sensor model
 pub struct SegmentPistonSensor {
@@ -160,13 +160,14 @@ impl Drop for SegmentPistonSensor {
     }
 }
 
+#[cfg(feature = "complot")]
 #[cfg(test)]
 mod tests {
     use std::{error::Error, fs::File, io::BufWriter};
 
     use complot::{Config, Heatmap};
 
-    use crate::{gmt::MirrorGetSet, Builder, FromBuilder, Gmt, Source};
+    use crate::{Builder, FromBuilder, Gmt, Source, gmt::MirrorGetSet};
 
     use super::SegmentPistonSensor;
 
