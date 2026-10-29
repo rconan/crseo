@@ -100,10 +100,8 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
             .for_each(|a_sid: &mut [f64]| {
                 a_sid.iter_mut().zip(a).for_each(|(a_sid, a)| *a_sid = *a)
             });
-        unsafe {
-            let m_sid_a = self.a.as_mut_ptr();
-            self._c_.modes_as_mut().update(m_sid_a);
-        }
+        // the surface is updated before the ray tracing (`flush_modes`)
+        self.modes_pending = true;
         self
     }
 
@@ -117,6 +115,7 @@ impl<M: GmtMx> MirrorGetSet for Mirror<M> {
             let m_sid_a = self.a.as_mut_ptr();
             self.modes_as_mut().update(m_sid_a);
         }
+        self.modes_pending = false;
         self
     }
 
@@ -152,6 +151,24 @@ where
     // modes coefficients
     pub a: Vec<f64>,
     pub(crate) mode_kind: PhantomData<K>,
+    // the modes coefficients set segment wise are not yet applied to the mirror surface
+    pub(crate) modes_pending: bool,
+}
+
+impl<M: GmtMx> Mirror<M> {
+    /// Updates the mirror surface with the modes coefficients set segment wise
+    ///
+    /// The surface is updated once for all the segments, before the ray tracing
+    pub fn flush_modes(&mut self) -> &mut Self {
+        if self.modes_pending {
+            unsafe {
+                let m_sid_a = self.a.as_mut_ptr();
+                self._c_.modes_as_mut().update(m_sid_a);
+            }
+            self.modes_pending = false;
+        }
+        self
+    }
 }
 
 impl<M: GmtMx + Display> Display for Mirror<M> {

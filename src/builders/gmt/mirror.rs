@@ -88,6 +88,7 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM1> {
                     n_mode,
                     a,
                     mode_kind: PhantomData,
+                    modes_pending: false,
                 };
                 let mode_type = CString::new(mode_path.map_err(|e| GmtError::from(e))?)?;
                 unsafe {
@@ -114,6 +115,7 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM1> {
                     n_mode: builder.n_mode,
                     a,
                     mode_kind: PhantomData,
+                    modes_pending: false,
                 };
                 unsafe {
                     mirror.setup4(
@@ -154,6 +156,7 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM2> {
                     n_mode,
                     a,
                     mode_kind: PhantomData,
+                    modes_pending: false,
                 };
                 let mode_type = CString::new(mode_path.map_err(|e| GmtError::from(e))?)?;
                 unsafe {
@@ -180,6 +183,7 @@ impl TryFrom<MirrorBuilder> for Mirror<GmtM2> {
                     n_mode: builder.n_mode,
                     a,
                     mode_kind: PhantomData,
+                    modes_pending: false,
                 };
                 unsafe {
                     mirror.setup4(

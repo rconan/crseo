@@ -341,6 +341,8 @@ impl Gmt {
     }
      */
     pub fn trace_all(&mut self, src: &mut Source) -> &mut Self {
+        self.m1.flush_modes();
+        self.m2.flush_modes();
         unsafe {
             src.as_raw_mut_ptr().reset_rays();
             let rays = &mut src.as_raw_mut_ptr().rays;
@@ -369,6 +371,9 @@ where
 impl Propagation for Gmt {
     /// Ray traces a `Source` through `Gmt`, ray tracing stops at the exit pupil
     fn propagate(&mut self, src: &mut Source) {
+        // the segment modes set since the last ray tracing
+        self.m1.flush_modes();
+        self.m2.flush_modes();
         if let Some((pz, pa)) = self.pointing_error {
             let (s, c) = pa.sin_cos();
             let (px, py) = (pz * c, pz * s);
