@@ -1,4 +1,4 @@
-use gmt_dos_systems_m1::SingularModes;
+use gmt_dos_systems_m1_modes_lib::SingularModes;
 
 use crate::{ModesSets, ModesSetsResult, Native, Set};
 
