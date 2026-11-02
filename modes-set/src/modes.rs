@@ -44,14 +44,15 @@ impl ModesSets<Native> {
         &mut self,
         modes: &SingularModes,
         n_mode: usize,
-    ) -> ModesSetsResult<()> {
+    ) -> ModesSetsResult<Vec<Vec<f64>>> {
         self.segment2set = [0, 1, 2, 3, 4, 5, 6];
 
         let segments_modes = &*modes;
 
+        let mut rms = vec![];
         for (i, segment_modes) in segments_modes.iter().enumerate() {
             let modes = segment_modes.modes_into_mat(Some(n_mode));
-            let set = modes
+            let (set, set_rms): (Vec<Vec<f64>>, Vec<f64>) = modes
                 .column_iter()
                 .map(|c| {
                     let x = c.as_slice();
@@ -60,12 +61,14 @@ impl ModesSets<Native> {
                         / x.len() as f64)
                         .sqrt();
                     // println!("{i}: {rms:.3e}");
-                    x.iter().map(|x| (*x - mean) / rms).collect::<Vec<_>>()
+                    (x.iter().map(|x| (*x - mean) / rms).collect::<Vec<_>>(), rms)
                 })
-                .collect::<Set>()
+                .unzip();
+            let set = Set::from_iter(set.into_iter())
                 .xy(segment_modes.nodes_iter().map(|n| [n[0], n[1]]));
             self.insert(i, set)?;
+            rms.push(set_rms);
         }
-        Ok(())
+        Ok(rms)
     }
 }
