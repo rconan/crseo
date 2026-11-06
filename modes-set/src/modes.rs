@@ -45,6 +45,25 @@ impl ModesSets<Native> {
         modes: &SingularModes,
         n_mode: usize,
     ) -> ModesSetsResult<Vec<Vec<f64>>> {
+        self.insert_scaled_modes(modes, n_mode, false)
+    }
+    /// Inserts M1 singular modes into [ModesSets]
+    ///
+    /// The modes are scaled such as the standard deviations are ones, the means are kept:
+    /// the modes are the surfaces of the forces of the modes divided by the standard deviations
+    pub fn insert_unit_rms_modes(
+        &mut self,
+        modes: &SingularModes,
+        n_mode: usize,
+    ) -> ModesSetsResult<Vec<Vec<f64>>> {
+        self.insert_scaled_modes(modes, n_mode, true)
+    }
+    fn insert_scaled_modes(
+        &mut self,
+        modes: &SingularModes,
+        n_mode: usize,
+        keep_mean: bool,
+    ) -> ModesSetsResult<Vec<Vec<f64>>> {
         self.segment2set = [0, 1, 2, 3, 4, 5, 6];
 
         let segments_modes = &*modes;
@@ -61,7 +80,11 @@ impl ModesSets<Native> {
                         / x.len() as f64)
                         .sqrt();
                     // println!("{i}: {rms:.3e}");
-                    (x.iter().map(|x| (*x - mean) / rms).collect::<Vec<_>>(), rms)
+                    let offset = if keep_mean { 0f64 } else { mean };
+                    (
+                        x.iter().map(|x| (*x - offset) / rms).collect::<Vec<_>>(),
+                        rms,
+                    )
                 })
                 .unzip();
             let set = Set::from_iter(set.into_iter())
