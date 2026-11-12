@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+#[cfg(feature = "modes-set")]
 use crseo_modes_set::{ModesSetError, ModesSets, Native, Regular};
 use serde::{Deserialize, Serialize};
 
@@ -55,6 +56,7 @@ impl From<&String> for ModeType {
     }
 }
 
+#[cfg(feature = "modes-set")]
 #[derive(Debug, thiserror::Error)]
 pub enum ModeTypeError {
     #[error("failed to convert ModesSet to ModeType, no modes found")]
@@ -65,12 +67,14 @@ pub enum ModeTypeError {
     Conversion(#[from] ModesSetError),
 }
 
+#[cfg(feature = "modes-set")]
 impl TryFrom<ModesSets<Native>> for ModeType {
     type Error = ModeTypeError;
     fn try_from(modes_set: ModesSets<Native>) -> Result<Self, Self::Error> {
         ModesSets::<Regular>::try_from(modes_set)?.try_into()
     }
 }
+#[cfg(feature = "modes-set")]
 impl TryFrom<ModesSets<Regular>> for ModeType {
     type Error = ModeTypeError;
 
