@@ -1,10 +1,16 @@
 [package]
 name = "crseo_modes-set"
 version = "0.1.0"
-edition = "2024"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+categories.workspace = true
+keywords.workspace = true
+description = "CEO GMT segment Modes Set"
 
 [dependencies]
-gmt_dos-systems_m1-modes_lib = { path="/home/ubuntu/projects/dos-actors/systems/m1/modes/lib", version = "0.1.0", optional = true }
+gmt_dos-systems_m1-modes_lib = { version = "0.1.0", optional = true }
 interface = { version = "1.5.1", package = "gmt_dos-actors-clients_interface", features = [
   "filing",
 ], optional = true }
@@ -30,3 +36,7 @@ serde-pickle.workspace = true
 name = "m1_bending_modes"
 path = "examples/m1_bending_modes.rs"
 required-features = ["m1", "delaunay", "filing"]
+
+[package.metadata.docs.rs]
+all-features = true
+ 
