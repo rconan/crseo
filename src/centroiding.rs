@@ -1,6 +1,6 @@
 use crate::{builders::CentroidingBuilder, Builder, FromBuilder};
 
-use ffi::{centroiding, dev2host, host2dev_char, mask};
+use ffi::{centroiding, dev2host, host2dev, host2dev_char, mask};
 
 use crate::imaging::Frame;
 
@@ -88,6 +88,26 @@ impl Centroiding {
                 }
             }
         };
+        self
+    }
+    /// Sets the `centroids` on the GPU, e.g. the centroids of a reference: `[[cx,cy]_1, ... , [cx,cy]_n]`
+    /// for `n` guide stars, `cx` and `cy` the centroids of all the lenslets
+    pub fn set_centroids(&mut self, centroids: &[f32]) -> &mut Self {
+        assert_eq!(
+            centroids.len(),
+            self.n_centroids,
+            "{} centroids for {} centroids",
+            centroids.len(),
+            self.n_centroids
+        );
+        self.centroids = centroids.to_vec();
+        unsafe {
+            host2dev(
+                self._c_.d__c,
+                self.centroids.as_mut_ptr(),
+                self.n_centroids as i32,
+            );
+        }
         self
     }
     /// grabs the `centroids` from the GPU
