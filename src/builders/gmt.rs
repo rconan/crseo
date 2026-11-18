@@ -195,6 +195,7 @@ impl Builder for GmtBuilder {
             m2: self.m2.try_into()?,
             pointing_error: self.pointing_error,
             m1_truss_projection: self.m1_truss_projection,
+            m1_s7_rz: 0.,
         };
         gmt.reset();
         Ok(gmt)

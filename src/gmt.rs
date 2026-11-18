@@ -99,6 +99,8 @@ where
     // pointing error
     pub pointing_error: Option<(f64, f64)>,
     pub(crate) m1_truss_projection: bool,
+    // Rz of M1 center segment: the rotation of the truss projection on M1, e.g. the GIR angle
+    pub(crate) m1_s7_rz: f64,
 }
 impl Display for Gmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -153,6 +155,7 @@ impl Gmt {
             self.m1.reset();
             self.m2.reset();
         }
+        self.m1_s7_rz = 0.;
         if let n = self.m1.a.len()
             && n > 0
         {
@@ -190,6 +193,10 @@ impl Gmt {
             y: t_xyz[1],
             z: t_xyz[2],
         };
+        if sid == 7 {
+            // the truss rotates with M1 center segment
+            self.m1_s7_rz = r_xyz[2];
+        }
         let r_xyz = vector {
             x: r_xyz[0],
             y: r_xyz[1],
@@ -395,7 +402,7 @@ impl Propagation for Gmt {
                 self.m2.blocking(rays);
                 self.m1.trace(rays);
                 if self.m1_truss_projection {
-                    rays.gmt_truss_onaxis();
+                    rays.gmt_truss_onaxis_rz(self.m1_s7_rz);
                 }
                 rays.gmt_m2_baffle();
                 self.m2.trace(rays);
@@ -412,7 +419,7 @@ impl Propagation for Gmt {
                 self.m2.blocking(rays);
                 self.m1.trace(rays);
                 if self.m1_truss_projection {
-                    rays.gmt_truss_onaxis();
+                    rays.gmt_truss_onaxis_rz(self.m1_s7_rz);
                 }
                 rays.gmt_m2_baffle();
                 self.m2.trace(rays);

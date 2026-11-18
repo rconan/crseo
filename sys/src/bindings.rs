@@ -1486,16 +1486,20 @@ unsafe extern "C" {
     pub fn bundle_gmt_truss_onaxis(this: *mut bundle);
 }
 unsafe extern "C" {
-    #[link_name = "\u{1}_ZN6bundle18gmt_truss_onaxis_1Ed"]
-    pub fn bundle_gmt_truss_onaxis_1(this: *mut bundle, scale: f64);
+    #[link_name = "\u{1}_ZN6bundle19gmt_truss_onaxis_rzEd"]
+    pub fn bundle_gmt_truss_onaxis_rz(this: *mut bundle, rz: f64);
 }
 unsafe extern "C" {
-    #[link_name = "\u{1}_ZN6bundle18gmt_truss_onaxis_2Ed"]
-    pub fn bundle_gmt_truss_onaxis_2(this: *mut bundle, scale: f64);
+    #[link_name = "\u{1}_ZN6bundle18gmt_truss_onaxis_1Edd"]
+    pub fn bundle_gmt_truss_onaxis_1(this: *mut bundle, scale: f64, rz: f64);
 }
 unsafe extern "C" {
-    #[link_name = "\u{1}_ZN6bundle18gmt_truss_onaxis_3Ed"]
-    pub fn bundle_gmt_truss_onaxis_3(this: *mut bundle, scale: f64);
+    #[link_name = "\u{1}_ZN6bundle18gmt_truss_onaxis_2Edd"]
+    pub fn bundle_gmt_truss_onaxis_2(this: *mut bundle, scale: f64, rz: f64);
+}
+unsafe extern "C" {
+    #[link_name = "\u{1}_ZN6bundle18gmt_truss_onaxis_3Edd"]
+    pub fn bundle_gmt_truss_onaxis_3(this: *mut bundle, scale: f64, rz: f64);
 }
 unsafe extern "C" {
     #[link_name = "\u{1}_ZN6bundle14gmt_pma_onaxisEv"]
@@ -1640,16 +1644,20 @@ impl bundle {
         bundle_gmt_truss_onaxis(self)
     }
     #[inline]
-    pub unsafe fn gmt_truss_onaxis_1(&mut self, scale: f64) {
-        bundle_gmt_truss_onaxis_1(self, scale)
+    pub unsafe fn gmt_truss_onaxis_rz(&mut self, rz: f64) {
+        bundle_gmt_truss_onaxis_rz(self, rz)
     }
     #[inline]
-    pub unsafe fn gmt_truss_onaxis_2(&mut self, scale: f64) {
-        bundle_gmt_truss_onaxis_2(self, scale)
+    pub unsafe fn gmt_truss_onaxis_1(&mut self, scale: f64, rz: f64) {
+        bundle_gmt_truss_onaxis_1(self, scale, rz)
     }
     #[inline]
-    pub unsafe fn gmt_truss_onaxis_3(&mut self, scale: f64) {
-        bundle_gmt_truss_onaxis_3(self, scale)
+    pub unsafe fn gmt_truss_onaxis_2(&mut self, scale: f64, rz: f64) {
+        bundle_gmt_truss_onaxis_2(self, scale, rz)
+    }
+    #[inline]
+    pub unsafe fn gmt_truss_onaxis_3(&mut self, scale: f64, rz: f64) {
+        bundle_gmt_truss_onaxis_3(self, scale, rz)
     }
     #[inline]
     pub unsafe fn gmt_pma_onaxis(&mut self) {
